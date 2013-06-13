@@ -1,4 +1,4 @@
-package preprocess.mr.preprocess;
+package preprocess.mr;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

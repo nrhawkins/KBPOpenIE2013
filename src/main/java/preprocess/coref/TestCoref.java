@@ -1,4 +1,4 @@
-package preprocess.preprocess.coref;
+package preprocess.coref;
 
 import java.util.List;
 import java.util.Map;

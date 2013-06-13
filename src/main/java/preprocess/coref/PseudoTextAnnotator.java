@@ -1,4 +1,4 @@
-package preprocess.preprocess.coref;
+package preprocess.coref;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import preprocess.preprocess.coref.Chunk.ReadrCoreAnnotations;
+import preprocess.coref.Chunk.ReadrCoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
