@@ -1,4 +1,4 @@
-package preprocess.mr;
+package edu.knowitall.tac2013.preprocess.mr;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

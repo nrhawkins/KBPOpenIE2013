@@ -5,4 +5,4 @@
  * Based heavily on rough source code provided by Xiao lang for performing
  * this preprocessing for a CSE 454 course in natural language processing.
  */
-package preprocess;
+package edu.knowitall.tac2013.preprocess;

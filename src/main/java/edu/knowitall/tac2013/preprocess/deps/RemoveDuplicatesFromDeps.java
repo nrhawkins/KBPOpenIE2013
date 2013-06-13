@@ -1,4 +1,4 @@
-package preprocess.deps;
+package edu.knowitall.tac2013.preprocess.deps;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;

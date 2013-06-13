@@ -1,4 +1,4 @@
-package preprocess.tac;
+package edu.knowitall.tac2013.preprocess.tac;
 
 
 import java.io.BufferedReader;

@@ -1,4 +1,4 @@
-package preprocess.coref;
+package edu.knowitall.tac2013.preprocess.coref;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
