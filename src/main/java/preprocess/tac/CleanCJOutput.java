@@ -11,12 +11,12 @@ import java.io.OutputStreamWriter;
 public class CleanCJOutput {
 
 	static String dir = "/projects/pardosa/s5/raphaelh/tac";
-	
+
 	static String in1 = dir + "/data/sentences.cjout";
 	static String out1 = dir + "/data/sentences.cj";
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		{
 			BufferedReader r = new BufferedReader(new InputStreamReader(
 					new FileInputStream(in1), "utf-8"));

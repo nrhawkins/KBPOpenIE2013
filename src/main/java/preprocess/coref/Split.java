@@ -13,18 +13,18 @@ import java.io.OutputStreamWriter;
 public class Split {
 
 	// split should be document-aware, so that sentences for same document are always together
-	
-	
+
+
 	static String inDir = "/projects/pardosa/data15/raphaelh/data";
 	static String outDir = "/projects/pardosa/data15/raphaelh/data/tmp2";
-	
-	static String[] files = { "sentences.articleIDs", "sentences.cj", 
+
+	static String[] files = { "sentences.articleIDs", "sentences.cj",
 		"sentences.text", "sentences.tokens", "sentences.tokenSpans" };
-	
+
 	static int lines = 1000000;
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		// first split sentences.articleIDs
 		int partition = 0;
 		{
@@ -57,14 +57,14 @@ public class Split {
 
 		// determine splitIDs
 		int[] startIDs = determineStartIDs(partition);
-		
+
 		// split other files based on these partitions
 		split(files[1], startIDs);
 		split(files[2], startIDs);
 		split(files[3], startIDs);
 		split(files[4], startIDs);
 	}
-	
+
 	static int[] determineStartIDs(int partitions) throws IOException {
 		int[] ps = new int[partitions];
 		for (int p = 0; p < partitions; p++) {
@@ -78,8 +78,8 @@ public class Split {
 		}
 		return ps;
 	}
-	
-	
+
+
 	static void split(String file, int[] startIDs) throws IOException {
 		BufferedReader r = new BufferedReader(new InputStreamReader
 				(new FileInputStream(inDir + "/" + file), "utf-8"));
@@ -92,7 +92,7 @@ public class Split {
 			do {
 				String[] c = l.split("\t");
 				int sentenceID = Integer.parseInt(c[0]);
-				
+
 				if (sentenceID < maxID) {
 					w.write(l);
 					w.write('\n');

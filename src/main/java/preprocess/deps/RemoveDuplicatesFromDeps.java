@@ -36,12 +36,12 @@ public class RemoveDuplicatesFromDeps {
 	static String in = "/projects/pardosa/data15/raphaelh/biology/sentences.depsStanfordCCProcessed";
 	static String out = "/projects/pardosa/data15/raphaelh/biology/sentences.depsStanfordCCProcessed.nodup";
 
-	
+
 	// kbest or single best
 	static boolean KBEST = false; //true;
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		BufferedReader r = new BufferedReader(new InputStreamReader
 				(new FileInputStream(in), "utf-8"));
 		BufferedWriter w = new BufferedWriter(new OutputStreamWriter
@@ -57,9 +57,9 @@ public class RemoveDuplicatesFromDeps {
 			String[] d = t[KBEST? 2 : 1].split("\\|");
 			Set<String> hs = new HashSet<String>();
 			for (int i=0; i < d.length; i++) hs.add(d[i]);
-			
+
 			w.write(t[0] + "\t");
-			if (KBEST) w.write(t[1] + "\t");			
+			if (KBEST) w.write(t[1] + "\t");
 			boolean first = true;
 			for (String s : hs) {
 				if (!first) w.write("|");
@@ -69,7 +69,7 @@ public class RemoveDuplicatesFromDeps {
 			w.write("\n");
 		}
 		r.close();
-		w.close();		
+		w.close();
 	}
-	
+
 }

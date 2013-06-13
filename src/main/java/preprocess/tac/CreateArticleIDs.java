@@ -12,7 +12,7 @@ import java.util.HashMap;
 public class CreateArticleIDs {
 
 	static String dir = "/projects/pardosa/s5/raphaelh/tac/data/09nw";
-	
+
 	public static void main(String[] args) throws IOException {
 		BufferedReader r1 = new BufferedReader(new InputStreamReader
 				(new FileInputStream(dir + "/sentences.meta"), "utf-8"));
@@ -26,11 +26,11 @@ public class CreateArticleIDs {
 			if (i == null) {
 				i = m.size();
 			}
-			m.put(t[2], i);			
+			m.put(t[2], i);
 			w.write(t[0] + "\t" + i + "\n");
 		}
 		r1.close();
 		w.close();
 	}
-	
+
 }

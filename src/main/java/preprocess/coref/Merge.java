@@ -5,7 +5,7 @@ import java.io.IOException;
 public class Merge {
 
 	public static void main(String[] args) throws IOException {
-		
+
 		for (int i=0; i < 45; i++)
 			//System.out.println("cat sentences.stanfordcoref." + i + ">> ../sentences.stanfordcoref");
 			//System.out.println("cat sentences.stanfordner." + i + ">> ../sentences.stanfordner");

@@ -17,7 +17,7 @@ public class PrepareSentencesForCJ {
 	//"/projects/pardosa/s5/raphaelh/tac";
 
 	// remove @
-	
+
 	static String input = dir + "/data/10wb/sentences.tokens";
 	static String output = dir + "/data/10wb/sentences.cjin";
 
@@ -25,7 +25,7 @@ public class PrepareSentencesForCJ {
 	//static String output = dir + "/../wex/sentences.cjin";
 
 	public static void main(String[] args) throws IOException {
-		
+
 		BufferedReader r = new BufferedReader(new InputStreamReader
 				(new FileInputStream(input), "utf-8"));
 		BufferedWriter w = new BufferedWriter(new OutputStreamWriter

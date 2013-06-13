@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * to be used in ExtractSEntencesAndTokenize to remove html tags
-* NOTE: copied from reverb 
+* NOTE: copied from reverb
 * @author Xiao Ling
 */
 

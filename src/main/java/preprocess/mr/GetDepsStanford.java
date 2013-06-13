@@ -28,7 +28,7 @@ public class GetDepsStanford {
 	public static void main (String[] args) throws IOException {
 		in0 = args[0];
 		out0 = args[1];
-		
+
 		TreebankLanguagePack tlp = new PennTreebankLanguagePack();
 		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
 
@@ -37,17 +37,17 @@ public class GetDepsStanford {
 		BufferedWriter w = new BufferedWriter(new OutputStreamWriter
 				(new FileOutputStream(out0), "utf-8"));
 		String line = null;
-		
+
 		while ((line = r.readLine())!= null) {
-			
+
 			String[] t = line.split("\t");
 
 			// we don't allow | since we treat that as a special character
 			t[1] = t[1].replace("|", " ");
-			
+
 			Tree parse = Tree.valueOf(t[1]);
 			//System.out.println(parse.pennString());
-			
+
 			GrammaticalStructure gs = gsf.newGrammaticalStructure(parse);
 			Collection<TypedDependency> tdl = null;
 			try {
@@ -56,7 +56,7 @@ public class GetDepsStanford {
 				// there has to be a bug in EnglishGrammaticalStructure.collapseFlatMWP
 				tdl = new ArrayList<TypedDependency>();
 			}
-			
+
 			StringBuilder sb = new StringBuilder();
 			List<TypedDependency> l = new ArrayList<TypedDependency>();
 			l.addAll(tdl);
@@ -64,7 +64,7 @@ public class GetDepsStanford {
 				TypedDependency td = l.get(i);
 				String name = td.reln().getShortName();
 				if (td.reln().getSpecific() != null)
-					name += "-" + td.reln().getSpecific();				
+					name += "-" + td.reln().getSpecific();
 				sb.append((td.gov().index()-1) + " ");
 				sb.append(name + " ");
 				sb.append((td.dep().index()-1));
@@ -74,7 +74,7 @@ public class GetDepsStanford {
 			//System.out.println(t[0] + "\t" + sb.toString());
 			w.write(t[0] + "\t" + sb.toString() + "\n");
 		}
-		
+
 		r.close();
 		w.close();
 	}

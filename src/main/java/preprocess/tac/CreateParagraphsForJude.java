@@ -15,7 +15,7 @@ public class CreateParagraphsForJude {
 	static String in1 = dir + "/data/09wb/sentences.meta";
 	static String in2 = dir + "/data/09wb/sentences.tokens";
 	static String out = dir + "/data/09wb/paragraphs.tokens";
-	
+
 	public static void main(String[] args) throws IOException {
 
 		BufferedReader r1 = new BufferedReader(new InputStreamReader
@@ -25,10 +25,10 @@ public class CreateParagraphsForJude {
 		BufferedWriter w = new BufferedWriter(new OutputStreamWriter
 				(new FileOutputStream(out), "utf-8"));
 		String l1 = r1.readLine(), l2 = r2.readLine();
-		
+
 		int currentPar = -1;
 		StringBuilder currentTokens = new StringBuilder();
-		
+
 		while (l1 != null && l2 != null) {
 			// they should align exactly
 			String[] c1 = l1.split("\t");
@@ -41,7 +41,7 @@ public class CreateParagraphsForJude {
 			}
 			currentPar = par;
 			if (currentTokens.length() > 0) currentTokens.append(" ");
-			currentTokens.append(c2[1]);			
+			currentTokens.append(c2[1]);
 			l1 = r1.readLine();
 			l2 = r2.readLine();
 		}

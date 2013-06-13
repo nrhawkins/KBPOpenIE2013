@@ -86,7 +86,7 @@ public class ExtractSentencesAndTokenize {
 					// have come from. I googled 'StringUtil.whitespace_charclass'
 					// and came up with something reasonable - see the comments around
 					// this.whitespace_charclass.
-					.replaceAll(whitespace_charclass, " ") 
+					.replaceAll(whitespace_charclass, " ")
 					// e.g. "</a" is left as a token due to bad html writing
 					.replaceAll("</\\p{Alnum}", "");
 			par = HtmlUtils.removeHtml(par).replace("[ \t\\u000B\f\r]+", " ");
@@ -163,20 +163,20 @@ public class ExtractSentencesAndTokenize {
 		w3.close();
 	}
 
-	
-	
-	
+
+
+
 	/*
 	 * Note:
 	 * The following fields whitespace_chars and whitespace_charclass
-	 * are taken from 
+	 * are taken from
 	 * http://bionlp.sourceforge.net/common/apidocs/v1.2/index.html?edu/ucdenver/ccp/common/string/RegExUnicodeUtils.html
 	 * Where whitespace_charclass is now used, the original code called StringUtil.whitespace_charclass.
 	 * The link above seems to be where this probably came from, and lets us avoid depending
 	 * on another big project.
 	 */
-	
-	/* 
+
+	/*
 	 * Because Java's \s and \S and \p{Space} are all unusable.
 	 */
 	private final static String whitespace_chars = "" /*

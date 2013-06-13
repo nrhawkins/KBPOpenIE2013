@@ -54,6 +54,7 @@ public class PseudoTextAnnotator implements Annotator {
 		}
 	}
 
+	@Override
 	public void annotate(Annotation annotation) {
 		try {
 //			System.out.println("===========annotating..=======");
@@ -124,7 +125,7 @@ public class PseudoTextAnnotator implements Annotator {
 				    } else {
 					for (int j=0; j < t2.length; j++)
 					    System.out.println(j + ": " + t2[j]);
-					
+
 					throw new RuntimeException("number of tokens mismatch for " + sentenceID1 + " " + t2.length + " != " + t3.length);
 				    }
 				}

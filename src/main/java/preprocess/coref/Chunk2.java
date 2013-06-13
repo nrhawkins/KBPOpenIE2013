@@ -3,13 +3,11 @@ package preprocess.coref;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -18,9 +16,6 @@ import java.util.Set;
 
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
-import edu.stanford.nlp.ie.NERClassifierCombiner;
-import edu.stanford.nlp.ie.regexp.NumberSequenceClassifier;
-import edu.stanford.nlp.ie.regexp.RegexNERSequenceClassifier;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
@@ -31,27 +26,12 @@ import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.Annotator;
-import edu.stanford.nlp.pipeline.AnnotatorPool;
-import edu.stanford.nlp.pipeline.CharniakParserAnnotator;
-import edu.stanford.nlp.pipeline.DefaultPaths;
-import edu.stanford.nlp.pipeline.DeterministicCorefAnnotator;
-import edu.stanford.nlp.pipeline.GenderAnnotator;
-import edu.stanford.nlp.pipeline.MorphaAnnotator;
-import edu.stanford.nlp.pipeline.NERCombinerAnnotator;
-import edu.stanford.nlp.pipeline.POSTaggerAnnotator;
-import edu.stanford.nlp.pipeline.ParserAnnotator;
-import edu.stanford.nlp.pipeline.RegexNERAnnotator;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.pipeline.TrueCaseAnnotator;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.Trees;
 import edu.stanford.nlp.util.CoreMap;
 import edu.stanford.nlp.util.ErasureUtils;
-import edu.stanford.nlp.util.Factory;
-import edu.stanford.nlp.util.Pair;
-import edu.stanford.nlp.util.PropertiesUtils;
-import edu.stanford.nlp.util.ReflectionLoading;
 
 /* java -cp ".:../lib/stanford-corenlp.jar:../lib/stanford-corenlp-models.jar:../lib/xom.jar:../lib/joda-time.jar" data.preprocess.coref.Chunk2 "" */
 
@@ -62,7 +42,7 @@ public class Chunk2 {
 	//static final String dir = "/projects/pardosa/data15/raphaelh/readr2exp/ace05";
 	//static final String dir = "/projects/pardosa/data15/raphaelh/roth-data";
 	static final String dir = "/projects/pardosa/data15/raphaelh/biology";
-	
+
 	static String in1 = dir + "/sentences.articleIDs";
 	static String in2 = dir + "/sentences.text";
 	static String in3 = dir + "/sentences.tokens";
@@ -85,11 +65,9 @@ public class Chunk2 {
 //		ignoreSentences.add(3810);
 //		ignoreSentences.add(4235);
 		//for (int i=2888; i < 6000; i++) ignoreSentences.add(i);
-		
+
 	}
-	
-	private static AnnotatorPool pool = null;
-	
+
 	public static void main(String[] args) throws Exception {
 		String sfx = args[0];
 		in1 += sfx;
@@ -102,22 +80,21 @@ public class Chunk2 {
 		in8 += sfx;
 		in9 += sfx;
 		//in10 += sfx;
-		
+
 		out1 += sfx;
 		//out2 += sfx;
 		//out3 += sfx;
 		//out4 += sfx;
 		//out5 += sfx;
-		
+
 		//System.in.read();
-		
+
 
 		Properties props = new Properties();
 		props.setProperty("annotators", "lemma"); //"ptext,ppos,plemma,pner,pparse,dcoref"); //,lemma,ner,dcoref"); //readrparse");
 		boolean enforceRequirements = false;
-		//StanfordCoreNLP core = new StanfordCoreNLP((Properties)null, enforceRequirements);
-		StanfordCoreNLP core = new StanfordCoreNLP(props, enforceRequirements);
-		
+		new StanfordCoreNLP(props, enforceRequirements);
+
 		List<Annotator> annotators = new ArrayList<Annotator>();
 		//annotators.add(new PseudoTextAnnotator(in2, in3, in4));
 		annotators.add(new PseudoTextAnnotator(in2, in3, in4));
@@ -127,15 +104,15 @@ public class Chunk2 {
 		annotators.add(new PseudoParseAnnotator(in5));
 		annotators.add(new DebugAnnotator());
 		annotators.add(StanfordCoreNLP.getExistingAnnotator("dcoref"));
-		
-		
-//		AnnotatorPool pool = StanfordCoreNLP.getDefaultAnnotatorPool(props);		
+
+
+//		AnnotatorPool pool = StanfordCoreNLP.getDefaultAnnotatorPool(props);
 //		pool.register("ptext", new Factory<Annotator>() {
 //			private static final long serialVersionUID = 1L;
 //			public PseudoTextAnnotator create() {
 //				return new PseudoTextAnnotator(in2, in3, in4);
 //			}
-//	    }); 
+//	    });
 //		pool.register("pparse", new Factory<Annotator>() {
 //			private static final long serialVersionUID = 1L;
 //			public PseudoParseAnnotator create() {
@@ -147,46 +124,46 @@ public class Chunk2 {
 //			public PseudoPosAnnotator create() {
 //				return new PseudoPosAnnotator(in7);
 //			}
-//	    }); 
+//	    });
 //		pool.register("plemma", new Factory<Annotator>() {
 //			private static final long serialVersionUID = 1L;
 //			public PseudoLemmaAnnotator create() {
 //				return new PseudoLemmaAnnotator(in8);
 //			}
-//	    }); 
+//	    });
 //		pool.register("pner", new Factory<Annotator>() {
 //			private static final long serialVersionUID = 1L;
 //			public PseudoNerAnnotator create() {
 //				return new PseudoNerAnnotator(in9);
 //			}
-//	    }); 
+//	    });
 
 //		boolean enforceRequirements = false;
 //		StanfordCoreNLP core = new StanfordCoreNLP(pool, props, enforceRequirements);
 
 		BufferedWriter w1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out1), "utf-8"));
-		
+
 		AnnotationCreator c = new AnnotationCreator(in1);
 		Annotation annotation = null;
 		while ((annotation = c.next()) != null) {
 			int docID = annotation.get(ReadrCoreAnnotations.DocIDAnnotation.class);
 			if (docID % 1000 == 0) System.out.println("annotating doc " + docID);
-			
+
 			//if (docID < 132000) continue;
 			//if (docID < 132954) continue;
-			
+
 			//System.out.println(docID);
-			
+
 			// TODO: error in doc 132954, sentence 2675998
 
     		// skip sentence if we don't have a tree annotation for it
-			
+
 			System.out.println(docID);
-			
+
 			for (Annotator annotator : annotators) {
 				//System.out.println(annotator.getClass().getName());
 				try {
-					annotator.annotate(annotation);					
+					annotator.annotate(annotation);
 					//core.annotate(annotation);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -194,11 +171,11 @@ public class Chunk2 {
 				}
 			}
 			//System.out.println("done");
-			
-			
+
+
 			// write to disk
 			try {
-				List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);				
+				List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
 		        Map<Integer, CorefChain> corefChains =
 		            annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
 		        if (corefChains != null) {
@@ -208,12 +185,11 @@ public class Chunk2 {
 		            for (CorefChain chain : corefChains.values()) {
 		            	CorefChain.CorefMention representative =
 			                chain.getRepresentativeMention();
-			            boolean outputHeading = false;
 			            for (CorefChain.CorefMention mention : chain.getMentionsInTextualOrder()) {
 			            	// docID corefClusterID mentionID sentenceID sentNum startIndex endIndex headIndex
 			            	// position mentionSpan mentionType number gender animacy representative
 			            	w1.write(docID + "\t" + mention.corefClusterID + "\t");
-			            	w1.write(mention.mentionID + "\t" + 
+			            	w1.write(mention.mentionID + "\t" +
 			            			sentences.get(mention.sentNum-1).
 			            				get(ReadrCoreAnnotations.SentenceIDAnnotation.class) + "\t" +
 			            			mention.sentNum + "\t" + mention.startIndex + "\t");
@@ -225,7 +201,7 @@ public class Chunk2 {
 		        }
 		        /*
 		        if (corefChains != null && sentences != null) {
-		            /* -- still need to figure out how to serialize -- 
+		            /* -- still need to figure out how to serialize --
 		        	List<List<CoreLabel>> sents = new ArrayList<List<CoreLabel>>();
 		            for (CoreMap sentence : sentences) {
 		              List<CoreLabel> tokens =
@@ -262,27 +238,27 @@ public class Chunk2 {
 		          os.flush();
 		        }
 		          */
-		        
+
 			} catch (Exception e) { throw new RuntimeException(e); } //throw new RuntimeException("unable to find words/tokens in: " + annotation); }
 		}
 		c.close();
 		w1.close();
 	}
-     
-    
+
+
     // in wex, articleID is 3rd in sentences.meta
     // in nyt, articleID is 2nd in sentences.articleIDs
 	static class AnnotationCreator {
 		BufferedReader r;
 		String nextLine = null;
-		
+
 		AnnotationCreator(String file) {
 			try {
 				r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"));
 				nextLine = r.readLine();
 			} catch (Exception e) { throw new RuntimeException(e); }
 		}
-		
+
 		public Annotation next() {
 			try {
 				if (nextLine == null) return null;
@@ -290,9 +266,8 @@ public class Chunk2 {
 				int articleID = Integer.parseInt(c[1]);
 				List<Integer> li = new ArrayList<Integer>();
 				li.add(Integer.parseInt(c[0]));
-				int id;
 				while ((nextLine = r.readLine()) != null &&
-					(id = Integer.parseInt((c = nextLine.split("\t"))[1])) == articleID) {
+					(Integer.parseInt((c = nextLine.split("\t"))[1])) == articleID) {
 					int sentenceID = Integer.parseInt(c[0]);
 					if (ignoreSentences.contains(sentenceID)) continue;
 					li.add(sentenceID);
@@ -303,24 +278,25 @@ public class Chunk2 {
 				return annotation;
 			} catch (Exception e) { throw new RuntimeException(e); }
 		}
-		
+
 		public void close() throws IOException {
 			r.close();
 		}
 	}
-	
+
 	static class DebugAnnotator implements Annotator {
+		@Override
 		public void annotate(Annotation annotation) {
     		List<Integer> li = annotation.get(ReadrCoreAnnotations.SentenceIDsAnnotation.class);
-		
-    		for (int id : li) 
+
+    		for (int id : li)
     			if (ignoreSentences.contains(id))
     				System.out.println(id);
-    		
+
 		}
 	}
-	
-	
+
+
     static class PseudoTextAnnotator implements Annotator {
     	private BufferedReader r1;
     	private BufferedReader r2;
@@ -334,8 +310,9 @@ public class Chunk2 {
 	    		r3 = new BufferedReader(new InputStreamReader(new FileInputStream(file3), "utf-8"));
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
-    	public void annotate(Annotation annotation) {
+
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	    		List<Integer> li = annotation.get(ReadrCoreAnnotations.SentenceIDsAnnotation.class);
 	    		StringBuilder sb = new StringBuilder();
@@ -345,12 +322,12 @@ public class Chunk2 {
 	            List<CoreMap> sentences = new ArrayList<CoreMap>();
         		//while ((sentenceID1 = Integer.parseInt(r1.readLine().split("\t")[0])) < li.get(0)
 
-	            
+
 	    		for (int i=0; i < li.size(); i++) {
 	    			int sentenceID = li.get(i);
-	    			
+
 	    			if (ignoreSentences.contains(sentenceID)) continue;
-	    			
+
 	    			String l1, l2, l3;
 	    			String[] c1, c2, c3;
 	    			int sentenceID1, sentenceID2, sentenceID3;
@@ -361,7 +338,7 @@ public class Chunk2 {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	        		
+
 	        		do {
 		        		l2 = r2.readLine();
 		        		c2 = l2.split("\t");
@@ -369,7 +346,7 @@ public class Chunk2 {
 	        		} while (sentenceID2 < sentenceID);
 	        		if (sentenceID != sentenceID2)
 	        			throw new RuntimeException("not aligned");
-	        		
+
 	        		do {
 		        		l3 = r3.readLine();
 		        		c3 = l3.split("\t");
@@ -377,14 +354,14 @@ public class Chunk2 {
 	        		} while (sentenceID3 < sentenceID);
 	        		if (sentenceID != sentenceID3)
 	        			throw new RuntimeException("not aligned");
-	
+
 	        		// convert sentence tokens
 	        		String[] t2 = c2[1].split(" ");
 	        		String[] t3 = c3[1].split(" ");
 	        		if (t2.length != t3.length) {
 	        			for (int j=0; j < t2.length; j++)
 	        				System.out.println(j + ": " + t2[j]);
-	        			
+
 	        			throw new RuntimeException("number of tokens mismatch for " + sentenceID1 + " " + t2.length + " != " + t3.length);
 	        		}
 	        		List<CoreLabel> sentenceTokens = new ArrayList<CoreLabel>(t2.length);
@@ -404,20 +381,20 @@ public class Chunk2 {
 		        		sentenceTokens.add(cl);
 	        		}
 	        		tokens.addAll(sentenceTokens);
-	        		
+
 	                if (sentenceTokens.size() == 0) {
 	                  throw new RuntimeException("unexpected empty sentence: " + sentenceTokens);
 	                }
-	
+
 	                  // get the sentence text from the first and last character offsets
 	                int begin = sentenceTokens.get(0).get(CharacterOffsetBeginAnnotation.class);
 	                int last = sentenceTokens.size() - 1;
 	                int end = sentenceTokens.get(last).get(CharacterOffsetEndAnnotation.class);
-	                
+
 	                sb.append(c1[1]);
 	                sb.append(" ");
 	                String sentenceText = c1[1]; //text.substring(begin, end);
-	
+
 	                // create a sentence annotation with text and token offsets
 	                Annotation sentence = new Annotation(sentenceText);
 	                sentence.set(ReadrCoreAnnotations.SentenceIDAnnotation.class, sentenceID1);
@@ -430,15 +407,15 @@ public class Chunk2 {
 	                // add the sentence to the list
 	                sentences.add(sentence);
 	            }
-	    		
+
 	    		annotation.set(CoreAnnotations.SentencesAnnotation.class, sentences);
 	    		annotation.set(CoreAnnotations.TokensAnnotation.class, tokens);
-	    		
+
 	    		//printDocument(annotation);
-	    		
+
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     		r2.close();
@@ -455,15 +432,16 @@ public class Chunk2 {
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
 
-    	public void annotate(Annotation annotation) {
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	            for (CoreMap sentence: annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
 	            	int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-	            	
+
 	    			String l1;
 	    			String[] c1;
 	    			int sentenceID1;
-	    			
+
 	    			if (ignoreSentences.contains(sentenceID)) continue;
 	    			do {
 		        		l1 = r1.readLine();
@@ -472,7 +450,7 @@ public class Chunk2 {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	        		
+
 	        		//if (c1.length > 1) {
 	        			String strTree = c1[1];
 		            	Tree tree = Trees.readTree(strTree);
@@ -481,22 +459,23 @@ public class Chunk2 {
 	            }
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     	}
     }
-    
+
     static class PseudoLemmaAnnotator implements Annotator {
     	private BufferedReader r1;
-    	
+
     	PseudoLemmaAnnotator(String file1) {
     		try {
     			r1 = new BufferedReader(new InputStreamReader(new FileInputStream(file1), "utf-8"));
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
-    	public void annotate(Annotation annotation) {
+
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	            for (CoreMap sentence: annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
 	            	int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
@@ -513,31 +492,32 @@ public class Chunk2 {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	            	
+
 		        	List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
 		        	String[] ls = c1[1].split(" ");
 		        	for (int i=0; i < ls.length; i++)
 		        		tokens.get(i).set(LemmaAnnotation.class, ls[i]);
 	            }
-    			
+
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     	}
     }
-    
+
     static class PseudoNerAnnotator implements Annotator {
     	private BufferedReader r1;
-    	
+
     	PseudoNerAnnotator(String file1) {
     		try {
     			r1 = new BufferedReader(new InputStreamReader(new FileInputStream(file1), "utf-8"));
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
-    	public void annotate(Annotation annotation) {
+
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	            for (CoreMap sentence: annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
 	            	int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
@@ -554,36 +534,37 @@ public class Chunk2 {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	            	
+
 		        	List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
 		        	String[] ls = c1[1].split(" ");
-		        	
+
 		        	for (int i=0; i < ls.length; i++)
 		        		tokens.get(i).set(NamedEntityTagAnnotation.class, ls[i]);
 	            }
-    			
+
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     	}
     }
-    
+
     static class PseudoPosAnnotator implements Annotator {
     	private BufferedReader r1;
-    	
+
     	PseudoPosAnnotator(String file1) {
     		try {
     			r1 = new BufferedReader(new InputStreamReader(new FileInputStream(file1), "utf-8"));
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
-    	public void annotate(Annotation annotation) {
+
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	            for (CoreMap sentence: annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
 	            	int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-	            	
+
 	            	if (ignoreSentences.contains(sentenceID)) continue;
 
 	            	String l1;
@@ -596,21 +577,21 @@ public class Chunk2 {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	            	
+
 		        	List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
 		        	String[] ls = c1[1].split(" ");
 		        	for (int i=0; i < ls.length; i++)
 		        		tokens.get(i).set(PartOfSpeechAnnotation.class, ls[i]);
 	            }
-    			
+
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     	}
     }
-    
+
     /*
     // copy/pasted from StanfordCoreNLP
     private static synchronized AnnotatorPool getDefaultAnnotatorPool(final Properties props) {
@@ -778,7 +759,7 @@ public class Chunk2 {
               boolean parserDebug =
                 PropertiesUtils.hasProperty(props, "parser.debug");
               String parserFlags = props.getProperty("parser.flags");
-              String[] parserFlagList = 
+              String[] parserFlagList =
                 ParserAnnotator.convertFlagsToArray(parserFlags);
               ParserAnnotator anno = new ParserAnnotator(parserPath, parserDebug,
                                                          maxLen, parserFlagList);
@@ -812,38 +793,28 @@ public class Chunk2 {
             return new DeterministicCorefAnnotator(props);
           }
         });
-        
+
         return pool;
     }
     */
-    
+
     static class ReadrCoreAnnotations {
     	public static class DocIDAnnotation implements CoreAnnotation<Integer> {
-    		public Class<Integer> getType() {
+    		@Override
+			public Class<Integer> getType() {
     			return Integer.class;
     		}
     	}
     	public static class SentenceIDsAnnotation implements CoreAnnotation<List<Integer>> {
-    		public Class<List<Integer>> getType() {
+    		@Override
+			public Class<List<Integer>> getType() {
     			return ErasureUtils.<Class<List<Integer>>> uncheckedCast(List.class);
     		}
     	}
     	public static class SentenceIDAnnotation implements CoreAnnotation<Integer> {
-    		public Class<Integer> getType() {
+    		@Override
+			public Class<Integer> getType() {
     			return Integer.class;
-    		}
-    	}
-    }
-    
-    private static void printDocument(Annotation annotation) {
-		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
-    	for (CoreMap sentence : sentences) {
-    		int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-    		System.out.print(sentenceID + "");
-    		
-    		List<CoreLabel> tokens = annotation.get(CoreAnnotations.TokensAnnotation.class);
-    		for (int i=0; i < tokens.size() ;i++) {
-    			System.out.println(i + " : " + tokens.get(i).value());
     		}
     	}
     }

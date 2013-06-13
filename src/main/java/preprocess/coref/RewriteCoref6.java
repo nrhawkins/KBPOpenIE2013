@@ -9,7 +9,6 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -27,15 +26,15 @@ public class RewriteCoref6 {
 //	static String out2 = "/projects/pardosa/data15/raphaelh/readr2exp/nythalfd_test/sentences.stanfordcoref.proper";
 
 	// COLUMNS: mentionID, sentenceID, headPos, repKey
-	
+
 	public static void main(String[] args) throws IOException {
 		plan1();
-		
+
 	}
 	/*
 	public static void old() throws IOException {
 		// read blocks of coreferences (chains) and determine the most representative of each
-		
+
 //		BufferedWriter w1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out1)));
 //		BufferedWriter w2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out2)));
 		BufferedReader r = new BufferedReader(new InputStreamReader(new FileInputStream(in)));
@@ -44,7 +43,7 @@ public class RewriteCoref6 {
 		while ((l = r.readLine())!= null) {
 			String[] c = l.split("\t");
 			// same document and same chain
-			if (block.isEmpty() || 
+			if (block.isEmpty() ||
 					(block.get(0)[0].equals(c[0]) && block.get(0)[1].equals(c[1]))) {
 				block.add(c);
 			} else {
@@ -60,10 +59,10 @@ public class RewriteCoref6 {
 //		w1.close();
 //		w2.close();
 	}
-	
+
 	static int mentionID = 0;
 	//static int chain = 0;
-	
+
 	// docID corefClusterID mentionID sentenceID sentNum start end headIndex position mentionSpan mentionType number gender animacy isRepresentative
 
 //	in[8].setInt(0, ); //mentionID
@@ -78,9 +77,9 @@ public class RewriteCoref6 {
 	private static void process(List<String[]> block) throws IOException {
 		String[] rep = null;
 		//int repStartPos=-1, repEndPos=-1, repHeadPos=-1;
-		
+
 		for (int j=0; j < block.size(); j++)
-			if (block.get(j)[14].equals("true")) { 
+			if (block.get(j)[14].equals("true")) {
 				//repID = mentionID + j;
 				rep = block.get(j);
 				//repStartPos = Integer.parseInt(rep[5]) - 1;
@@ -90,35 +89,35 @@ public class RewriteCoref6 {
 
 		System.out.println("-----------");
 		for (int j=0; j < block.size(); j++) {
-			if (block.get(j)[14].equals("true")) 
+			if (block.get(j)[14].equals("true"))
 				System.out.print("*** ");
 			if (block.get(j)[10].equals("PROPER"))
 				System.out.print("PROPER ");
 			System.out.println(block.get(j)[9]);
 		}
 	}
-	
+
 	/*
-	private static void process(List<String[]> block, BufferedWriter w1, 
+	private static void process(List<String[]> block, BufferedWriter w1,
 			BufferedWriter w2) throws IOException {
 		int repID = -1;
 		//int representativeSentenceID = -1;
-		//int 
+		//int
 		String[] rep = null;
 		int repStartPos=-1, repEndPos=-1, repHeadPos=-1;
-		
+
 		for (int j=0; j < block.size(); j++)
-			if (block.get(j)[14].equals("true")) { 
+			if (block.get(j)[14].equals("true")) {
 				repID = mentionID + j;
 				rep = block.get(j);
 				repStartPos = Integer.parseInt(rep[5]) - 1;
 				repEndPos = Integer.parseInt(rep[6]) - 1;
 				repHeadPos = Integer.parseInt(rep[7]) - 1;
 			}
-		
+
 		// if it is not proper, ignore
 		//if (!representativeMention[10].equals("PROPER")) return;
-						
+
 		// find shortest mention with same head
 		for (int j=0; j < block.size(); j++) {
 			String[] c = block.get(j);
@@ -134,39 +133,39 @@ public class RewriteCoref6 {
 				repHeadPos = Integer.parseInt(rep[7]) - 1;
 			}
 		}
-				
+
 		for (String[] c : block) {
 			int sentenceID = Integer.parseInt(c[3]);
 			int startPos = Integer.parseInt(c[5]) - 1;
 			int endPos = Integer.parseInt(c[6]) - 1;
-			int headPos = Integer.parseInt(c[7]) - 1;			
+			int headPos = Integer.parseInt(c[7]) - 1;
 			String mentionSpan = rep[9];
 			String mentionType = rep[10];
 			String number = rep[11].charAt(0) + "";
 			String gender = rep[12].charAt(0) + "";
 			String animacity = rep[13].charAt(0) + "";
 			String repKey = mentionSpan +"|" + mentionType + "|"+ number + "|" + gender + "|" + animacity;
-			
-			w1.write(mentionID + "\t" + sentenceID + "\t" + startPos + "\t" + endPos + "\t" + headPos + "\t" + 
-					repID + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n"); //"\t" + repKey + "\n"); //mentionSpan + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n");			
-			
+
+			w1.write(mentionID + "\t" + sentenceID + "\t" + startPos + "\t" + endPos + "\t" + headPos + "\t" +
+					repID + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n"); //"\t" + repKey + "\n"); //mentionSpan + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n");
+
 			if (mentionType.equals("PROPER"))
 				w2.write(mentionID + "\t" + sentenceID + "\t" + headPos + "\t" + repKey + "\n");
-			
+
 			mentionID++;
 		}
-		
+
 		//chain++;
 	}
 	*/
-	
+
 	// Plan:
 	//   1. prefer mention spans with NNP (and maybe IN inside)
 	//   2. prefer mention spans with overlap with Stanford NER
 	//   3. try increasing recall by allowing all propers/ all great propers as names
-	
+
 	static int mentionID = 0;
-	
+
 	private static void plan1() throws IOException
 	{
 		BufferedWriter w1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out1)));
@@ -178,7 +177,7 @@ public class RewriteCoref6 {
 		String lastCorefArticle = "";
 		String lastCorefChain = "";
 		List<Line> lastCorefBlock = new ArrayList<Line>();
-		
+
 		String l1 = r1.readLine(), l2 = r2.readLine(), l3 = null;
 		int lastArticleID = -1;
 		Map<Integer,String[]> lastArticleSentences = new HashMap<Integer,String[]>();
@@ -209,7 +208,7 @@ public class RewriteCoref6 {
 				}
 				lastArticleID = articleID;
 			}
-			
+
 			// augment and blockify
 			// here we have all article sentences and can process them
 			if (!c3[0].equals(lastCorefArticle) || !c3[1].equals(lastCorefChain)) {
@@ -218,7 +217,7 @@ public class RewriteCoref6 {
 				//System.out.println("----------");
 			}
 			lastCorefArticle = c3[0];
-			lastCorefChain = c3[1];			
+			lastCorefChain = c3[1];
 
 			String[] tags = lastArticleSentences.get(Integer.parseInt(c3[3]));
 			int startPos = Integer.parseInt(c3[5]) - 1;
@@ -226,24 +225,24 @@ public class RewriteCoref6 {
 			boolean satisfied = true;
 			for (int i=startPos; i < endPos; i++)
 				if (tags[i] == null) satisfied = false;
-			
+
 			// want to drop determiner at beginning and possessive 's at end
 			String name = c3[9];
 			if (name.startsWith("the ")) name = name.substring(4);
 			if (startPos == 0 && name.startsWith("The ")) name = name.substring(4);
 			if (name.endsWith(" 's")) name = name.substring(0, name.length()-3);
-			
-			
-			//if (c3[14].equals("true")) 
+
+
+			//if (c3[14].equals("true"))
 			//	System.out.print("*** ");
 			//if (satisfied)
-			//	System.out.print("GREAT ");			
+			//	System.out.print("GREAT ");
 			//if (c3[10].equals("PROPER"))
 			//	System.out.print("PROPER ");
 			//System.out.println(name);
-			
+
 			// write single best mentionSpan for block: GREAT PROPER, then PROPER, ...
-			Line l = new Line();			
+			Line l = new Line();
 			l.c3 = c3;
 			l.name = name;
 			l.great = satisfied;
@@ -264,13 +263,13 @@ public class RewriteCoref6 {
 		w2.close();
 		w3.close();
 	}
-	
+
 	static class Line {
 		String[] c3;
 		boolean great;
 		boolean proper;
 		String name;
-		
+
 		int mentionID;
 		int startPos;
 		int endPos;
@@ -282,10 +281,10 @@ public class RewriteCoref6 {
 		String gender;
 		String animacity;
 	}
-	
+
 	//static HashSet<Integer> repWritten = new HashSet<Integer>();
-	
-	static void process(List<Line> block, BufferedWriter w1, 
+
+	static void process(List<Line> block, BufferedWriter w1,
 			BufferedWriter w2, BufferedWriter w3) throws IOException {
 		Line rep = null;
 		for (int j=0; j < block.size(); j++) {
@@ -302,17 +301,17 @@ public class RewriteCoref6 {
 				rep = cur;
 			}
 		}
-		
-		String repKey = rep.name +"|" + rep.mentionType + "|"+ 
+
+		String repKey = rep.name +"|" + rep.mentionType + "|"+
 			rep.number.charAt(0) + "|" + rep.gender.charAt(0) + "|" + rep.animacity.charAt(0);
 
 		for (Line c : block) {
-			w1.write(mentionID + "\t" + c.sentenceID + "\t" + c.headPos + "\t" + c.startPos + "\t" + c.endPos + "\t" +  
-					rep.mentionID + "\t" + c.mentionType + "\t" + c.number + "\t" + c.gender + "\t" + c.animacity + "\n"); //"\t" + repKey + "\n"); //mentionSpan + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n");			
-			
+			w1.write(mentionID + "\t" + c.sentenceID + "\t" + c.headPos + "\t" + c.startPos + "\t" + c.endPos + "\t" +
+					rep.mentionID + "\t" + c.mentionType + "\t" + c.number + "\t" + c.gender + "\t" + c.animacity + "\n"); //"\t" + repKey + "\n"); //mentionSpan + "\t" + mentionType + "\t" + number + "\t" + gender + "\t" + animacity + "\n");
+
 			if (rep.mentionType.equals("PROPER"))
 				w2.write(mentionID + "\t" + c.sentenceID + "\t" + c.headPos + "\t" + repKey + "\n");
-			
+
 			mentionID++;
 		}
 
@@ -320,8 +319,8 @@ public class RewriteCoref6 {
 			w3.write(rep.mentionID + "\t" + rep.name + "\n");
 
 		//chain++;
-		
+
 	}
-	
+
 }
 

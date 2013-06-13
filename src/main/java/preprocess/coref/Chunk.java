@@ -16,15 +16,12 @@ import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetBeginAnnotation;
-import edu.stanford.nlp.ling.CoreAnnotations.CharacterOffsetEndAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.LemmaAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.PartOfSpeechAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.Annotator;
-import edu.stanford.nlp.pipeline.AnnotatorPool;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
@@ -61,8 +58,6 @@ public class Chunk {
 	static String out3 = outDir + "/sentences.stanfordner";
 	static String out4 = outDir + "/sentences.stanfordcoref";
 	static String out5 = outDir + "/sentences.errors";
-
-	private static AnnotatorPool pool = null;
 
 	public static void main(String[] args) throws Exception {
 		// String sfx = args[0];
@@ -189,7 +184,7 @@ public class Chunk {
 					 * sentence.get(CoreAnnotations.TokensAnnotation.class);
 					 * sents.add(tokens);
 					 * }
-					 * 
+					 *
 					 * for (CorefChain chain : corefChains.values()) {
 					 * CorefChain.CorefMention representative =
 					 * chain.getRepresentativeMention();
@@ -216,7 +211,7 @@ public class Chunk {
 					 * }
 					 * }
 					 * }
-					 * 
+					 *
 					 * os.flush();
 					 */
 				}
@@ -258,9 +253,8 @@ public class Chunk {
 				int articleID = Integer.parseInt(c[1]);
 				List<Integer> li = new ArrayList<Integer>();
 				li.add(Integer.parseInt(c[0]));
-				int id;
 				while ((nextLine = r.readLine()) != null
-						&& (id = Integer
+						&& (Integer
 								.parseInt((c = nextLine.split("\t"))[1])) == articleID)
 					li.add(Integer.parseInt(c[0]));
 				Annotation annotation = new Annotation("");
@@ -278,7 +272,7 @@ public class Chunk {
 			r.close();
 		}
 	}
-	
+
 	static class PseudoParseAnnotator implements Annotator {
 		private BufferedReader r1;
 
@@ -291,6 +285,7 @@ public class Chunk {
 			}
 		}
 
+		@Override
 		public void annotate(Annotation annotation) {
 			try {
 				for (CoreMap sentence : annotation
@@ -324,6 +319,7 @@ public class Chunk {
 
 	static class ReadrCoreAnnotations {
 		public static class DocIDAnnotation implements CoreAnnotation<Integer> {
+			@Override
 			public Class<Integer> getType() {
 				return Integer.class;
 			}
@@ -331,6 +327,7 @@ public class Chunk {
 
 		public static class SentenceIDsAnnotation implements
 				CoreAnnotation<List<Integer>> {
+			@Override
 			public Class<List<Integer>> getType() {
 				return ErasureUtils
 						.<Class<List<Integer>>> uncheckedCast(List.class);
@@ -339,24 +336,9 @@ public class Chunk {
 
 		public static class SentenceIDAnnotation implements
 				CoreAnnotation<Integer> {
+			@Override
 			public Class<Integer> getType() {
 				return Integer.class;
-			}
-		}
-	}
-
-	private static void printDocument(Annotation annotation) {
-		List<CoreMap> sentences = annotation
-				.get(CoreAnnotations.SentencesAnnotation.class);
-		for (CoreMap sentence : sentences) {
-			int sentenceID = sentence
-					.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-			System.out.print(sentenceID + "");
-
-			List<CoreLabel> tokens = annotation
-					.get(CoreAnnotations.TokensAnnotation.class);
-			for (int i = 0; i < tokens.size(); i++) {
-				System.out.println(i + " : " + tokens.get(i).value());
 			}
 		}
 	}

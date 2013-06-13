@@ -50,7 +50,7 @@ public class Test {
 	static final String out4 = dir + "/sentences.stanfordcorefXX";
 
 	//private static AnnotatorPool pool = null;
-	
+
 	public static void main(String[] args) throws Exception {
 		Properties props = new Properties();
 		//props.setProperty("annotators", "readrtext,pos,lemma,ner"); //,lemma,ner,dcoref"); //readrparse");
@@ -65,7 +65,7 @@ public class Test {
 
 		/*
 		AnnotatorPool pool = getDefaultAnnotatorPool(props);
-		
+
 		pool.register("readrtext", new AnnotatorFactory(props) {
 		      private static final long serialVersionUID = 1L;
 		      @Override
@@ -77,7 +77,7 @@ public class Test {
 		      public String signature() {
 		    	  return null;
 		      }
-	    }); 
+	    });
 		pool.register("readrparse", new Factory<Annotator>() {
 			private static final long serialVersionUID = 1L;
 			public PseudoParseAnnotator create() {
@@ -85,23 +85,23 @@ public class Test {
 			}
 		});
 		*/
-		
+
 		BufferedWriter w1 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out1), "utf-8"));
 		BufferedWriter w2 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out2), "utf-8"));
 		BufferedWriter w3 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out3), "utf-8"));
 		BufferedWriter w4 = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(out4), "utf-8"));
-		
+
 		AnnotationCreator c = new AnnotationCreator(in1);
 		Annotation annotation = null;
 		while ((annotation = c.next()) != null) {
 			int docID = annotation.get(ReadrCoreAnnotations.DocIDAnnotation.class);
 			if (docID % 1000 == 0) System.out.println("annotating doc " + docID);
-			
+
 			//if (docID < 132000) continue;
 			if (docID < 132954) continue;
-			
+
 			System.out.println(docID);
-			
+
 			// TODO: error in doc 132954, sentence 2675998
 
 			try {
@@ -110,24 +110,24 @@ public class Test {
 				e.printStackTrace();
 				// ignore error
 			}
-			
-			
+
+
 			// write to disk
 			try {
 				List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
 		        for (CoreMap sentence : sentences) {
-					int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);					
+					int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
 		        	List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
-		        	
+
 		        	// write pos
 		        	w1.write(sentenceID + "");
 		        	w1.write("\t");
 		        	for (int i=0; i < tokens.size(); i++) {
 		        		if (i > 0) w1.write(" ");
-		        		w1.write(tokens.get(i).get(PartOfSpeechAnnotation.class));		        		
+		        		w1.write(tokens.get(i).get(PartOfSpeechAnnotation.class));
 		        	}
 		        	w1.write("\n");
-		        	
+
 		        	// write lemma
 		        	w2.write(sentenceID + "");
 		        	w2.write("\t");
@@ -136,23 +136,23 @@ public class Test {
 		        		w2.write(tokens.get(i).get(LemmaAnnotation.class));
 		        	}
 		        	w2.write("\n");
-		        	
+
 		        	// write ner
 		        	w3.write(sentenceID + "");
 		        	w3.write("\t");
 		        	for (int i=0; i < tokens.size(); i++) {
 		        		if (i > 0) w3.write(" ");
-		        		String ner = tokens.get(i).get(NamedEntityTagAnnotation.class); 
+		        		String ner = tokens.get(i).get(NamedEntityTagAnnotation.class);
 		        		if (ner == null) break;
 		        		w3.write(ner);
 		        	}
 		        	w3.write("\n");
 		        }
-		        
+
 		        Map<Integer, CorefChain> corefChains =
 		            annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
 		        if (corefChains != null && sentences != null) {
-		            /* -- still need to figure out how to serialize -- 
+		            /* -- still need to figure out how to serialize --
 		        	List<List<CoreLabel>> sents = new ArrayList<List<CoreLabel>>();
 		            for (CoreMap sentence : sentences) {
 		              List<CoreLabel> tokens =
@@ -189,7 +189,7 @@ public class Test {
 		          os.flush();
 		          */
 		        }
-		        
+
 			} catch (Exception e) { throw new RuntimeException(e); } //throw new RuntimeException("unable to find words/tokens in: " + annotation); }
 		}
 		c.close();
@@ -198,21 +198,21 @@ public class Test {
 		w3.close();
 		w4.close();
 	}
-     
-    
+
+
     // in wex, articleID is 3rd in sentences.meta
     // in nyt, articleID is 2nd in sentences.articleIDs
 	static class AnnotationCreator {
 		BufferedReader r;
 		String nextLine = null;
-		
+
 		AnnotationCreator(String file) {
 			try {
 				r = new BufferedReader(new InputStreamReader(new FileInputStream(file), "utf-8"));
 				nextLine = r.readLine();
 			} catch (Exception e) { throw new RuntimeException(e); }
 		}
-		
+
 		public Annotation next() {
 			try {
 				if (nextLine == null) return null;
@@ -220,9 +220,8 @@ public class Test {
 				int articleID = Integer.parseInt(c[1]);
 				List<Integer> li = new ArrayList<Integer>();
 				li.add(Integer.parseInt(c[0]));
-				int id;
 				while ((nextLine = r.readLine()) != null &&
-					(id = Integer.parseInt((c = nextLine.split("\t"))[1])) == articleID)
+					(Integer.parseInt((c = nextLine.split("\t"))[1])) == articleID)
 					li.add(Integer.parseInt(c[0]));
 				Annotation annotation = new Annotation("");
 				annotation.set(ReadrCoreAnnotations.DocIDAnnotation.class, articleID);
@@ -230,12 +229,12 @@ public class Test {
 				return annotation;
 			} catch (Exception e) { throw new RuntimeException(e); }
 		}
-		
+
 		public void close() throws IOException {
 			r.close();
 		}
 	}
-	
+
     static class PseudoTextAnnotator implements Annotator {
     	private BufferedReader r1;
     	private BufferedReader r2;
@@ -249,8 +248,9 @@ public class Test {
 	    		r3 = new BufferedReader(new InputStreamReader(new FileInputStream(file3), "utf-8"));
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
-    	public void annotate(Annotation annotation) {
+
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	    		List<Integer> li = annotation.get(ReadrCoreAnnotations.SentenceIDsAnnotation.class);
 	    		StringBuilder sb = new StringBuilder();
@@ -260,10 +260,10 @@ public class Test {
 	            List<CoreMap> sentences = new ArrayList<CoreMap>();
         		//while ((sentenceID1 = Integer.parseInt(r1.readLine().split("\t")[0])) < li.get(0)
 
-	            
+
 	    		for (int i=0; i < li.size(); i++) {
 	    			int sentenceID = li.get(i);
-	    			
+
 	    			String l1, l2, l3;
 	    			String[] c1, c2, c3;
 	    			int sentenceID1, sentenceID2, sentenceID3;
@@ -274,7 +274,7 @@ public class Test {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	        		
+
 	        		do {
 		        		l2 = r2.readLine();
 		        		c2 = l2.split("\t");
@@ -282,7 +282,7 @@ public class Test {
 	        		} while (sentenceID2 < sentenceID);
 	        		if (sentenceID != sentenceID2)
 	        			throw new RuntimeException("not aligned");
-	        		
+
 	        		do {
 		        		l3 = r3.readLine();
 		        		c3 = l3.split("\t");
@@ -290,14 +290,14 @@ public class Test {
 	        		} while (sentenceID3 < sentenceID);
 	        		if (sentenceID != sentenceID3)
 	        			throw new RuntimeException("not aligned");
-	
+
 	        		// convert sentence tokens
 	        		String[] t2 = c2[1].split(" ");
 	        		String[] t3 = c3[1].split(" ");
 	        		if (t2.length != t3.length) {
 	        			for (int j=0; j < t2.length; j++)
 	        				System.out.println(j + ": " + t2[j]);
-	        			
+
 	        			throw new RuntimeException("number of tokens mismatch for " + sentenceID1 + " " + t2.length + " != " + t3.length);
 	        		}
 	        		List<CoreLabel> sentenceTokens = new ArrayList<CoreLabel>(t2.length);
@@ -317,20 +317,20 @@ public class Test {
 		        		sentenceTokens.add(cl);
 	        		}
 	        		tokens.addAll(sentenceTokens);
-	        		
+
 	                if (sentenceTokens.size() == 0) {
 	                  throw new RuntimeException("unexpected empty sentence: " + sentenceTokens);
 	                }
-	
+
 	                  // get the sentence text from the first and last character offsets
 	                int begin = sentenceTokens.get(0).get(CharacterOffsetBeginAnnotation.class);
 	                int last = sentenceTokens.size() - 1;
 	                int end = sentenceTokens.get(last).get(CharacterOffsetEndAnnotation.class);
-	                
+
 	                sb.append(c1[1]);
 	                sb.append(" ");
 	                String sentenceText = c1[1]; //text.substring(begin, end);
-	
+
 	                // create a sentence annotation with text and token offsets
 	                Annotation sentence = new Annotation(sentenceText);
 	                sentence.set(ReadrCoreAnnotations.SentenceIDAnnotation.class, sentenceID1);
@@ -343,15 +343,15 @@ public class Test {
 	                // add the sentence to the list
 	                sentences.add(sentence);
 	            }
-	    		
+
 	    		annotation.set(CoreAnnotations.SentencesAnnotation.class, sentences);
 	    		annotation.set(CoreAnnotations.TokensAnnotation.class, tokens);
-	    		
+
 	    		//printDocument(annotation);
-	    		
+
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     		r2.close();
@@ -368,11 +368,12 @@ public class Test {
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
 
-    	public void annotate(Annotation annotation) {
+    	@Override
+		public void annotate(Annotation annotation) {
     		try {
 	            for (CoreMap sentence: annotation.get(CoreAnnotations.SentencesAnnotation.class)) {
 	            	int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-	            	
+
 	    			String l1;
 	    			String[] c1;
 	    			int sentenceID1;
@@ -383,18 +384,18 @@ public class Test {
 	    			} while (sentenceID1 < sentenceID);
 	        		if (sentenceID != sentenceID1)
 	        			throw new RuntimeException("not aligned");
-	            	
+
 	            	Tree tree = Trees.readTree(c1[1]);
 	            	sentence.set(TreeAnnotation.class, tree);
 	            }
     		} catch (Exception e) { throw new RuntimeException(e); }
     	}
-    	
+
     	public void close() throws IOException {
     		r1.close();
     	}
     }
-    
+
     /*
     // copy/pasted from StanfordCoreNLP
     private static synchronized AnnotatorPool getDefaultAnnotatorPool(final Properties props) {
@@ -562,7 +563,7 @@ public class Test {
               boolean parserDebug =
                 PropertiesUtils.hasProperty(props, "parser.debug");
               String parserFlags = props.getProperty("parser.flags");
-              String[] parserFlagList = 
+              String[] parserFlagList =
                 ParserAnnotator.convertFlagsToArray(parserFlags);
               ParserAnnotator anno = new ParserAnnotator(parserPath, parserDebug,
                                                          maxLen, parserFlagList);
@@ -596,38 +597,28 @@ public class Test {
             return new DeterministicCorefAnnotator(props);
           }
         });
-        
+
         return pool;
     }
-    */   
-    
+    */
+
     static class ReadrCoreAnnotations {
     	public static class DocIDAnnotation implements CoreAnnotation<Integer> {
-    		public Class<Integer> getType() {
+    		@Override
+			public Class<Integer> getType() {
     			return Integer.class;
     		}
     	}
     	public static class SentenceIDsAnnotation implements CoreAnnotation<List<Integer>> {
-    		public Class<List<Integer>> getType() {
+    		@Override
+			public Class<List<Integer>> getType() {
     			return ErasureUtils.<Class<List<Integer>>> uncheckedCast(List.class);
     		}
     	}
     	public static class SentenceIDAnnotation implements CoreAnnotation<Integer> {
-    		public Class<Integer> getType() {
+    		@Override
+			public Class<Integer> getType() {
     			return Integer.class;
-    		}
-    	}
-    }
-    
-    private static void printDocument(Annotation annotation) {
-		List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
-    	for (CoreMap sentence : sentences) {
-    		int sentenceID = sentence.get(ReadrCoreAnnotations.SentenceIDAnnotation.class);
-    		System.out.print(sentenceID + "");
-    		
-    		List<CoreLabel> tokens = annotation.get(CoreAnnotations.TokensAnnotation.class);
-    		for (int i=0; i < tokens.size() ;i++) {
-    			System.out.println(i + " : " + tokens.get(i).value());
     		}
     	}
     }

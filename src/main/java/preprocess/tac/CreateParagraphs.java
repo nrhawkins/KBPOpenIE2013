@@ -16,9 +16,9 @@ public class CreateParagraphs {
 	static String in = dir + "/data/source_10wb";
 	static String out1 = dir + "/data/10wb/paragraphs.text";
 	static String out2 = dir + "/data/10wb/paragraphs.meta";
-	
+
 	public static void main(String[] args) throws IOException {
-		
+
 		BufferedWriter w1 = new BufferedWriter(new OutputStreamWriter
 				(new FileOutputStream(out1), "utf-8"));
 		BufferedWriter w2 = new BufferedWriter(new OutputStreamWriter
@@ -38,5 +38,5 @@ public class CreateParagraphs {
 		w1.close();
 		w2.close();
 	}
-	
+
 }
