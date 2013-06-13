@@ -1,0 +1,1 @@
+Repository for the KnowItAll Slot-Filling system for the 2013 TAC KBP English Slot-Filling Task
