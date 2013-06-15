@@ -80,7 +80,10 @@ public class KbpCorpusParser {
 			try {
 				Document doc = parser.getXmlDocument(docStream);
 
-				List<String> sentences = parser.getForumContent(doc);
+				List<String> sentences;
+				if (forum) sentences = parser.getForumContent(doc);
+				else if (news) sentences = parser.getNewsContent(doc);
+				else sentences = parser.getWebContent(doc);
 
 				for (String sent : sentences)
 					outputStream.println(sent);
