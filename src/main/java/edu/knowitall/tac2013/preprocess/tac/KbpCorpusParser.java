@@ -68,29 +68,41 @@ public class KbpCorpusParser {
 		
 		// Actual processing begins here.
 		
+		long numLines = 0; 
+		
 		KbpCorpusParser parser = new KbpCorpusParser();
 		
-		Iterator<String> docs = parser.breakFileByDocTags(inputStream);
+		Iterator<List<String>> docs = parser.breakFileByDocTags(inputStream);
 
 		while (docs.hasNext()) {
 
-			InputStream docStream = new ByteArrayInputStream(docs.next()
-					.getBytes());
+			List<String> docLines = docs.next();
+			
+			
+			// Convert to single string
+			StringBuilder docBuffer = new StringBuilder();
+			for (String line : docLines) docBuffer.append(line);
+			String doc = docBuffer.toString();
+			
+			InputStream docStream = new ByteArrayInputStream(doc.getBytes());
 
 			try {
-				Document doc = parser.getXmlDocument(docStream);
+				Document xmlDoc = parser.getXmlDocument(docStream);
 
 				List<String> sentences;
-				if (forum) sentences = parser.getForumContent(doc);
-				else if (news) sentences = parser.getNewsContent(doc);
-				else sentences = parser.getWebContent(doc);
+				if (forum) sentences = parser.getForumContent(xmlDoc);
+				else if (news) sentences = parser.getNewsContent(xmlDoc);
+				else sentences = parser.getWebContent(xmlDoc);
 
 				for (String sent : sentences)
 					outputStream.println(sent);
 
 			} catch (SAXException | IOException | ParserConfigurationException e) {
+				System.err.println("Exception at doc starting at line: " +  numLines + 1);
 				e.printStackTrace();
 			}
+			
+			numLines += docLines.size();
 		}
 	}
 
@@ -105,13 +117,13 @@ public class KbpCorpusParser {
 	 * @return
 	 * @throws FileNotFoundException
 	 */
-	private Iterator<String> breakFileByDocTags(InputStream input)
+	private Iterator<List<String>> breakFileByDocTags(InputStream input)
 			throws FileNotFoundException {
 
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(
 				input));
 
-		return new Iterator<String>() {
+		return new Iterator<List<String>>() {
 			@Override
 			public boolean hasNext() {
 				try {
@@ -123,14 +135,8 @@ public class KbpCorpusParser {
 			}
 
 			@Override
-			public String next() {
-
-				List<String> docLines = getUntilNextDoc(reader);
-				StringBuilder docBuffer = new StringBuilder(
-						docLines.size() * 10); // rough estimate of initial size
-				for (String line : docLines)
-					docBuffer.append(line + "\n");
-				return docBuffer.toString();
+			public List<String> next() {
+				return getUntilNextDoc(reader);
 			}
 
 			@Override
