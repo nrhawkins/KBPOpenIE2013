@@ -13,7 +13,13 @@ import edu.knowitall.tool.chunk.ChunkedToken
 
 class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
   
-  def parseKbpSentence(kbpSentence: KbpSentence): ParsedKbpSentence = {
+  def isValid(kbpSentence: KbpSentence): Boolean = {
+    kbpSentence.text.length <= 500
+  }
+  
+  def parseKbpSentence(kbpSentence: KbpSentence): Option[ParsedKbpSentence] = {
+    
+    if (!isValid(kbpSentence)) return None
     
     // chunks, then parse
     val chunked = chunker.chunk(kbpSentence.text)
@@ -23,7 +29,7 @@ class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
     val postags = chunked.map(_.postag).mkString(" ")
     val chunks = chunked.map(_.chunk).mkString(" ")
     
-    ParsedKbpSentence(kbpSentence.docId, kbpSentence.sentId, kbpSentence.text, tokens, postags, chunks, dgraph)
+    Some(ParsedKbpSentence(kbpSentence.docId, kbpSentence.sentId, kbpSentence.text, tokens, postags, chunks, dgraph))
   }
 }
 
@@ -63,8 +69,10 @@ object KbpSentenceParser {
     val kbpSentences = input.getLines.flatMap { line => KbpSentence.read(line) }
     
     kbpSentences.foreach { kbpSentence =>
-      val parsedKbpSentence = kbpProcessor.parseKbpSentence(kbpSentence)
-      output.println(ParsedKbpSentence.write(parsedKbpSentence))
+      val parsedKbpSentenceOption = kbpProcessor.parseKbpSentence(kbpSentence)
+      parsedKbpSentenceOption foreach { parsedKbpSentence =>
+        output.println(ParsedKbpSentence.write(parsedKbpSentence))
+      }
     }
   }
 }
