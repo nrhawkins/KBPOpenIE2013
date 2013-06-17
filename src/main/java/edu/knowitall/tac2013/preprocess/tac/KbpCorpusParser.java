@@ -33,6 +33,7 @@ public class KbpCorpusParser {
 
 	private static Pattern ampersandCodePattern = Pattern.compile("\\&.*?\\;");
 	private static Pattern ampersandPattern = Pattern.compile("\\&");
+	private static Pattern emailPattern = Pattern.compile("[^\\s@]+@[^\\s]+");
 	
 	private static String offsetPlaceHolder = "\t0\t0";
 	
@@ -230,6 +231,21 @@ public class KbpCorpusParser {
 					+ offsetPlaceHolder);
 			sentenceCounter++;
 		}
+		
+		// Hack: get author and date
+		String authorString = doc.getElementsByTagName("post").item(0).getAttributes()
+						.getNamedItem("author").getTextContent();
+		String authorSentence = String.format("This post was written by %s.", authorString);
+		lines.add(docId + "\t" + sentenceCounter + "\t" + authorSentence
+				+ offsetPlaceHolder);
+		sentenceCounter++;
+		
+		String dateString = doc.getElementsByTagName("post").item(0).getAttributes()
+				.getNamedItem("datetime").getTextContent();
+		String dateSentence = String.format("This post was written on %s.", dateString);
+		lines.add(docId + "\t" + sentenceCounter + "\t" + dateSentence
+				+ offsetPlaceHolder);
+		sentenceCounter++;
 
 		// get the main post text.
 		NodeList nodeList = doc.getElementsByTagName("post");
@@ -303,7 +319,28 @@ public class KbpCorpusParser {
 					+ offsetPlaceHolder);
 			sentenceCounter++;
 		}
-
+		
+		// Hack: Construct an extractable sentence from the Date line.
+		NodeList dateLine = doc.getElementsByTagName("DATETIME");
+		if (dateLine.getLength() != 0) {
+			String dateLineString = dateLine.item(0).getTextContent().trim();
+			String dateSentence = String.format("This document was posted on %s.", dateLineString);
+			lines.add(docId + "\t" + sentenceCounter + "\t" + dateSentence
+					+ offsetPlaceHolder);
+			sentenceCounter++;
+		}
+		
+		// Hack a sentence for the POSTER element as well
+		NodeList poster = doc.getElementsByTagName("POSTER");
+		if (poster.getLength() != 0) {
+			String posterString = poster.item(0).getTextContent().trim();
+			String posterName = emailPattern.matcher(posterString).replaceAll(""); // remove email from POSTER string
+			String posterSentence = String.format("This post was written by %s.", posterName);
+			lines.add(docId + "\t" + sentenceCounter + "\t" + posterSentence
+					+ offsetPlaceHolder);
+			sentenceCounter++;
+		}
+		
 		// get the main post text.
 		NodeList nodeList = doc.getElementsByTagName("POST");
 
