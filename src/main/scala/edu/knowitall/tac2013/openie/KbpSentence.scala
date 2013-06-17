@@ -1,12 +1,10 @@
 package edu.knowitall.tac2013.openie
 
-case class KbpSentence(val docId: String, val sentId: Int, val text: String) {
-
-}
+case class KbpSentence(val docId: String, val sentId: Int, val text: String)
 
 object KbpSentence {
   
-  private val tabRegex = "\t".r
+val tabRegex = "\t".r
   
   def read(pickle: String): Option[KbpSentence] = {
     tabRegex.split(pickle) match {
