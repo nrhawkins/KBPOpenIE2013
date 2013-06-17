@@ -33,7 +33,7 @@ public class CreateParagraphs {
 		while ((l = sentencesInput.readLine())!= null) {
 			String[] c = l.split("\t");
 			if (c.length < 5) {System.out.println(l); continue; }
-			metaOutput.print(i + "\t" + c[2] + "\n");
+			metaOutput.print(c[0] + "\t" + i + "\t" + c[2] + "\n");
 			textOutput.print(i + "\t" + c[0] + "\t" + /*c[1] + "\t" +*/ c[3] + "\t" + c[4] + "\n");
 			i++;
 		}
