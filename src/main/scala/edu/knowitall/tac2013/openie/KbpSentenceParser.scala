@@ -4,6 +4,7 @@ import edu.knowitall.tool.chunk.Chunker
 import edu.knowitall.tool.chunk.OpenNlpChunker
 import edu.knowitall.tool.parse.DependencyParser
 import edu.knowitall.tool.parse.ClearParser
+import edu.knowitall.tool.postag.ClearPostagger
 import scopt.OptionParser
 import scala.io.Source
 import java.io.PrintStream
@@ -62,7 +63,7 @@ object KbpSentenceParser {
   def run(input: Source, output: PrintStream): Unit = {
    
     val chunker = new OpenNlpChunker()
-    val parser = new ClearParser()
+    val parser = new ClearParser(new ClearPostagger())
     
     val kbpProcessor = new KbpSentenceParser(chunker, parser);
     
