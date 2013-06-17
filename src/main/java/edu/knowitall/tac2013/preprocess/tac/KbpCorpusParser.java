@@ -106,6 +106,12 @@ public class KbpCorpusParser {
 		}
 	}
 
+	private String cleanString(String rawString) {
+		
+		return rawString.replaceAll("\\&.*?\\;", "");
+	}
+	
+	
 	/**
 	 * KBP corpus files are pseudo-XML and are like a concatenation of XML
 	 * documents whose root elements are DOC elements.
@@ -174,7 +180,7 @@ public class KbpCorpusParser {
 					inQuote = false;
 				}
 
-				stringList.add(next);
+				stringList.add(cleanString(next));
 				if (next.contains("</DOC>") || next.contains("</doc>")) {
 					break;
 				}
