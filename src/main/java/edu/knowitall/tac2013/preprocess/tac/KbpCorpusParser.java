@@ -31,7 +31,18 @@ import org.xml.sax.SAXException;
  */
 public class KbpCorpusParser {
 
+	private static Pattern ampersandCodePattern = Pattern.compile("\\&.*?\\;");
+	private static Pattern ampersandPattern = Pattern.compile("\\&");
+	
 	private static String offsetPlaceHolder = "\t0\t0";
+	
+	private int lineNum = 0; // Current line number reading input stream
+	
+	private InputStream input;
+	
+	public KbpCorpusParser(InputStream input) {
+		this.input = input;
+	}
 
 	public static void main(String[] args) throws FileNotFoundException {
 
@@ -68,23 +79,20 @@ public class KbpCorpusParser {
 		
 		// Actual processing begins here.
 		
-		long numLines = 0; 
+		KbpCorpusParser parser = new KbpCorpusParser(inputStream);
 		
-		KbpCorpusParser parser = new KbpCorpusParser();
-		
-		Iterator<List<String>> docs = parser.breakFileByDocTags(inputStream);
+		Iterator<DocWrapper> docs = parser.breakFileByDocTags();
 
 		while (docs.hasNext()) {
 
-			List<String> docLines = docs.next();
-			
+			DocWrapper docWrapper = docs.next();
 			
 			// Convert to single string
 			StringBuilder docBuffer = new StringBuilder();
-			for (String line : docLines) docBuffer.append(line);
-			String doc = docBuffer.toString();
+			for (String line : docWrapper.lines) docBuffer.append(line);
+			String docString = docBuffer.toString();
 			
-			InputStream docStream = new ByteArrayInputStream(doc.getBytes());
+			InputStream docStream = new ByteArrayInputStream(docString.getBytes());
 
 			try {
 				Document xmlDoc = parser.getXmlDocument(docStream);
@@ -98,17 +106,20 @@ public class KbpCorpusParser {
 					outputStream.println(sent);
 
 			} catch (SAXException | IOException | ParserConfigurationException e) {
-				System.err.println("Exception at doc starting at line: " +  numLines + 1);
+				String errorStr = String.format("Exception in XML between lines %d and %d", docWrapper.startLineNum, docWrapper.endLineNum);
+				System.err.println(errorStr);
 				e.printStackTrace();
 			}
-			
-			numLines += docLines.size();
 		}
 	}
 
 	private String cleanString(String rawString) {
 		
-		return rawString.replaceAll("\\&.*?\\;", "");
+		// TODO: Figure out how to do this right?
+		// Strip HTML ampersand codes
+		String noAmpCodes = ampersandCodePattern.matcher(rawString).replaceAll("");
+		// Strip remaining ampersand characters
+		return ampersandPattern.matcher(noAmpCodes).replaceAll("");
 	}
 	
 	
@@ -123,13 +134,13 @@ public class KbpCorpusParser {
 	 * @return
 	 * @throws FileNotFoundException
 	 */
-	private Iterator<List<String>> breakFileByDocTags(InputStream input)
+	private Iterator<DocWrapper> breakFileByDocTags()
 			throws FileNotFoundException {
 
 		final BufferedReader reader = new BufferedReader(new InputStreamReader(
 				input));
 
-		return new Iterator<List<String>>() {
+		return new Iterator<DocWrapper>() {
 			@Override
 			public boolean hasNext() {
 				try {
@@ -141,7 +152,7 @@ public class KbpCorpusParser {
 			}
 
 			@Override
-			public List<String> next() {
+			public DocWrapper next() {
 				return getUntilNextDoc(reader);
 			}
 
@@ -163,16 +174,19 @@ public class KbpCorpusParser {
 	 * @param reader
 	 * @return
 	 */
-	private List<String> getUntilNextDoc(BufferedReader reader) {
+	private DocWrapper getUntilNextDoc(BufferedReader reader) {
 
 		String next;
 
 		List<String> stringList = new LinkedList<String>();
 
+		int startLine = lineNum;
+		
 		boolean inQuote = false;
 
 		try {
 			while ((next = reader.readLine()) != null) {
+				lineNum++;
 				if (next.startsWith("<QUOTE"))
 					inQuote = true;
 				if (inQuote && next.contains("\">")) {
@@ -188,7 +202,7 @@ public class KbpCorpusParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return stringList;
+		return new DocWrapper(stringList, startLine, lineNum);
 	}
 
 	public Document getXmlDocument(InputStream docStream) throws SAXException,
@@ -315,4 +329,16 @@ public class KbpCorpusParser {
 		return lines;
 	}
 
+	private static class DocWrapper {
+		List<String> lines;
+		int startLineNum;
+		int endLineNum;
+		
+		private DocWrapper(List<String> lines, int startLineNum, int endLineNum) {
+			this.lines = lines;
+			this.startLineNum = startLineNum;
+			this.endLineNum = endLineNum;
+		}
+	}
+	
 }
