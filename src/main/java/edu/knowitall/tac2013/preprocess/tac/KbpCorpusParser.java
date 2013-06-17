@@ -78,7 +78,6 @@ public class KbpCorpusParser {
 		}
 		
 		// Actual processing begins here.
-		
 		KbpCorpusParser parser = new KbpCorpusParser(inputStream);
 		
 		Iterator<DocWrapper> docs = parser.breakFileByDocTags();
