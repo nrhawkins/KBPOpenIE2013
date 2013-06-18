@@ -32,7 +32,7 @@ class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
     
     Some(ParsedKbpSentence(kbpSentence.docId, kbpSentence.sentId, kbpSentence.text, tokens, postags, chunks, dgraph))
     } catch {
-      case e =>
+      case e: Exception =>
         System.err.println("Error parsing sentence: %s".format(kbpSentence.text))
         e.printStackTrace()
         None
