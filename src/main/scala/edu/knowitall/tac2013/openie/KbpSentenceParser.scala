@@ -21,7 +21,7 @@ class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
   def parseKbpSentence(kbpSentence: KbpSentence): Option[ParsedKbpSentence] = {
     
     if (!isValid(kbpSentence)) return None
-    
+    try {
     // chunks, then parse
     val chunked = chunker.chunk(kbpSentence.text)
     val dgraph = parser.dependencyGraph(kbpSentence.text).serialize
@@ -31,6 +31,12 @@ class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
     val chunks = chunked.map(_.chunk).mkString(" ")
     
     Some(ParsedKbpSentence(kbpSentence.docId, kbpSentence.sentId, kbpSentence.text, tokens, postags, chunks, dgraph))
+    } catch {
+      case e =>
+        System.err.println("Error parsing sentence: %s".format(kbpSentence.text))
+        e.printStackTrace()
+        None
+    }
   }
 }
 
