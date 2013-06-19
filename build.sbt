@@ -18,6 +18,12 @@ libraryDependencies += "edu.washington.cs.knowitall.nlptools" % "nlptools-chunk-
 
 libraryDependencies += "edu.washington.cs.knowitall.nlptools" % "nlptools-parse-clear_2.10" % "2.4.2"
 
+libraryDependencies += "edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1"
+
+libraryDependencies += "net.liftweb" %% "lift-json" % "2.5-RC5"
+
+libraryDependencies += "org.apache.solr" % "solr-solrj" % "4.3.0"
+
 javaOptions in run += "-Xmx8G"
 
 fork in run := true
