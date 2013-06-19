@@ -7,6 +7,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class SolrPopulator[E](val solrServer: SolrServer) {
 
+  def extract(line: String): Iterable[E]
+  
   def toSolrInputDocument(extr: E): SolrInputDocument
   
   def populateThenCommit(extrs: Iterator[E]): Unit = {

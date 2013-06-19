@@ -24,6 +24,8 @@ libraryDependencies += "net.liftweb" %% "lift-json" % "2.5-RC5"
 
 libraryDependencies += "org.apache.solr" % "solr-solrj" % "4.3.0"
 
+libraryDependencies += "edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4"
+
 javaOptions in run += "-Xmx8G"
 
 fork in run := true
