@@ -31,34 +31,82 @@ abstract class KbpExtractor {
 
 object KbpExtractor {
   
+  private val extractionsProcessed = new AtomicInteger(0)
+  private val sentencesProcessed = new AtomicInteger(0)
+  
   object Settings {
     var inputFile = "stdin"
     var outputFile = "stdout"
+    var parallel = false
   }
+  
+  def getInput = if (Settings.inputFile.equals("stdin")) io.Source.stdin else io.Source.fromFile(Settings.inputFile)
+  def getOutput = if (Settings.outputFile.equals("stdout")) System.out else new PrintStream(Settings.outputFile)
   
   def main(args: Array[String]): Unit = {
     
     val parser = new OptionParser("KbpExtractor") {
       opt("inputFile", "ParsedKbpSentences for input, default stdinput", { s => Settings.inputFile = s })
       opt("outputFile", "KbpExtractionInstances output file, default stdout", { s => Settings.outputFile = s})
+      opt("parallel", "Run over input in parallel, default false", { Settings.parallel = true })
     }
     
     if (!parser.parse(args)) return
     
-    def getInput = if (Settings.inputFile.equals("stdin")) io.Source.stdin else io.Source.fromFile(Settings.inputFile)
-    def getOutput = if (Settings.outputFile.equals("stdout")) System.out else new PrintStream(Settings.outputFile)
+    val time = Timing.time {
+      if (Settings.parallel) runParallel() else run()
+    }
     
+    val seconds = Timing.Seconds.format(time)
+    System.out.flush()
+    System.err.flush()
+    System.err.println(
+        "%d sentences, %d extractions processed in %s".format(
+            sentencesProcessed.get, extractionsProcessed.get, seconds))
+  }
+  
+  def run(): Unit = {
     val extractor = new KbpCombinedExtractor()
     
     Resource.using(getInput) { input =>
       Resource.using(getOutput) { output =>
         val sentences = input.getLines.flatMap(str => ParsedKbpSentence.read(str))
         val insts = sentences.flatMap { sent =>
+          sentencesProcessed.getAndIncrement()
           val extrs = extractor.extract(sent)
-          extrs.map(extr => new KbpExtractionInstance(extr, sent))
+          extrs.map { 
+            extractionsProcessed.getAndIncrement()
+            extr => new KbpExtractionInstance(extr, sent) 
+          }
         }
         val outStrings = insts map KbpExtractionInstance.write
         outStrings foreach output.println
+      }
+    }
+  }
+  
+  private val batchSize = 1000
+  
+  def runParallel(): Unit = {
+    val extractor = new KbpCombinedExtractor()
+    
+    Resource.using(getInput) { input =>
+      Resource.using(getOutput) { output =>
+      	val batches = input.getLines.grouped(batchSize)
+      	val outStrings = batches.flatMap { batch =>
+      	  val parsed = batch.par.flatMap { line =>
+      	  	sentencesProcessed.getAndIncrement()
+      	    ParsedKbpSentence.read(line) 
+      	  }
+      	  val insts = parsed.flatMap { sent =>
+      	    extractor.extract(sent).map {
+      	      extractionsProcessed.getAndIncrement()
+      	      extr => new KbpExtractionInstance(extr, sent) 
+      	    }
+      	  }
+      	  insts map KbpExtractionInstance.write
+      	}
+      	outStrings foreach output.println
       }
     }
   }
@@ -120,7 +168,7 @@ class KbpSrlExtractor(
 
     val srlInstances =
       try {
-        srl.apply(graph)
+        this.synchronized { srl.apply(graph) }
       } catch {
         case e: Throwable =>
           System.err.println(
