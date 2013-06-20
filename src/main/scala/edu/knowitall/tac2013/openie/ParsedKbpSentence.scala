@@ -5,16 +5,23 @@ import edu.knowitall.tool.chunk.ChunkedToken
 
 case class ParsedKbpSentence(
     val docId: String, 
-    val sentId: Int, 
-    val text: String, 
     val tokens: String, 
     val postags: String, 
     val chunks: String, 
+    val offsets: String,
     val dgraph: String) {
   
+  import ParsedKbpSentence.wsSplit
+  
   def chunkedTokens = {
-    tokens.split(" ").zip(postags.split(" ")).zip(chunks.split(" ")).map { case  ((token, postag), chunk) =>
-      new ChunkedToken(chunk, postag, token, 0)
+    
+    val ts = wsSplit.split(tokens)
+    val ps = wsSplit.split(postags)
+    val cs = wsSplit.split(chunks)
+    val os = wsSplit.split(offsets)
+    
+    ts.zip(ps).zip(cs).zip(os).map { case  (((token, postag), chunk), offset) =>
+      new ChunkedToken(chunk, postag, token, offset.toInt)
     }
   }
   
@@ -22,7 +29,9 @@ case class ParsedKbpSentence(
     
 object ParsedKbpSentence {
   
-  val NUM_FIELDS = 7
+  private val wsSplit = "\\s+".r
+  
+  val NUM_FIELDS = 6
   
   import KbpSentence.tabRegex
   
@@ -30,8 +39,8 @@ object ParsedKbpSentence {
   
   def read(split: Array[String]): Option[ParsedKbpSentence] = {
     split match {
-      case Array(docId, sentIdString, text, tokens, postags, chunks, dgraph, _*) => 
-        Some(ParsedKbpSentence(docId, sentIdString.toInt, text, tokens, postags, chunks, dgraph))
+      case Array(docId, tokens, postags, chunks, offsets, dgraph, _*) => 
+        Some(ParsedKbpSentence(docId, tokens, postags, chunks, offsets, dgraph))
       case _ => {
         System.err.println("Error reading ParsedKbpSentence: %s".format(split.mkString("\t")))
         None

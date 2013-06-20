@@ -29,8 +29,9 @@ class KbpSentenceParser(val chunker: Chunker, val parser: DependencyParser) {
     val tokens = chunked.map(_.string).mkString(" ")
     val postags = chunked.map(_.postag).mkString(" ")
     val chunks = chunked.map(_.chunk).mkString(" ")
+    val offsets = chunked.map(_.offsets).mkString(" ")
     
-    Some(ParsedKbpSentence(kbpSentence.docId, kbpSentence.sentId, kbpSentence.text, tokens, postags, chunks, dgraph))
+    Some(ParsedKbpSentence(kbpSentence.docId, tokens, postags, chunks, offsets, dgraph))
     } catch {
       case e: Throwable =>
         System.err.println("Error parsing sentence: %s".format(kbpSentence.text))
@@ -47,10 +48,12 @@ object KbpSentenceParser {
     
     var inputfile = Option.empty[String]
     var outputfile = Option.empty[String]
+    var parallel = false
     
     val cliParser = new OptionParser() {
       opt("inputfile", "File: KbpSentences one per line -- default stdin", { str => inputfile = Some(str) })
       opt("outputfile", "File: ParsedKbpSentences, default stdout", { str => outputfile = Some(str) })
+      opt("parallel", "Run multithreaded? Default = no", { parallel = true })
     }
     
     if (cliParser.parse(args)) {
@@ -58,7 +61,8 @@ object KbpSentenceParser {
       val outputStream = outputfile map { file => new PrintStream(file) } getOrElse System.out
       using(inputSource) { input =>
         using(outputStream) { output =>
-          run(input, output)
+          if (!parallel) run(input, output)
+          else runParallel(input, output)
         }
       }
     } else { 
@@ -67,7 +71,6 @@ object KbpSentenceParser {
   }
   
   def run(input: Source, output: PrintStream): Unit = {
-   
     val chunker = new OpenNlpChunker()
     val parser = new ClearParser(new ClearPostagger())
     
@@ -81,5 +84,25 @@ object KbpSentenceParser {
         output.println(ParsedKbpSentence.write(parsedKbpSentence))
       }
     }
+  }
+  
+  val batchSize = 1000
+  
+  def runParallel(input: Source, output: PrintStream): Unit = {
+    val chunker = new OpenNlpChunker()
+    val parser = new ClearParser(new ClearPostagger())
+    
+    val kbpProcessor = new KbpSentenceParser(chunker, parser);
+    
+    val kbpSentences = input.getLines.flatMap { line => KbpSentence.read(line) }
+    
+    kbpSentences.foreach { kbpSentence =>
+      val parsedKbpSentenceOption = kbpProcessor.parseKbpSentence(kbpSentence)
+      parsedKbpSentenceOption foreach { parsedKbpSentence =>
+        output.println(ParsedKbpSentence.write(parsedKbpSentence))
+      }
+    }
+    
+    
   }
 }

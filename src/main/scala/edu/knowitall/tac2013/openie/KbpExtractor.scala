@@ -146,7 +146,7 @@ class KbpRelnounExtractor(val relnoun: Relnoun = new Relnoun()) extends KbpExtra
     } catch {
       case e: Throwable => {
         System.err.println(
-          "Relnoun error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.text))
+          "Relnoun error #%d on input: %s".format(errorCounter.incrementAndGet(), parsedSentence.tokens))
         Seq.empty
       }
     }
@@ -172,7 +172,7 @@ class KbpSrlExtractor(
       } catch {
         case e: Throwable =>
           System.err.println(
-            "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.text))
+            "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.tokens))
           Seq.empty
       }
 
