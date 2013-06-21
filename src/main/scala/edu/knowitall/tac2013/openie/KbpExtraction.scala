@@ -7,6 +7,7 @@ import edu.knowitall.chunkedextractor.BinaryExtractionInstance
 import edu.knowitall.chunkedextractor.Relnoun
 import edu.knowitall.srlie.confidence.SrlConfidenceFunction.SrlConfidenceFunction
 import edu.knowitall.tool.chunk.ChunkedToken
+import edu.knowitall.chunkedextractor.ExtractionPart
 
 case class KbpExtraction(
   val arg1: String,
@@ -45,20 +46,19 @@ object KbpExtraction {
   
   def fromRelnounInstance(
       relnounInst: BinaryExtractionInstance[Relnoun.Token], 
-      tokens: Seq[ChunkedToken], 
       parsedSentence: ParsedKbpSentence): KbpExtraction = {
     
     val extr = relnounInst.extr
     
-    def postags(interval: Interval) = tokens.drop(interval.start).take(interval.size).map(_.postag).mkString(" ")
+    def postags(epart: ExtractionPart[ChunkedToken]) = epart.tokens.map(_.postag).mkString(" ")
     
     new KbpExtraction(
         arg1 = extr.arg1.text,
         rel = extr.rel.text,
         arg2 = extr.arg2.text,
-        arg1postags = postags(extr.arg1.interval),
-        relpostags = postags(extr.rel.interval), 
-        arg2postags = postags(extr.arg2.interval),
+        arg1postags = postags(extr.arg1),
+        relpostags = postags(extr.rel), 
+        arg2postags = postags(extr.arg2),
         confidence = "0.9",
         extractor = "relnoun")
   }

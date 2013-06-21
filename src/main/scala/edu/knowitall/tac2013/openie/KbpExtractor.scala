@@ -152,7 +152,7 @@ class KbpRelnounExtractor(val relnoun: Relnoun = new Relnoun()) extends KbpExtra
     }
 
     relnounExtractionInstances.map { inst =>
-      KbpExtraction.fromRelnounInstance(inst, chunked, parsedSentence)
+      KbpExtraction.fromRelnounInstance(inst, parsedSentence)
     }
   }
 }
