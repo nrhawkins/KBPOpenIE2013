@@ -31,6 +31,75 @@ abstract class KbpDocParser() {
       Some(new KbpParsedDoc(docIdLine.get, authorLine, dateLine, textLines))
     }
   }
+  
+  protected def isValidText(line: String): Boolean = {
+    !line.startsWith("<") && !line.trim().isEmpty
+  }
+}
+
+object KbpDocParser {
+  def main(args: Array[String]): Unit = {
+    
+    var inputFile = args(0)
+    var corpus = args(1) // web, forum, or news
+    
+    val docSplitter = new DocSplitter()
+    val docParser = 
+      if (corpus.equals("news")) new KbpNewsDocParser()
+      else if (corpus.equals("forum")) new KbpForumDocParser()
+      else if (corpus.equals("web")) new KbpWebDocParser()
+      else throw new IllegalArgumentException("Unknown corpus type \"%s\"".format(corpus))
+    
+    val source = io.Source.fromFile(inputFile)
+    
+    val spliterator = docSplitter.splitDocs(source)
+    
+    spliterator.take(10).foreach { kbpRawDoc => 
+      val text = docParser.parseDoc(kbpRawDoc).get.debugText
+      println(text)
+    }
+  }
+}
+
+class KbpForumDocParser extends KbpDocParser {
+  override def parseDoc(rawDoc: KbpRawDoc): Option[KbpParsedDoc] = {
+    
+    var docIdLine = Option.empty[KbpDocLine]
+    var textLines = new LinkedList[KbpDocLine]
+    
+    for (kbpLine <- rawDoc.lines; line = kbpLine.line) {
+      
+      if (docIdLine.isEmpty && line.startsWith("<doc id")) docIdLine = Some(kbpLine)
+      else if (isValidText(line)) textLines.add(kbpLine)
+    }
+    
+    buildDoc(docIdLine, None, None, textLines.asScala.toList)    
+  }
+}
+
+class KbpNewsDocParser extends KbpDocParser {
+  
+  override def parseDoc(rawDoc: KbpRawDoc): Option[KbpParsedDoc] = {
+    
+    var docIdLine = Option.empty[KbpDocLine]
+    var dateLine = Option.empty[KbpDocLine]
+    var textLines = new LinkedList[KbpDocLine]
+    
+    var datelineNext = false
+    
+    for (kbpLine <- rawDoc.lines; line = kbpLine.line) {
+      
+      if (datelineNext) {
+        dateLine = Some(kbpLine)
+        datelineNext = false
+      } 
+      else if (docIdLine.isEmpty && line.startsWith("<DOC id")) docIdLine = Some(kbpLine)
+      else if (dateLine.isEmpty && line.startsWith("<DATELINE>")) datelineNext = true
+      else if (isValidText(line)) textLines.add(kbpLine)
+    }
+    
+    buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
+  }
 }
 
 class KbpWebDocParser extends KbpDocParser {
@@ -47,9 +116,10 @@ class KbpWebDocParser extends KbpDocParser {
       if (docIdLine.isEmpty && line.startsWith("<DOCID>")) docIdLine = Some(kbpLine)
       else if (authorLine.isEmpty && line.startsWith("<POSTER>")) authorLine = Some(kbpLine)
       else if (dateLine.isEmpty && line.startsWith("<DATETIME>")) dateLine = Some(kbpLine)
-      else if (!line.startsWith("<")) textLines.add(kbpLine)
+      else if (isValidText(line)) textLines.add(kbpLine)
     }
     
     buildDoc(docIdLine, authorLine, dateLine, textLines.asScala.toList)    
   }
 }
+
