@@ -10,6 +10,10 @@ scalaVersion := "2.10.2"
 
 organization := "edu.knowitall"
 
+resolvers += "amateras-repo" at "http://smateras.sourceforge.jp/mvn"
+
+libraryDependencies += "jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7"
+
 libraryDependencies += "edu.stanford.nlp" % "stanford-corenlp" % "1.3.4"
 
 libraryDependencies += "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test"
