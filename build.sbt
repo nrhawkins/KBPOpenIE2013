@@ -8,9 +8,9 @@ version := "0.0.1"
 
 scalaVersion := "2.10.2"
 
-organization := "edu.knowitall"
+organization := "edu.knowitall
 
-resolvers += "amateras-repo" at "http://smateras.sourceforge.jp/mvn"
+resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
 
 libraryDependencies ++= Seq(
 	"jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
