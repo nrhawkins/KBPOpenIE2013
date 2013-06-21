@@ -36,15 +36,14 @@ object SingleSolrQueryExecutor {
     lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:8995/solr")
     
     val query = client.query(queryString)
-    val result = query.rows(1).getResultAsMap()
+    val result = query.rows(5).getResultAsMap()
     result.documents.foreach {doc: Map[String,Any] =>
         println(doc("arg1") + " " + doc("rel") + " " + doc("arg2"))}
-    val bigresult = query.getResultAsMap()
+    val bigresult = query.rows(1000).sortBy("confidence",Order.desc).getResultAsMap()
     var a = Array[Map[String,Any]]()
-    result.documents.foreach {doc: Map[String,Any] =>
+    bigresult.documents.foreach {doc: Map[String,Any] =>
         a = a :+ doc
       }
     a
-    
   }
 }
