@@ -45,8 +45,9 @@ object KbpExtraction {
   
   def fromRelnounInstance(
       relnounInst: BinaryExtractionInstance[Relnoun.Token], 
-      tokens: Seq[ChunkedToken], 
       parsedSentence: ParsedKbpSentence): KbpExtraction = {
+    
+    val tokens = relnounInst.sent
     
     val extr = relnounInst.extr
     
