@@ -6,7 +6,7 @@ import KBPSlotOpenIERelationTranslator.getPersonMap
 import QueryEntityForAllSlots.executeEntityQueryForAllSlots
 import KbpQueryOutput.printPersonOutput
 
-object findSlotFills {
+object FindSlotFills {
   
   def main(args: Array[String]){
 
