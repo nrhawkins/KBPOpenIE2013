@@ -17,11 +17,11 @@ class DocSplitter {
   /**
    * Process input from a Source. Caller must close the source.
    */
-  def splitDocs(source: io.Source): Iterator[KbpDoc] = {
+  def splitDocs(source: io.Source): Iterator[KbpRawDoc] = {
     splitDocs(source.getLines)
   }
   
-  def splitDocs(lines: Iterator[String])= new Iterator[KbpDoc] {
+  def splitDocs(lines: Iterator[String])= new Iterator[KbpRawDoc] {
     
     def hasNext = lines.hasNext
     
@@ -29,7 +29,7 @@ class DocSplitter {
     def next = this.synchronized { getNextDoc(lines) }
   }
   
-  def getNextDoc(lines: Iterator[String]): KbpDoc = {
+  def getNextDoc(lines: Iterator[String]): KbpRawDoc = {
     
     val lineBuffer = new LinkedList[KbpDocLine]()
     
@@ -45,7 +45,7 @@ class DocSplitter {
       lineBuffer.add(new KbpDocLine(nextLine, startByte, endByte))
       startByte = endByte + 1
     }
-    new KbpDoc(lineBuffer.asScala.toList)
+    new KbpRawDoc(lineBuffer.asScala.toList)
     
   }
 }
