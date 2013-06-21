@@ -20,4 +20,12 @@ class KbpParsedDoc(
     val docIdLine: KbpDocLine, 
     val authorLine: Option[KbpDocLine], 
     val datetimeLine: Option[KbpDocLine], 
-    val textLines: List[KbpDocLine])
+    val textLines: List[KbpDocLine]) {
+  
+  def debugText = {
+    
+    val allFields = Seq(docIdLine) ++ authorLine ++ datetimeLine ++ textLines
+    allFields.map(_.debugString).mkString
+  }
+  
+}
