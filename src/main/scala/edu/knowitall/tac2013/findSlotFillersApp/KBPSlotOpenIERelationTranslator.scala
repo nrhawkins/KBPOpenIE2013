@@ -6,7 +6,7 @@ import scala.collection.mutable.Map
 object KBPSlotOpenIERelationTranslator {
   
   def getOrganizationMap(): Map[String,List[KbpSlotToOpenIEData]] = {
-    val source = Source.fromURL(getClass.getResource("/KBP-OpenIE1.csv"))
+    val source = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE1.csv"))
     val lines = source.getLines().toList
     var KBP_OpenIEMap = Map[String,List[KbpSlotToOpenIEData]]()
     for( line <- lines){
@@ -39,7 +39,7 @@ object KBPSlotOpenIERelationTranslator {
     
   
   def getPersonMap(): Map[String,List[KbpSlotToOpenIEData]] = {
-    val source = Source.fromURL(getClass.getResource("/KBP-OpenIE1.csv"))
+    val source = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE1.csv"))
     val lines = source.getLines().toList
     var KBP_OpenIEMap = Map[String,List[KbpSlotToOpenIEData]]()
     for( line <- lines){
