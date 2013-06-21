@@ -13,14 +13,10 @@ import scala.collection.JavaConverters._
 class DocSplitter {
   
   private val docCloseTag = Pattern.compile("\\s*(</DOC>|</doc>)\\s*")
-  
-  def splitDocs(file: File): Iterator[KbpDoc] = {
-    
-    Resource.using(io.Source.fromFile(file)) { source =>
-      splitDocs(source)
-    }
-  }
-  
+
+  /**
+   * Process input from a Source. Caller must close the source.
+   */
   def splitDocs(source: io.Source): Iterator[KbpDoc] = {
     splitDocs(source.getLines)
   }
@@ -29,24 +25,66 @@ class DocSplitter {
     
     def hasNext = lines.hasNext
     
-    def next = getNextDoc(lines)
+    // getNextDoc may not be thread safe
+    def next = this.synchronized { getNextDoc(lines) }
   }
   
   def getNextDoc(lines: Iterator[String]): KbpDoc = {
     
-    val lineBuffer = new LinkedList[String]()
+    val lineBuffer = new LinkedList[KbpDocLine]()
+    
+    var startByte = 0
     
     var done = false
     
     while (!done && lines.hasNext) {
       
-      val nextLine = lines.next()
+      val nextLine = lines.next() + "\n"
       if (docCloseTag.matcher(nextLine).matches()) done = true
-      lineBuffer.add(nextLine)
+      val endByte = startByte + nextLine.getBytes().length - 1
+      lineBuffer.add(new KbpDocLine(nextLine, startByte, endByte))
+      startByte = endByte + 1
     }
     new KbpDoc(lineBuffer.asScala.toList)
     
   }
 }
 
-class KbpDoc(val lines: List[String])
+class KbpDoc(val lines: List[KbpDocLine])
+class KbpDocLine(val line: String, val startByte: Int, val endByte: Int) {
+  def debugString = "(%04d,%04d) %s".format(startByte, endByte, line.mkString(" "))
+  def length = endByte - startByte + 1
+}
+
+object DocSplitter {
+  
+  import java.io.PrintStream
+  
+  def main(args: Array[String]) {
+    
+    val inputFile = args(0)
+    
+    val outputDir = args(1)
+    
+    val docsToSplitStr = args(2)
+    
+    val docsToSplit = if (docsToSplitStr.equals("-1")) Int.MaxValue else docsToSplitStr.toInt
+    
+    var numDocs = 0
+    
+    val source = io.Source.fromFile(inputFile, "UTF8")
+    
+    val docSpliterator = new DocSplitter().splitDocs(source)
+    
+    docSpliterator.foreach { kbpDoc =>
+
+      val output = new PrintStream("%s/doc%d.txt".format(outputDir, numDocs))
+      
+      kbpDoc.lines.foreach { kbpLine => output.print(kbpLine.line) }
+
+      numDocs += 1
+    }
+    
+    source.close()
+  }
+}
