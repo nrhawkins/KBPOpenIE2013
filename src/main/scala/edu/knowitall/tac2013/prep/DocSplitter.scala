@@ -50,11 +50,7 @@ class DocSplitter {
   }
 }
 
-class KbpDoc(val lines: List[KbpDocLine])
-class KbpDocLine(val line: String, val startByte: Int, val endByte: Int) {
-  def debugString = "(%04d,%04d) %s".format(startByte, endByte, line.mkString(" "))
-  def length = endByte - startByte + 1
-}
+
 
 object DocSplitter {
   
@@ -72,7 +68,7 @@ object DocSplitter {
     
     var numDocs = 0
     
-    val source = io.Source.fromFile(inputFile, "UTF8")
+    val source = io.Source.fromFile(inputFile, "UTF8")	
     
     val docSpliterator = new DocSplitter().splitDocs(source)
     
