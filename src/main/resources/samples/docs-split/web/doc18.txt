@@ -1,0 +1,49 @@
+<DOC>
+<DOCID> eng-NG-31-150365-10636435 </DOCID>
+<DOCTYPE SOURCE="usenet"> USENET TEXT </DOCTYPE>
+<DATETIME> 2007-11-05T20:00:24 </DATETIME>
+<BODY>
+<HEADLINE>
+Our Google Group
+</HEADLINE>
+<TEXT>
+<POST>
+<POSTER> "Xiaoru Yuan (University of Minnesota at Twin Cities)" &lt;xiaoru.y...@gmail.com&gt; </POSTER>
+<POSTDATE> 2007-11-05T20:00:24 </POSTDATE>
+Hi,
+
+Our Google group has around 20 members. It is a good start. To begin,
+how about everyone post a message introducing him/herself?
+
+To facilitate the communication, please set the &quot;Name&quot; field of your
+group membership information following what I and Zhao Ye have done.
+The format  is &quot;Name (Institute)&quot;.
+
+Cheers,
+
+Xiaoru
+</POST>
+<POST>
+<POSTER> Ye Zhao &lt;z...@cs.kent.edu&gt; </POSTER>
+<POSTDATE> 2007-11-15T19:18:00 </POSTDATE>
+Hi, all,
+this is Ye Zhao from Kent State University. I got my PhD from Stony
+Brook University last year and now is an assistant professor at Kent,
+Ohio. I am working on natural phenomena simulation and visualization. I
+am now looking for good PhD students. If you know someone may be
+interested, please give them a recommendation. Thanks a lot!
+More information can be found at http://www.cs.kent.edu/~zhao
+
+-Ye Zhao
+
+--
+Ye Zhao, Ph.D.
+Assistant Professor
+Kent State University
+Department of Computer Science
+Kent, Ohio 44242-0001
+Tel: (330)672-9059
+</POST>
+</TEXT>
+</BODY>
+</DOC>

@@ -1,0 +1,20 @@
+<DOC>
+<DOCID> eng-NG-31-150355-10636413 </DOCID>
+<DOCTYPE SOURCE="usenet"> USENET TEXT </DOCTYPE>
+<DATETIME> 2007-10-10T07:16:39 </DATETIME>
+<BODY>
+<HEADLINE>
+A Must Read!!!
+</HEADLINE>
+<TEXT>
+<POST>
+<POSTER> "michael.huss...@gmail.com" &lt;michael.huss...@gmail.com&gt; </POSTER>
+<POSTDATE> 2007-10-10T07:16:39 </POSTDATE>
+I have found an excellent resource on Product Integration based upon
+the CMMI standards.
+
+http://testingmechanism.blogspot.com/
+</POST>
+</TEXT>
+</BODY>
+</DOC>
