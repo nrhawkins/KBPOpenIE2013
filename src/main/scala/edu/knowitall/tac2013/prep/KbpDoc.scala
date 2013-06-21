@@ -27,5 +27,4 @@ class KbpParsedDoc(
     val allFields = Seq(docIdLine) ++ authorLine ++ datetimeLine ++ textLines
     allFields.map(_.debugString).mkString
   }
-  
 }
