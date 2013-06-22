@@ -12,6 +12,7 @@ class KbpRawDoc(val lines: List[KbpDocLine])
  * with byte offsets counting from 0 at the start of the "<DOC>" tag.
  */
 class KbpDocLine(val line: String, val startByte: Int, val endByte: Int) {
+  lazy val isBlank = line.trim.isEmpty()
   def debugString = "(%04d,%04d) %s".format(startByte, endByte, line)
   def length = endByte - startByte + 1
 }
