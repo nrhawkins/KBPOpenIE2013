@@ -2,11 +2,12 @@ package edu.knowitall.tac2013.prep
 
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
+import edu.knowitall.tool.segment.Segmenter
 
 /**
  * Converts from KbpParsedDoc to KbpSentences
  */
-class Sentencer {
+class Sentencer(val segmenter: Segmenter) {
   
   private val errorCounter = new AtomicInteger(0)
   
@@ -91,7 +92,7 @@ class Sentencer {
       }
 
     mention match {
-      case Some(mention) => fabricateSentence(mention, "This post was written by ", ".\n")
+      case Some(mention) => fabricateSentence(mention, "This post was written by ", ".")
       case None => None
     }
   }
@@ -128,17 +129,65 @@ class Sentencer {
       }
     }
     
-    fabricateSentence(mention, "This post was written on ", ".\n")
+    fabricateSentence(mention, "This post was written on ", ".")
   }
-
+  
+  private val newLine = Pattern.compile("\n")
+  
   private def buildKbpSentences(docId: String, author: Option[KbpDocLine], date: Option[KbpDocLine], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
-    date.toSeq map { a => new KbpSentence(docId, 0, a.startByte, a.endByte, a.line) } toSeq
+    
+    // first, return any author or date lines as sentences
+    val optionals = (author.toSeq ++ date.toSeq)
+    
+    // split textLines into groups (rough paragraphs?) around empty lines (double-newlines)
+    
+    val lineIterator = textLines.iterator
+    val lineGroups = Iterator.continually {
+      lineIterator.dropWhile(_.isBlank).takeWhile(!_.isBlank).toSeq
+    } takeWhile(!_.isEmpty) toSeq
+   
+    // join lines of a paragraph into big strings, and stuff into a KbpDocLine
+    val paragraphs = lineGroups map { lineGroup =>
+      // join into one big KbpDocLine 
+      // assume lines are in document order
+      // replace newlines (again, assuming they are 1 byte) and replace with space char.
+      val text = lineGroup.map(l => newLine.matcher(l.line).replaceAll(" ")).mkString 
+      val start = lineGroup.head.startByte
+      val end = lineGroup.last.endByte
+      new KbpDocLine(text, start, end)
+    }
+    
+    // run segmenter on each paragraph,
+    // map resulting segments to the KbpDocLine structure.
+    // flatten over all paragraphs
+    val allSegments = paragraphs flatMap { pgraph =>
+      val segments = try {
+        segmenter.segment(pgraph.line)
+      } catch {
+        case e: Throwable => {
+          System.err.println("Sentencer error #%d: Segmenter exception on input: %s".format(errorCounter.incrementAndGet(), pgraph.line))
+          e.printStackTrace()
+          Iterable.empty
+        }
+      }
+      segments map { seg =>
+        val byteInterval = seg.interval
+        new KbpDocLine(seg.text, pgraph.startByte + byteInterval.start, pgraph.startByte + byteInterval.last)
+      }
+    }
+    
+    // convert KbpDocLines to KbpSentences.
+    (optionals ++ allSegments).zipWithIndex map { case (kbpLine, sentNum) =>
+      new KbpSentence(docId, sentNum, kbpLine.startByte, kbpLine.endByte, kbpLine.line)
+    }
   }
 }
 
 object Sentencer {
   
   import scopt.OptionParser
+  
+  import edu.knowitall.tool.sentence.BreezeSentencer
   
   def main(args: Array[String]): Unit = {
     
@@ -151,17 +200,15 @@ object Sentencer {
 
     val docSplitter = new DocSplitter()
     val docParser = KbpDocParser.getParser(corpus)
-    val sentencer = new Sentencer()
+    val sentencer = new Sentencer(new BreezeSentencer())
     
     val source = io.Source.fromFile(inputFile)
     
     val docs = docSplitter.splitDocs(source)
     val parsedDocs = docs flatMap docParser.parseDoc
     val sentences = parsedDocs foreach { doc =>
-      doc.datetimeLine foreach { a => print(a.debugString) }
       sentencer.convertToSentences(doc) foreach { s =>
-        val str = "(%04d,%04d) %s".format(s.startByte, s.endByte, s.text)
-        print(str)
+        println(KbpSentence.write(s))
       }
     }
   }
