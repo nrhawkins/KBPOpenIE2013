@@ -33,7 +33,7 @@ abstract class KbpDocParser() {
   }
   
   protected def isValidText(line: String): Boolean = {
-    !line.startsWith("<") && !line.trim().isEmpty
+    !line.startsWith("<")
   }
 }
 
