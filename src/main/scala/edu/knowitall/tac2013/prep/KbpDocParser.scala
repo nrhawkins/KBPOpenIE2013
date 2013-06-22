@@ -71,10 +71,13 @@ class KbpForumDocParser extends KbpDocParser {
     var docIdLine = Option.empty[KbpDocLine]
     var textLines = new LinkedList[KbpDocLine]
     
+    var lastLineEmpty = false
+    
     for (kbpLine <- rawDoc.lines; line = kbpLine.line) {
       
       if (docIdLine.isEmpty && line.startsWith("<doc id")) docIdLine = Some(kbpLine)
       else if (isValidText(line)) textLines.add(kbpLine)
+      else textLines.add(kbpLine.copy(line = "\n"))
     }
     
     buildDoc(docIdLine, None, None, textLines.asScala.toList)    
@@ -100,6 +103,7 @@ class KbpNewsDocParser extends KbpDocParser {
       else if (docIdLine.isEmpty && line.startsWith("<DOC id")) docIdLine = Some(kbpLine)
       else if (dateLine.isEmpty && line.startsWith("<DATELINE>")) datelineNext = true
       else if (isValidText(line)) textLines.add(kbpLine)
+      else textLines.add(kbpLine.copy(line = "\n"))
     }
     
     buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
@@ -121,6 +125,7 @@ class KbpWebDocParser extends KbpDocParser {
       else if (authorLine.isEmpty && line.startsWith("<POSTER>")) authorLine = Some(kbpLine)
       else if (dateLine.isEmpty && line.startsWith("<DATETIME>")) dateLine = Some(kbpLine)
       else if (isValidText(line)) textLines.add(kbpLine)
+      else textLines.add(kbpLine.copy(line = "\n"))
     }
     
     buildDoc(docIdLine, authorLine, dateLine, textLines.asScala.toList)    
