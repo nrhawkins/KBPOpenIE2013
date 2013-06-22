@@ -17,6 +17,7 @@ organization := "edu.knowitall"
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
 
 libraryDependencies ++= Seq(
+    "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2",
 	"com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-a",
 	"jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
 	"edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
