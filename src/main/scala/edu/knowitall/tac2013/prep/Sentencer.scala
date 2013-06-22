@@ -212,7 +212,6 @@ object Sentencer {
       }
     }
   }
-  
 }
 
 /*
@@ -220,3 +219,5 @@ object Sentencer {
  * 
  */
 case class Mention(val text: String, val startByte: Int, val endByte: Int, val kbpLine: KbpDocLine)
+
+
