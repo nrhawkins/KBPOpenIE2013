@@ -102,8 +102,7 @@ class KbpNewsDocParser extends KbpDocParser {
       else if (isValidText(line)) textLines.add(kbpLine)
     }
     
-    //buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
-    buildDoc(Some(new KbpDocLine("", 0, 0)), None, dateLine, List.empty)
+    buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
   }
 }
 
