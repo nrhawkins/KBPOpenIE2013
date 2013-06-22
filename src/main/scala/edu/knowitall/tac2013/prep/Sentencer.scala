@@ -75,7 +75,18 @@ class Sentencer {
   }
   
   private def extractDate(kbpLine: KbpDocLine): Option[String] = {
-    Some("DATE EXTRACT NOT IMPLEMENTED")
+    // Date format is always:
+    // <DATETIME> 2007-10-22T10:31:03 </DATETIME> (web)
+    // On its own line with no tags, probably with a location as well...
+    // Indicated many times per forum document
+    val str = kbpLine.line
+    
+    if (str.startsWith("<DATETIME>")) {
+      
+      Some(str.drop(11).takeWhile(_ != '<').trim)
+    } else {
+      None
+    }
   }
   
   private def buildKbpSentences(docId: String, author: Option[String], date: Option[String], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
