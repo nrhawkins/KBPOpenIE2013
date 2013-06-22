@@ -20,7 +20,8 @@ class Sentencer {
     val date = parsedDoc.datetimeLine flatMap extractDate
     
     if (docId.isEmpty) {
-      val msg = "Sentencer error #%d: Doc skipped; Unable to extract docId from line: %s".format(parsedDoc.docIdLine.line)
+      val msgFmt = "Sentencer error #%d: Doc skipped; Unable to extract docId from line: %s"
+      val msg = msgFmt.format(errorCounter.incrementAndGet(), parsedDoc.docIdLine.line)
       System.err.println(msg)
       Seq.empty
     } else {
@@ -28,7 +29,7 @@ class Sentencer {
     }
   }
   
-  private val docIdPattern = Pattern.compile("^<DOC id=.*", Pattern.CASE_INSENSITIVE)
+  private val docIdPattern = Pattern.compile("^<DOC\\s+id=.*", Pattern.CASE_INSENSITIVE)
   
   /*
    * Extract docId string, assuming kbpLine contains it.
@@ -44,7 +45,7 @@ class Sentencer {
       // drop the tag and go until the closing tag.
       Some(str.drop(7).takeWhile(_ != '<'))
     }
-    else if (docIdPattern.matcher(str).matches()) {
+    else if (docIdPattern.matcher(str).find()) {
       // drop the <DOC ID=" part, and take until the closing quote.
       Some(str.drop(9).takeWhile(_ != '\"'))
     } else {
@@ -99,36 +100,39 @@ class Sentencer {
   // Byte offsets still properly point to the name 
   private def fabricateSentence(m: Mention, prefix: String, suffix: String): Option[KbpDocLine] = {
 
-        // compute start bytes for the fabricated sentence
-        val fabStart = m.startByte - prefix.length + m.kbpLine.startByte
-        val fabEnd = m.endByte + suffix.length + m.kbpLine.startByte
-        // if fabricated offsets point to bytes outside the document (e.g. negative)
-        // then we can't hand this to the caller, they'll hit an OOB exception.
-        if (fabStart < 0 || fabEnd > m.kbpLine.endByte) None
-        else {
-          val fabSentence = Seq(prefix, m.text, suffix).mkString
-          Some(new KbpDocLine(fabSentence, fabStart, fabEnd))
-        }
-
+    // compute start bytes for the fabricated sentence
+    val fabStart = m.startByte - prefix.length + m.kbpLine.startByte
+    val fabEnd = m.endByte + suffix.length + m.kbpLine.startByte
+    // if fabricated offsets point to bytes outside the document (e.g. negative)
+    // then we can't hand this to the caller, they'll hit an OOB exception.
+    if (fabStart < 0 || fabEnd > m.kbpLine.endByte) None
+    else {
+      val fabSentence = Seq(prefix, m.text, suffix).mkString
+      Some(new KbpDocLine(fabSentence, fabStart, fabEnd))
+    }
   } 
   
-  private def extractDate(kbpLine: KbpDocLine): Option[String] = {
+  private def extractDate(kbpLine: KbpDocLine): Option[KbpDocLine] = {
     // Date format is always:
     // <DATETIME> 2007-10-22T10:31:03 </DATETIME> (web)
     // On its own line with no tags, usually prefixed by a location
     // Indicated many times per forum document
     val str = kbpLine.line
     
-    if (str.startsWith("<DATETIME>")) {
-      
-      Some(str.drop(11).takeWhile(_ != '<').trim)
+    val mention = {
+      if (str.startsWith("<DATETIME>")) {
+      val text = str.drop(11).takeWhile(_ != '<')
+      Mention(text, 11, 11+text.length, kbpLine)
     } else {
-      Some(str)
+      Mention(str, 0, str.length, kbpLine)
+      }
     }
+    
+    fabricateSentence(mention, "This post was written on ", ".\n")
   }
-  
-  private def buildKbpSentences(docId: String, author: Option[KbpDocLine], date: Option[String], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
-    author.toSeq map { a => new KbpSentence(docId, 0, a.startByte, a.endByte, a.line) } toSeq
+
+  private def buildKbpSentences(docId: String, author: Option[KbpDocLine], date: Option[KbpDocLine], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
+    date.toSeq map { a => new KbpSentence(docId, 0, a.startByte, a.endByte, a.line) } toSeq
   }
 }
 
@@ -154,7 +158,7 @@ object Sentencer {
     val docs = docSplitter.splitDocs(source)
     val parsedDocs = docs flatMap docParser.parseDoc
     val sentences = parsedDocs foreach { doc =>
-      doc.authorLine foreach { a => print(a.debugString) }
+      doc.datetimeLine foreach { a => print(a.debugString) }
       sentencer.convertToSentences(doc) foreach { s =>
         val str = "(%04d,%04d) %s".format(s.startByte, s.endByte, s.text)
         print(str)
