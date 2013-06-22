@@ -14,8 +14,11 @@ scalaVersion := "2.10.2"
 
 organization := "edu.knowitall"
 
+resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
+
 libraryDependencies ++= Seq(
 	"com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-a",
+	"jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
 	"edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
 	"org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
 	"edu.washington.cs.knowitall.nlptools" % "nlptools-chunk-opennlp_2.10" % "2.4.2",
