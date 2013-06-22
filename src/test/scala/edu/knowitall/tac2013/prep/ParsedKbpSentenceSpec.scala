@@ -1,6 +1,7 @@
-package edu.knowitall.tac2013.openie
+package edu.knowitall.tac2013.prep
 
 import org.scalatest._
+import edu.knowitall.tac2013.prep.KbpSentence
 
 class KbpSentenceSpec extends FlatSpec {
 

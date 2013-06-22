@@ -1,4 +1,4 @@
-package edu.knowitall.tac2013.openie
+package edu.knowitall.tac2013.prep
 
 case class KbpSentence(val docId: String, val sentNum: Int, val startByte: Int, val endByte: Int, val text: String)
 

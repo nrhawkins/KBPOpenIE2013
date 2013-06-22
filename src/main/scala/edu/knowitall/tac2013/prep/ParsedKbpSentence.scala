@@ -1,6 +1,8 @@
-package edu.knowitall.tac2013.openie
+package edu.knowitall.tac2013.prep
 
 import edu.knowitall.tool.chunk.ChunkedToken
+import KbpSentence.tabRegex
+import scala.Array.canBuildFrom
 
 
 case class ParsedKbpSentence(

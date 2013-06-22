@@ -1,8 +1,5 @@
-package edu.knowitall.tac2013.openie
-
-import edu.knowitall.tool.chunk.Chunker
+package edu.knowitall.tac2013.prep
 import edu.knowitall.tool.chunk.OpenNlpChunker
-import edu.knowitall.tool.parse.DependencyParser
 import edu.knowitall.tool.postag.OpenNlpPostagger
 import edu.knowitall.tool.tokenize.OpenNlpTokenizer
 import edu.knowitall.tool.parse.ClearParser
@@ -12,9 +9,8 @@ import scala.io.Source
 import java.io.PrintStream
 import edu.knowitall.common.Resource.using
 import edu.knowitall.common.Timing
-import edu.knowitall.collection.immutable.Interval
-
-import edu.knowitall.tool.chunk.ChunkedToken
+import java.util.concurrent.atomic.AtomicInteger
+import scala.Option.option2Iterable
 
 class KbpSentenceParser() {
 

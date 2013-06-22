@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.prep
 
-import edu.knowitall.tac2013.openie.KbpSentence
+import edu.knowitall.tac2013.prep.KbpSentence
 import java.util.concurrent.atomic.AtomicInteger
 
 /**

@@ -1,4 +1,4 @@
-package edu.knowitall.tac2013.openie
+package edu.knowitall.tac2013.prep
 
 import org.scalatest._
 

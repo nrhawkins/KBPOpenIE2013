@@ -2,24 +2,17 @@ package edu.knowitall.tac2013.openie
 
 import edu.knowitall.common.Resource
 import edu.knowitall.common.Timing
-
 import edu.knowitall.srlie.SrlExtractor
 import edu.knowitall.srlie.SrlExtractionInstance
 import edu.knowitall.srlie.confidence.SrlConfidenceFunction
-
 import edu.knowitall.chunkedextractor.Relnoun
-
 import edu.knowitall.tool.parse.graph.DependencyGraph
 import edu.knowitall.tool.conf.impl.LogisticRegression
-//import edu.knowitall.tool.chunk.OpenNlpChunker
-//import edu.knowitall.tool.postag.OpenNlpPostagger
-//import edu.knowitall.tool.tokenize.OpenNlpTokenizer
 import edu.knowitall.tool.stem.MorphaStemmer
-
 import java.util.concurrent.atomic.AtomicInteger
 import java.io.PrintStream
-
 import scopt.OptionParser
+import edu.knowitall.tac2013.prep.ParsedKbpSentence
 
 
 abstract class KbpExtractor {
