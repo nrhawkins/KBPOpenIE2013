@@ -53,31 +53,69 @@ class Sentencer {
     }
   }
   
-  private def extractAuthor(kbpLine: KbpDocLine): Option[String] = {
+  private val trailingWs = Pattern.compile("\\s+$")
+  private val quotes = Pattern.compile("^\"([^\"]+)\"$")
+  
+  /*
+   * Fabricate a KbpLine where any author mention is inside an extractp-able
+   * sentence, where the sentence's offsets are set such that the author
+   * mention falls in the correct location.
+   * Returns none if an author couldn't be found within the line.
+   */
+  private def extractAuthor(kbpLine: KbpDocLine): Option[KbpDocLine] = {
     // Author format is always either:
     // <POSTER> "jht...@gmail.com" &lt;jht...@gmail.com&gt; </POSTER>   (web)
     // (nothing for news)
     // (nothing for forums, for now, since each doc lists many authors)
     val str = kbpLine.line
-    
-    if (str.startsWith("<POSTER>")) {
-      // drop the tag, plus a space.
-      // then take until the next ampersand
-      val candidate = str.drop(9).takeWhile(_ != '&')
-      // this will usually work, but if it doesn't, it will take the entire line and end with </POSTER>
-      if (candidate.endsWith("</POSTER>")) None
-      else {
-        Some(candidate.trim().replaceAll("\"", ""))
+
+    // Pull the author's name out of the line with start and end offsets.
+    val mention: Option[Mention] =
+      if (str.startsWith("<POSTER>")) {
+        // drop the tag, plus a space.
+        // then take until the next ampersand
+        val (text, quoted) = {
+          val c1 = str.drop(9).takeWhile(c => c != '&' && c != '<' && c != '\n')
+          val c2 = trailingWs.matcher(c1).replaceAll("")
+          val matcher = quotes.matcher(c2)
+          val quoted = matcher.find()
+          val c3 = if (quoted) c2.drop(1).dropRight(1) else c2 
+          (c3, quoted)
+        }
+        val startByte = if (quoted) 10 else 9
+        val endByte = startByte + text.length
+        Some(Mention(text, startByte, endByte, kbpLine))
+      } else {
+        None
       }
-    } else {
-      None
+
+    mention match {
+      case Some(mention) => fabricateSentence(mention, "This post was written by ", ".\n")
+      case None => None
     }
   }
+
+  // Fabricate a sentence containing the author's name where
+  // Byte offsets still properly point to the name 
+  private def fabricateSentence(m: Mention, prefix: String, suffix: String): Option[KbpDocLine] = {
+
+        // compute start bytes for the fabricated sentence
+        val fabStart = m.startByte - prefix.length + m.kbpLine.startByte
+        val fabEnd = m.endByte + suffix.length + m.kbpLine.startByte
+        // if fabricated offsets point to bytes outside the document (e.g. negative)
+        // then we can't hand this to the caller, they'll hit an OOB exception.
+        if (fabStart < 0 || fabEnd > m.kbpLine.endByte) None
+        else {
+          val fabSentence = Seq(prefix, m.text, suffix).mkString
+          Some(new KbpDocLine(fabSentence, fabStart, fabEnd))
+        }
+
+  } 
   
   private def extractDate(kbpLine: KbpDocLine): Option[String] = {
     // Date format is always:
     // <DATETIME> 2007-10-22T10:31:03 </DATETIME> (web)
-    // On its own line with no tags, probably with a location as well...
+    // On its own line with no tags, usually prefixed by a location
     // Indicated many times per forum document
     val str = kbpLine.line
     
@@ -85,11 +123,49 @@ class Sentencer {
       
       Some(str.drop(11).takeWhile(_ != '<').trim)
     } else {
-      None
+      Some(str)
     }
   }
   
-  private def buildKbpSentences(docId: String, author: Option[String], date: Option[String], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
-    throw new Exception("NOT IMPLEMENTED")
+  private def buildKbpSentences(docId: String, author: Option[KbpDocLine], date: Option[String], textLines: Seq[KbpDocLine]): Seq[KbpSentence] = {
+    author.toSeq map { a => new KbpSentence(docId, 0, a.startByte, a.endByte, a.line) } toSeq
   }
 }
+
+object Sentencer {
+  
+  import scopt.OptionParser
+  
+  def main(args: Array[String]): Unit = {
+    
+    var inputFile = args(0)
+    var corpus = args(1)
+    var news = corpus.equals("news")
+    var forum = corpus.equals("forum")
+    var web = corpus.equals("web")
+    if (!news && !forum && !web) throw new IllegalArgumentException("Unknown corpus: %s".format(args(1)))
+
+    val docSplitter = new DocSplitter()
+    val docParser = KbpDocParser.getParser(corpus)
+    val sentencer = new Sentencer()
+    
+    val source = io.Source.fromFile(inputFile)
+    
+    val docs = docSplitter.splitDocs(source)
+    val parsedDocs = docs flatMap docParser.parseDoc
+    val sentences = parsedDocs foreach { doc =>
+      doc.authorLine foreach { a => print(a.debugString) }
+      sentencer.convertToSentences(doc) foreach { s =>
+        val str = "(%04d,%04d) %s".format(s.startByte, s.endByte, s.text)
+        print(str)
+      }
+    }
+  }
+  
+}
+
+/*
+ * Represents a specific subsection of a given KbpLine. 
+ * 
+ */
+case class Mention(val text: String, val startByte: Int, val endByte: Int, val kbpLine: KbpDocLine)
