@@ -12,7 +12,7 @@ import edu.knowitall.common.Timing
 import java.util.concurrent.atomic.AtomicInteger
 import scala.Option.option2Iterable
 
-class KbpSentenceParser() {
+class KbpSentenceParser private() {
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
   val postagModel = OpenNlpPostagger.loadDefaultModel
