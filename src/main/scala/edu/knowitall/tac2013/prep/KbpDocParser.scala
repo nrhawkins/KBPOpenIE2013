@@ -38,17 +38,21 @@ abstract class KbpDocParser() {
 }
 
 object KbpDocParser {
+  
+  def getParser(corpus: String) = corpus match {
+    case "web" => new KbpWebDocParser()
+    case "news" => new KbpNewsDocParser()
+    case "forum" => new KbpForumDocParser()
+    case _ => throw new IllegalArgumentException("Unknown corpus type \"%s\"".format(corpus))
+  }
+  
   def main(args: Array[String]): Unit = {
     
-    var inputFile = args(0)
-    var corpus = args(1) // web, forum, or news
+    val inputFile = args(0)
+    val corpus = args(1) // web, forum, or news
     
     val docSplitter = new DocSplitter()
-    val docParser = 
-      if (corpus.equals("news")) new KbpNewsDocParser()
-      else if (corpus.equals("forum")) new KbpForumDocParser()
-      else if (corpus.equals("web")) new KbpWebDocParser()
-      else throw new IllegalArgumentException("Unknown corpus type \"%s\"".format(corpus))
+    val docParser = getParser(corpus)
     
     val source = io.Source.fromFile(inputFile)
     
@@ -98,7 +102,8 @@ class KbpNewsDocParser extends KbpDocParser {
       else if (isValidText(line)) textLines.add(kbpLine)
     }
     
-    buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
+    //buildDoc(docIdLine, None, dateLine, textLines.asScala.toList)    
+    buildDoc(Some(new KbpDocLine("", 0, 0)), None, dateLine, List.empty)
   }
 }
 
