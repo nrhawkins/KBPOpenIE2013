@@ -54,7 +54,24 @@ class Sentencer {
   }
   
   private def extractAuthor(kbpLine: KbpDocLine): Option[String] = {
-    Some("AUTHOR EXTRACT NOT IMPLEMENTED")
+    // Author format is always either:
+    // <POSTER> "jht...@gmail.com" &lt;jht...@gmail.com&gt; </POSTER>   (web)
+    // (nothing for news)
+    // (nothing for forums, for now, since each doc lists many authors)
+    val str = kbpLine.line
+    
+    if (str.startsWith("<POSTER>")) {
+      // drop the tag, plus a space.
+      // then take until the next ampersand
+      val candidate = str.drop(9).takeWhile(_ != '&')
+      // this will usually work, but if it doesn't, it will take the entire line and end with </POSTER>
+      if (candidate.endsWith("</POSTER>")) None
+      else {
+        Some(candidate.trim().replaceAll("\"", ""))
+      }
+    } else {
+      None
+    }
   }
   
   private def extractDate(kbpLine: KbpDocLine): Option[String] = {
