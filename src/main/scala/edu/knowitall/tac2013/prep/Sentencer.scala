@@ -101,6 +101,8 @@ object Sentencer {
   
   import edu.knowitall.tool.sentence.BreezeSentencer
   
+  lazy val defaultInstance = new Sentencer(new BreezeSentencer())
+  
   def main(args: Array[String]): Unit = {
     
     var inputFile = args(0)
@@ -113,7 +115,7 @@ object Sentencer {
 
     val docSplitter = new DocSplitter()
     val docParser = KbpDocParser.getParser(corpus)
-    val sentencer = new Sentencer(new BreezeSentencer())
+    val sentencer = defaultInstance
     
     val source = io.Source.fromFile(inputFile)
     val output = if (outputFile.equals("stdout")) System.out else new java.io.PrintStream(outputFile)

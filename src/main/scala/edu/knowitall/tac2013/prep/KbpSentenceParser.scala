@@ -12,7 +12,7 @@ import edu.knowitall.common.Timing
 import java.util.concurrent.atomic.AtomicInteger
 import scala.Option.option2Iterable
 
-class KbpSentenceParser private() {
+class KbpSentenceParser() {
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
   val postagModel = OpenNlpPostagger.loadDefaultModel
@@ -37,12 +37,12 @@ class KbpSentenceParser private() {
     try {
     // chunks, then parse
     val chunker = chunkerLocal.get
-    val chunked = chunker.synchronized { chunker.chunk(kbpSentence.text) } 
+    val chunked = chunker.chunk(kbpSentence.text) 
     val dgraph = parser.dependencyGraph(kbpSentence.text).serialize
     val tokens = chunked.map(_.string).mkString(" ")
     val postags = chunked.map(_.postag).mkString(" ")
     val chunks = chunked.map(_.chunk).mkString(" ")
-    val offsets = chunked.map(_.offset).mkString(" ")
+    val offsets = chunked.map(_.offset + kbpSentence.startByte).mkString(" ")
     
     Some(ParsedKbpSentence(kbpSentence.docId, tokens, postags, chunks, offsets, dgraph))
     } catch {
@@ -63,47 +63,64 @@ object KbpSentenceParser {
   
   def main(args: Array[String]): Unit = {
     
-    var inputFile = Option.empty[String]
+    var webRaw  = Option.empty[String]
+    var newsRaw  = Option.empty[String]
+    var forumRaw = Option.empty[String] 
+    
     var outputFile = Option.empty[String]
     var parallel = false
     
     val cliParser = new OptionParser() {
-      opt("inputFile", "File: KbpSentences one per line -- default stdin", { str => inputFile = Some(str) })
+      opt("webFile", "raw web xml", { str => webRaw = Some(str) })
+      opt("newsRaw", "raw news xml", { str => newsRaw = Some(str) })
+      opt("forumRaw", "raw forum xml", { str => forumRaw = Some(str) })
       opt("outputFile", "File: ParsedKbpSentences, default stdout", { str => outputFile = Some(str) })
       opt("parallel", "Run multithreaded? Default = no", { parallel = true })
     }
 
     val nsTime = Timing.time {
-
       if (cliParser.parse(args)) {
-        val inputSource = inputFile map Source.fromFile getOrElse Source.stdin
-        val outputStream = outputFile map { file => new PrintStream(file) } getOrElse System.out
-        using(inputSource) { input =>
-          using(outputStream) { output =>
-            if (!parallel) run(input, output)
-            else runParallel(input, output)
-          }
-        }
-      } else {
-        return
+
+        val inputCorpora =
+          Seq((newsRaw, "news"), (webRaw, "web"), (forumRaw, "forum"))
+            .flatMap {
+              case (input, corpora) => input match {
+                case Some(f) => Some(f, corpora)
+                case None => None
+              }
+            }
+
+        runMain(inputCorpora, System.out, parallel)
       }
+
     }
-    
     val seconds = Timing.Seconds.format(nsTime)
     System.err.println("Processed %d sentences in %s.".format(sentencesProcessed.get, seconds))
   }
-  
-  def run(input: Source, output: PrintStream): Unit = {
 
+  def runMain(inputCorpora: Seq[(String, String)], output: PrintStream, parallel: Boolean): Unit = {
+
+    println(inputCorpora)
     
+    inputCorpora map { case (sample, corpus) =>
+      val source = Source.fromFile(sample)
+      if (parallel) runParallel(source, output, corpus)
+      else run(source, output, corpus)
+    }
+  }
+  
+  def run(input: Source, output: PrintStream, corpus: String): Unit = {
+
+    val docSplitter = new DocSplitter()
+    val docParser = KbpDocParser.getParser(corpus)
+    val sentencer = Sentencer.defaultInstance
     val kbpProcessor = new KbpSentenceParser();
     
-    val kbpSentences = input.getLines.flatMap { line =>
-      sentencesProcessed.incrementAndGet()
-      KbpSentence.read(line) 
-    }
+    val docs = docSplitter.splitDocs(input)
+    val parsedDocs = docs flatMap docParser.parseDoc
+    val sentences = parsedDocs flatMap sentencer.convertToSentences
     
-    kbpSentences.foreach { kbpSentence =>
+    sentences.foreach { kbpSentence =>
       val parsedKbpSentenceOption = kbpProcessor.parseKbpSentence(kbpSentence)
       parsedKbpSentenceOption foreach { parsedKbpSentence =>
         output.println(ParsedKbpSentence.write(parsedKbpSentence))
@@ -113,18 +130,21 @@ object KbpSentenceParser {
   
   val batchSize = 1000
   
-  def runParallel(input: Source, output: PrintStream): Unit = {
-    val chunker = new OpenNlpChunker()
-    val parser = new ClearParser(new ClearPostagger())
+  def runParallel(input: Source, output: PrintStream, corpus: String): Unit = {
     
+    val docSplitter = new DocSplitter()
+    val docParser = KbpDocParser.getParser(corpus)
+    val sentencer = Sentencer.defaultInstance
     val kbpProcessor = new KbpSentenceParser();
     
-    val lineGroups = input.getLines.grouped(batchSize)
+    val docs = docSplitter.splitDocs(input)
+    val parsedDocs = docs flatMap docParser.parseDoc
+    val sentences = parsedDocs flatMap sentencer.convertToSentences
     
-    lineGroups.flatMap { group =>
-      group.par.flatMap { line =>
+    sentences.grouped(batchSize).flatMap { sentenceGroup =>
+      sentenceGroup.par.flatMap { sentence =>
         sentencesProcessed.incrementAndGet()
-        KbpSentence.read(line) flatMap kbpProcessor.parseKbpSentence
+        kbpProcessor.parseKbpSentence(sentence)
       }
     } map { parsed => 
       ParsedKbpSentence.write(parsed)  
