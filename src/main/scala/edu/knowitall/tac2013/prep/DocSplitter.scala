@@ -41,7 +41,7 @@ class DocSplitter {
       
       val nextLine = lines.next() + "\n"
       if (docCloseTag.matcher(nextLine).matches()) done = true
-      val endByte = startByte + nextLine.getBytes().length - 1
+      val endByte = startByte + nextLine.getBytes("UTF8").length - 1
       lineBuffer.add(new KbpDocLine(nextLine, startByte, endByte))
       startByte = endByte + 1
     }
@@ -70,7 +70,7 @@ object DocSplitter {
     
     val source = io.Source.fromFile(inputFile, "UTF8")	
     
-    val docSpliterator = new DocSplitter().splitDocs(source)
+    val docSpliterator = new DocSplitter().splitDocs(source).take(docsToSplit)
     
     docSpliterator.foreach { kbpDoc =>
 

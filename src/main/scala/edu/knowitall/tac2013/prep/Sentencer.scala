@@ -152,7 +152,7 @@ class Sentencer(val segmenter: Segmenter) {
       // join into one big KbpDocLine 
       // assume lines are in document order
       // replace newlines (again, assuming they are 1 byte) and replace with space char.
-      val bytes = lineGroup.flatMap(l => l.line.getBytes()).toArray
+      val bytes = lineGroup.flatMap(l => l.line.getBytes("UTF8")).toArray
       val text = new String(bytes, "UTF8")
       val start = lineGroup.head.startByte
       val end = lineGroup.last.endByte
@@ -172,9 +172,9 @@ class Sentencer(val segmenter: Segmenter) {
           Iterable.empty
         }
       }
-
+      
       // placeholder segment is null because the second list is always shorter
-      val bytes = pgraph.line.getBytes
+      val bytes = pgraph.line.getBytes("UTF8")
       segments.zipAll(
           segments.drop(1).map(_.interval.start), 
           null, 
