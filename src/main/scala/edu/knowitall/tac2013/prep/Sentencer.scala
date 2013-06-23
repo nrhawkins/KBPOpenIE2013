@@ -3,6 +3,7 @@ package edu.knowitall.tac2013.prep
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
 import edu.knowitall.tool.segment.Segmenter
+import Sentencer._
 
 /**
  * Converts from KbpParsedDoc to KbpSentences
@@ -30,7 +31,7 @@ class Sentencer(val segmenter: Segmenter) {
     }
   }
   
-  private val docIdPattern = Pattern.compile("^<DOC\\s+id=.*", Pattern.CASE_INSENSITIVE)
+
   
   /*
    * Extract docId string, assuming kbpLine contains it.
@@ -151,7 +152,8 @@ class Sentencer(val segmenter: Segmenter) {
       // join into one big KbpDocLine 
       // assume lines are in document order
       // replace newlines (again, assuming they are 1 byte) and replace with space char.
-      val text = lineGroup.map(l => newLine.matcher(l.line).replaceAll(" ")).mkString 
+      val bytes = lineGroup.flatMap(l => l.line.getBytes()).toArray
+      val text = new String(bytes, "UTF8")
       val start = lineGroup.head.startByte
       val end = lineGroup.last.endByte
       new KbpDocLine(text, start, end)
@@ -170,15 +172,29 @@ class Sentencer(val segmenter: Segmenter) {
           Iterable.empty
         }
       }
-      segments map { seg =>
-        val byteInterval = seg.interval
-        new KbpDocLine(seg.text, pgraph.startByte + byteInterval.start, pgraph.startByte + byteInterval.last)
+
+      // placeholder segment is null because the second list is always shorter
+      val bytes = pgraph.line.getBytes
+      segments.zipAll(
+          segments.drop(1).map(_.interval.start), 
+          null, 
+          pgraph.endByte - pgraph.startByte
+          ) map { case (seg, nextStart) =>
+        
+        // For some reason we seem to drift behind, as if the sentencer counts offsets differently 
+        // than based on the source bytes. So, here's a hack to shift our sentence window over
+        // so that it starts with a Letter.
+        val shift = 0 //math.max(0, bytes.drop(seg.offset).indexWhere(_.toChar.isLetter))
+        val start = seg.offset + shift 
+        val end = nextStart - 1 + shift
+        val text = new String(bytes.drop(start).take(end - start + 1), "UTF8")
+        new KbpDocLine(text, pgraph.startByte + start, pgraph.startByte + end)
       }
     }
     
     // convert KbpDocLines to KbpSentences.
     (optionals ++ allSegments).zipWithIndex map { case (kbpLine, sentNum) =>
-      new KbpSentence(docId, sentNum, kbpLine.startByte, kbpLine.endByte, kbpLine.line)
+      new KbpSentence(docId, sentNum, kbpLine.startByte, kbpLine.endByte, newLine.matcher(kbpLine.line).replaceAll(" "))
     }
   }
 }
@@ -188,6 +204,8 @@ object Sentencer {
   import scopt.OptionParser
   
   import edu.knowitall.tool.sentence.BreezeSentencer
+  
+  private val docIdPattern = Pattern.compile("^<DOC\\s+id=.*", Pattern.CASE_INSENSITIVE)
   
   def main(args: Array[String]): Unit = {
     
