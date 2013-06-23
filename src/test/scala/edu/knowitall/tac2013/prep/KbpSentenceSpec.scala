@@ -7,7 +7,7 @@ class KbpSentenceSpec extends FlatSpec {
   val samplesDir = "src/main/resources/samples/"
   val corpora = Seq("news", "web", "forum")
   val sentFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-sentences.txt") }
-  val rawFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "_sample.txt") }
+  val rawFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-xml.txt") }
   
   "KbpSentences" should "deserialize then serialize to their original string" in {
     
