@@ -40,10 +40,10 @@ class DocSplitterSpec extends FlatSpec {
     
     require(!spliterator.hasNext)
     
-    val bytes = DocSplitterSpec.fileBytes(file)
+    val fileString = DocSplitterSpec.fileString(file)
     
     for (kbpline <- kbpDoc.lines) {
-      val targetString = new String(bytes.drop(kbpline.startByte).take(kbpline.length), "UTF8")
+      val targetString = fileString.drop(kbpline.offset).take(kbpline.length)
       assert(targetString === kbpline.line)
     }
     source.close()
@@ -52,8 +52,8 @@ class DocSplitterSpec extends FlatSpec {
 
 object DocSplitterSpec {
    
-  def fileBytes(file: File): Array[Byte] = {
+  def fileString(file: File): String = {
     val path = Paths.get(file.getPath)
-    Files.readAllBytes(path);
+    new String(Files.readAllBytes(path), "UTF8");
   }
 }

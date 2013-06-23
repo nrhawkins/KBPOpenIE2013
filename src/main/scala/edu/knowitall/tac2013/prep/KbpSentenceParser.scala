@@ -42,9 +42,9 @@ class KbpSentenceParser() {
     val tokens = chunked.map(_.string).mkString(" ")
     val postags = chunked.map(_.postag).mkString(" ")
     val chunks = chunked.map(_.chunk).mkString(" ")
-    val offsets = chunked.map(_.offset + kbpSentence.startByte).mkString(" ")
+    val offset = kbpSentence.offset.toString
     
-    Some(ParsedKbpSentence(kbpSentence.docId, tokens, postags, chunks, offsets, dgraph))
+    Some(ParsedKbpSentence(kbpSentence.docId, tokens, postags, chunks, offset, dgraph))
     } catch {
       case e: Throwable =>
         System.err.println("Error parsing sentence: %s".format(kbpSentence.text))

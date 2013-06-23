@@ -42,12 +42,10 @@ class Sentencer(val segmenter: Segmenter) {
     val paragraphs = lineGroups map { lineGroup =>
       // join into one big KbpDocLine 
       // assume lines are in document order
-      val bytes = lineGroup.flatMap(l => l.line.getBytes("UTF8")).toArray
-      val text = new String(bytes, "UTF8")
-      val start = lineGroup.head.startByte
-      val end = lineGroup.last.endByte
-      assert(end == start + bytes.length - 1)
-      new KbpDocLine(text, start, end)
+      val text = lineGroup.map(_.line).mkString
+      //val text = new String(bytes, "UTF8")
+      val offset = lineGroup.head.offset
+      new KbpDocLine(text, offset)
     }
     paragraphs
   }
@@ -73,24 +71,23 @@ class Sentencer(val segmenter: Segmenter) {
           Seq.empty
         }
       }
-      (segments, pgraph.startByte)
+      (segments, pgraph.offset)
     }
     
     val asDocLines = allSegments.flatMap { case (segments, pgraphStart) =>
-      val segBytes = segments.map(_.text.getBytes("UTF8"))
-      val segStarts = (0 to segBytes.size - 1).map { num =>
-        val segOffset = segBytes.take(num).map(_.length).sum
+      val segStarts = (0 to segments.size - 1).map { num =>
+        val segOffset = segments.take(num).map(_.length).sum
         segOffset + pgraphStart
       }
-      assert(segBytes.size == segStarts.size && segStarts.size == segments.size)
-      segments.zip(segBytes).zip(segStarts) map { case ((seg, bytes), start) =>
-        new KbpDocLine(new String(bytes, "UTF8"), start, start + bytes.length - 1)  
+      assert(segments.size == segStarts.size)
+      segments.zip(segStarts) map { case (seg, start) =>
+        new KbpDocLine(seg.text, start)  
       }
     }
     
     // convert KbpDocLines to KbpSentences.
     (optionals ++ asDocLines).zipWithIndex map { case (kbpLine, sentNum) =>
-      new KbpSentence(docId, sentNum, kbpLine.startByte, kbpLine.endByte, newLine.matcher(kbpLine.line).replaceAll(" "))
+      new KbpSentence(docId, sentNum, kbpLine.offset, newLine.matcher(kbpLine.line).replaceAll(" "))
     }
   }
 }
@@ -129,11 +126,3 @@ object Sentencer {
     }
   }
 }
-
-/*
- * Represents a specific subsection of a given KbpLine. 
- * 
- */
-case class Mention(val text: String, val startByte: Int, val endByte: Int, val kbpLine: KbpDocLine)
-
-

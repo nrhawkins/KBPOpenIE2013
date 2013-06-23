@@ -37,11 +37,10 @@ class KbpSentenceSpec extends FlatSpec {
         val parser = KbpDocParser.getParser(corpus)
         val docSplitterator = docSplitter.splitDocs(source)
         for (rawDoc <- docSplitterator; parsedDoc <- parser.parseDoc(rawDoc); docId <- parsedDoc.extractDocId) {
-          val rawBytes = rawDoc.getBytes
+          val rawString = rawDoc.getString
           val sents = sentenceMap(docId)
           sents foreach { s =>
-            val bytes = rawBytes.drop(s.startByte).take(s.endByte - s.startByte + 1)
-            val extrString = new String(bytes, "UTF8").replaceAll("\n", " ")
+            val extrString = rawString.drop(s.offset).take(s.text.length).replaceAll("\n", " ")
             if (!extrString.equals(s.text)) {
               System.err.println("\"%s\"".format(extrString))
               System.err.println("\"%s\"".format(s.text))

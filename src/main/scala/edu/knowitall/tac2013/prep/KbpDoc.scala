@@ -9,7 +9,7 @@ import java.util.regex.Pattern
  */
 class KbpRawDoc(val lines: List[KbpDocLine]) {
   
-  def getBytes = lines.flatMap(_.line.getBytes("UTF8")).toArray
+  def getString = lines.flatMap(_.line).mkString
   
 }
 
@@ -17,10 +17,10 @@ class KbpRawDoc(val lines: List[KbpDocLine]) {
  * Represents a line of characters from the raw KBP source corpus,
  * with byte offsets counting from 0 at the start of the "<DOC>" tag.
  */
-case class KbpDocLine(val line: String, val startByte: Int, val endByte: Int) {
+case class KbpDocLine(val line: String, val offset: Int) {
   lazy val isBlank = line.trim.isEmpty()
-  def debugString = "(%04d,%04d) %s".format(startByte, endByte, line)
-  def length = endByte - startByte + 1
+  def debugString = "(%04d,%04d) %s".format(offset, line)
+  def length = line.length()
 }
 
 object KbpParsedDoc {
@@ -54,9 +54,9 @@ object KbpParsedDoc {
           val c3 = if (quoted) c2.drop(1).dropRight(1) else c2
           (c3, quoted)
         }
-        val startByte = if (quoted) 10 else 9
-        val endByte = startByte + text.length
-        Some(Mention(text, startByte, endByte, authorLine))
+        val start = if (quoted) 10 else 9
+        val end = start + text.length
+        Some(Mention(text, start, end, authorLine))
       } else {
         None
       }
@@ -72,14 +72,14 @@ object KbpParsedDoc {
   private def fabricateSentence(m: Mention, prefix: String, suffix: String): Option[KbpDocLine] = {
 
     // compute start bytes for the fabricated sentence
-    val fabStart = m.startByte - prefix.length + m.kbpLine.startByte
-    val fabEnd = m.endByte + suffix.length + m.kbpLine.startByte
+    val fabStart = m.start - prefix.length + m.kbpLine.offset
+    val fabEnd = m.end + suffix.length + m.kbpLine.offset
     // if fabricated offsets point to bytes outside the document (e.g. negative)
     // then we can't hand this to the caller, they'll hit an OOB exception.
-    if (fabStart < 0 || fabEnd > m.kbpLine.endByte) None
+    if (fabStart < 0 || fabEnd > m.kbpLine.offset + m.kbpLine.length) None
     else {
       val fabSentence = Seq(prefix, m.text, suffix).mkString
-      Some(new KbpDocLine(fabSentence, fabStart, fabEnd))
+      Some(new KbpDocLine(fabSentence, fabStart))
     }
   }
 
@@ -142,3 +142,10 @@ class KbpParsedDoc(
 
   def extractDate: Option[KbpDocLine] = datetimeLine flatMap { d => KbpParsedDoc.extractDate(d)}
 }
+
+/*
+ * Represents a specific subsection of a given KbpLine. 
+ * 
+ */
+case class Mention(val text: String, val start: Int, val end: Int, val kbpLine: KbpDocLine)
+

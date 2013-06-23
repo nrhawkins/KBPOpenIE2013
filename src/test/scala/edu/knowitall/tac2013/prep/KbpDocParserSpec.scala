@@ -45,10 +45,10 @@ class KbpDocParserSpec extends FlatSpec {
     
     val parsedDoc = docParser.parseDoc(kbpDoc)
     
-    val bytes = DocSplitterSpec.fileBytes(file)
+    val fileString = DocSplitterSpec.fileString(file)
     
     for (doc <- parsedDoc.toList; kbpline <- doc.textLines) {
-      val targetString = new String(bytes.drop(kbpline.startByte).take(kbpline.length), "UTF8")
+      val targetString = fileString.drop(kbpline.offset).take(kbpline.length)
       if (!kbpline.line.trim().isEmpty) {
         if (!targetString.equals(kbpline.line)) {
           System.err.println("ParsedDoc: error on docId=%s expected\\nactual\n%s\n%s".format(doc.docIdLine.line, targetString, kbpline.line))

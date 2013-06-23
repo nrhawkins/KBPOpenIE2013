@@ -27,8 +27,8 @@ class SentencerSpec extends FlatSpec {
             parsedDoc <- docParser.parseDoc(rawDoc).toList;
             s <- sentencer.convertToSentences(parsedDoc)
          ) {
-          val bytes = DocSplitterSpec.fileBytes(file)
-          val byteString = new String(bytes.drop(s.startByte).take(s.endByte - s.startByte + 1), "UTF8")
+          val fileString = DocSplitterSpec.fileString(file)
+          val byteString = fileString.drop(s.offset).take(s.length)
           // skip the fabricated sentences. Offsets only line up for the entity in them.
           if (!s.text.startsWith("This post was written")) {
             
@@ -37,8 +37,8 @@ class SentencerSpec extends FlatSpec {
             
             def bytes(str: String) = str
             if (!str.equals(exp)) {
-             //System.err.println("\"%s\"".format(str))
-             //System.err.println("\"%s\"".format(exp))
+             System.err.println("\"%s\"".format(str))
+             System.err.println("\"%s\"".format(exp))
              fail()
             } 
           }

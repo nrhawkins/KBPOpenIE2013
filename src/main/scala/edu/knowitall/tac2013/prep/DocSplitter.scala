@@ -33,7 +33,7 @@ class DocSplitter {
     
     val lineBuffer = new LinkedList[KbpDocLine]()
     
-    var startByte = 0
+    var offset = 0
     
     var done = false
     
@@ -41,9 +41,8 @@ class DocSplitter {
       
       val nextLine = lines.next() + "\n"
       if (docCloseTag.matcher(nextLine).matches()) done = true
-      val endByte = startByte + nextLine.getBytes("UTF8").length - 1
-      lineBuffer.add(new KbpDocLine(nextLine, startByte, endByte))
-      startByte = endByte + 1
+      lineBuffer.add(new KbpDocLine(nextLine, offset))
+      offset = offset + nextLine.length
     }
     new KbpRawDoc(lineBuffer.asScala.toList)
     
