@@ -7,7 +7,11 @@ import java.util.regex.Pattern
  * KBP corpus document -
  * e.g. from <DOC> to </DOC>
  */
-class KbpRawDoc(val lines: List[KbpDocLine])
+class KbpRawDoc(val lines: List[KbpDocLine]) {
+  
+  def getBytes = lines.flatMap(_.line.getBytes("UTF8")).toArray
+  
+}
 
 /**
  * Represents a line of characters from the raw KBP source corpus,
