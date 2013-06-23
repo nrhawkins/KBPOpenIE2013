@@ -151,49 +151,44 @@ class Sentencer(val segmenter: Segmenter) {
     val paragraphs = lineGroups map { lineGroup =>
       // join into one big KbpDocLine 
       // assume lines are in document order
-      // replace newlines (again, assuming they are 1 byte) and replace with space char.
       val bytes = lineGroup.flatMap(l => l.line.getBytes("UTF8")).toArray
       val text = new String(bytes, "UTF8")
       val start = lineGroup.head.startByte
       val end = lineGroup.last.endByte
+      assert(end == start + bytes.length - 1)
       new KbpDocLine(text, start, end)
     }
     
     // run segmenter on each paragraph,
     // map resulting segments to the KbpDocLine structure.
     // flatten over all paragraphs
-    val allSegments = paragraphs flatMap { pgraph =>
+    val allSegments = paragraphs map { pgraph =>
       val segments = try {
-        segmenter.segment(pgraph.line)
+        segmenter.segment(pgraph.line).toSeq
       } catch {
         case e: Throwable => {
           System.err.println("Sentencer error #%d: Segmenter exception on input: %s".format(errorCounter.incrementAndGet(), pgraph.line))
           e.printStackTrace()
-          Iterable.empty
+          Seq.empty
         }
       }
-      
-      // placeholder segment is null because the second list is always shorter
-      val bytes = pgraph.line.getBytes("UTF8")
-      segments.zipAll(
-          segments.drop(1).map(_.interval.start), 
-          null, 
-          pgraph.endByte - pgraph.startByte
-          ) map { case (seg, nextStart) =>
-        
-        // For some reason we seem to drift behind, as if the sentencer counts offsets differently 
-        // than based on the source bytes. So, here's a hack to shift our sentence window over
-        // so that it starts with a Letter.
-        val shift = 0 //math.max(0, bytes.drop(seg.offset).indexWhere(_.toChar.isLetter))
-        val start = seg.offset + shift 
-        val end = nextStart - 1 + shift
-        val text = new String(bytes.drop(start).take(end - start + 1), "UTF8")
-        new KbpDocLine(text, pgraph.startByte + start, pgraph.startByte + end)
+      (segments, pgraph.startByte)
+    }
+    
+    val asDocLines = allSegments.flatMap { case (segments, pgraphStart) =>
+      val segBytes = segments.map(_.text.getBytes("UTF8"))
+      val segStarts = (0 to segBytes.size - 1).map { num =>
+        val segOffset = segBytes.take(num).map(_.length).sum
+        segOffset + pgraphStart
+      }
+      assert(segBytes.size == segStarts.size && segStarts.size == segments.size)
+      segments.zip(segBytes).zip(segStarts) map { case ((seg, bytes), start) =>
+        new KbpDocLine(new String(bytes, "UTF8"), start, start + bytes.length - 1)  
       }
     }
     
     // convert KbpDocLines to KbpSentences.
-    (optionals ++ allSegments).zipWithIndex map { case (kbpLine, sentNum) =>
+    (optionals ++ asDocLines).zipWithIndex map { case (kbpLine, sentNum) =>
       new KbpSentence(docId, sentNum, kbpLine.startByte, kbpLine.endByte, newLine.matcher(kbpLine.line).replaceAll(" "))
     }
   }
