@@ -58,13 +58,15 @@ class ParsedKbpSentenceSpec extends FlatSpec {
         sentenceopt <- parsedSentences.get(docId)) {
       
       val docString = rawDoc.getString
-      for (sentence <- sentenceopt; token <- sentence.chunkedTokens) {
+      for (sentence <- sentenceopt; token <- DependencyGraph.deserialize(sentence.dgraph).nodes) {
         val pstart = sentence.offset.toInt
         val start = token.interval.start + pstart
         val str = docString.drop(start).take(token.string.length).replaceAll("\n", " ")
         
         if (!str.equals(token.string)) {
-          System.err.println("%s\n\"%s\"\n\"%s\"".format(sentence.docId, str, token.string))
+          System.err.println("%s:%s".format(sentence.docId, sentence.offset.toInt + token.offset))
+          System.err.println("file:  \"%s\"".format(str))
+          System.err.println("token: \"%s\"".format(token.string))
           fail()
         }
       }

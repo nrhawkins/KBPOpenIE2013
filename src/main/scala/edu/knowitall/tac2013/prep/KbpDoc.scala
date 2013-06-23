@@ -19,7 +19,7 @@ class KbpRawDoc(val lines: List[KbpDocLine]) {
  */
 case class KbpDocLine(val line: String, val offset: Int) {
   lazy val isBlank = line.trim.isEmpty()
-  def debugString = "(%04d,%04d) %s".format(offset, line)
+  def debugString = "(%04d) %s".format(offset, line)
   def length = line.length()
 }
 

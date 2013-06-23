@@ -49,18 +49,21 @@ object KbpDocParser {
   def main(args: Array[String]): Unit = {
     
     val inputFile = args(0)
-    val corpus = args(1) // web, forum, or news
+    val outputFile = args(1)
+    val corpus = args(2) // web, forum, or news
     
     val docSplitter = new DocSplitter()
     val docParser = getParser(corpus)
     
     val source = io.Source.fromFile(inputFile)
     
+    val output = new java.io.PrintStream(outputFile, "UTF8")
+    
     val spliterator = docSplitter.splitDocs(source)
     
-    spliterator.take(10).foreach { kbpRawDoc => 
+    spliterator.foreach { kbpRawDoc => 
       val text = docParser.parseDoc(kbpRawDoc).get.debugText
-      println(text)
+      output.println(text)
     }
   }
 }

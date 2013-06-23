@@ -92,7 +92,7 @@ object KbpSentenceParser {
               }
             }
 
-        val output = if (outputFile.equals("stdout")) System.out else new PrintStream(outputFile)
+        val output = if (outputFile.equals("stdout")) System.out else new PrintStream(outputFile, "UTF8")
         
         runMain(inputCorpora, output, parallel, limit)
       }

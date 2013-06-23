@@ -73,7 +73,7 @@ object DocSplitter {
     
     docSpliterator.foreach { kbpDoc =>
 
-      val output = new PrintStream("%s/doc%d.txt".format(outputDir, numDocs))
+      val output = new PrintStream("%s/doc%d.txt".format(outputDir, numDocs), "UTF8")
       
       kbpDoc.lines.foreach { kbpLine => output.print(kbpLine.line) }
 
