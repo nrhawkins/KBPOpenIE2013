@@ -205,7 +205,8 @@ object Sentencer {
   def main(args: Array[String]): Unit = {
     
     var inputFile = args(0)
-    var corpus = args(1)
+    var outputFile = args(1)
+    var corpus = args(2)
     var news = corpus.equals("news")
     var forum = corpus.equals("forum")
     var web = corpus.equals("web")
@@ -216,12 +217,13 @@ object Sentencer {
     val sentencer = new Sentencer(new BreezeSentencer())
     
     val source = io.Source.fromFile(inputFile)
+    val output = new java.io.PrintStream(outputFile)
     
     val docs = docSplitter.splitDocs(source)
     val parsedDocs = docs flatMap docParser.parseDoc
     val sentences = parsedDocs foreach { doc =>
       sentencer.convertToSentences(doc) foreach { s =>
-        println(KbpSentence.write(s))
+        output.println(KbpSentence.write(s))
       }
     }
   }
