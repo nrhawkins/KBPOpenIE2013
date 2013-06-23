@@ -17,14 +17,14 @@ organization := "edu.knowitall"
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
 
 libraryDependencies ++= Seq(
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2",
+    "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
 	"com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-a",
 	"jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
 	"edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
 	"org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
 	"edu.washington.cs.knowitall.nlptools" % "nlptools-chunk-opennlp_2.10" % "2.4.2",
 	"edu.washington.cs.knowitall.nlptools" % "nlptools-parse-clear_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
-	"edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1",
+	"edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
 	"net.liftweb" %% "lift-json" % "2.5-RC5",
 	"org.apache.solr" % "solr-solrj" % "4.3.0",
 	"edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4",
