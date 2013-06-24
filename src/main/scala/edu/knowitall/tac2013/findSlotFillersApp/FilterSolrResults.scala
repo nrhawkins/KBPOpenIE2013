@@ -1,6 +1,22 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
 object FilterSolrResults {
+
+  //filter for arg2 beginning with proper preposition
+  private def satisfiesArg2Filter(relationData: KbpSlotToOpenIEData, resultsMap: Map[String,Any] ): Boolean{
+
+    True
+  }
+  
+  private def satisfiesRelFilter(relationData: KbpSlotToOpenIEData, resultsMap: Map[String,Any] ): Boolean{
+    
+    True
+  }
+  
+  private def satisfiesArg1Filter(relationData: KbpSlotToOpenIEData, resultsMap: Map[String,Any] ): Boolean{
+    
+    True
+  }
   
   def filterResults(resultsArray: Array[Map[String,Any]],relationData: KbpSlotToOpenIEData) : Array[Map[String,Any]] = {
     
@@ -16,9 +32,18 @@ object FilterSolrResults {
 	          solrResultsArg2.toString().substring(1,arg2PrepositionString.length+1) == arg2PrepositionString)
 	        filteredResultsArray = filteredResultsArray :+ solrResultsMap
 	      }
+      //filter that ensures relation phrases end with query verb
+      
       else{
         filteredResultsArray = filteredResultsArray :+ solrResultsMap
       }
+      
+      if( satisfiesArg2Filter(relationData,solrResultsMap) &&
+          satisfiesArg1Filter(relationData,solrResultsMap) &&
+          satisfiesRelFilter(relationData,solrResultsMap)){
+          
+      }
+      
       
        
     }
