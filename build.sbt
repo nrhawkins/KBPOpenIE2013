@@ -17,8 +17,10 @@ organization := "edu.knowitall"
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
 
 libraryDependencies ++= Seq(
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
+        "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
 	"com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-a",
+        "net.databinder" %% "unfiltered-filter" % "0.6.8",
+        "net.databinder" %% "unfiltered-jetty" % "0.6.8",
 	"jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
 	"edu.stanford.nlp" % "stanford-corenlp" % "1.3.4",
 	"org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
@@ -30,7 +32,7 @@ libraryDependencies ++= Seq(
 	"edu.washington.cs.knowitall.chunkedextractor" %% "chunkedextractor" % "1.0.4",
 	"org.slf4j" % "slf4j-api" % "1.7.2",
 	"ch.qos.logback" % "logback-classic" % "1.0.9",
-    "ch.qos.logback" % "logback-core" % "1.0.9")
+        "ch.qos.logback" % "logback-core" % "1.0.9")
 
 javaOptions in run += "-Xmx8G"
 
