@@ -31,7 +31,7 @@ class DocSplitterSpec extends FlatSpec {
    */
   def testFile(file: File): Unit = {
     
-    val source = io.Source.fromFile(file)
+    val source = io.Source.fromFile(file, "UTF8")
     
     val spliterator = docSplitter.splitDocs(source)
     require(spliterator.hasNext)
@@ -42,9 +42,11 @@ class DocSplitterSpec extends FlatSpec {
     
     val fileString = DocSplitterSpec.fileString(file)
     
+    assert(fileString.equals(kbpDoc.getString))
+    
     for (kbpline <- kbpDoc.lines) {
       val targetString = fileString.drop(kbpline.offset).take(kbpline.length)
-      assert(targetString === kbpline.line)
+      assert(targetString.equals(kbpline.line))
     }
     source.close()
   }

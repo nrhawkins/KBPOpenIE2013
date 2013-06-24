@@ -2,16 +2,20 @@ package edu.knowitall.tac2013.prep
 
 import org.scalatest._
 
-class KbpSentenceSpec extends FlatSpec {
-
+object KbpSentenceSpec {
   val samplesDir = "src/main/resources/samples/"
   val corpora = Seq("news", "web", "forum")
   val sentFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-sentences.txt") }
   val rawFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-xml.txt") }
+}
+
+class KbpSentenceSpec extends FlatSpec {
+
+  import KbpSentenceSpec._
   
   "KbpSentences" should "deserialize then serialize to their original string" in {
     
-    val testSrcs = sentFiles map scala.io.Source.fromFile
+    val testSrcs = sentFiles map { f => scala.io.Source.fromFile(f, "UTF8") }
     val lines = testSrcs.flatMap(_.getLines)
     lines.foreach { line =>
       val sent = KbpSentence.read(line).get
