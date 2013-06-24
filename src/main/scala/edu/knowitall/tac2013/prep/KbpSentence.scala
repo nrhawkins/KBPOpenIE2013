@@ -19,7 +19,10 @@ val tabRegex = "\t".r
   }
   
   def write(sent: KbpSentence): String = {
-    val fields = KbpSentence.unapply(sent).get.productIterator.map(_.toString).toSeq
+    val fieldTuple = KbpSentence.unapply(sent).getOrElse {
+      throw new RuntimeException("Unable to serialize KbpSentence")
+    }
+    val fields = fieldTuple.productIterator.map(_.toString).toSeq
     fields.map(_.replaceAll("\t", "")).mkString("\t")
   }
 }

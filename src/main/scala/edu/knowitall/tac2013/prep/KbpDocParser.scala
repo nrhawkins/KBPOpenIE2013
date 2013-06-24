@@ -27,7 +27,7 @@ abstract class KbpDocParser() {
       System.err.println(msg)
       for (kbpline <- textLines.take(5)) System.err.print(kbpline.line)
       None
-    } else {
+    } else /* if docIdLine.isDefined */ {
       Some(new KbpParsedDoc(docIdLine.get, authorLine, dateLine, textLines))
     }
   }
@@ -61,8 +61,8 @@ object KbpDocParser {
     
     val spliterator = docSplitter.splitDocs(source)
     
-    spliterator.foreach { kbpRawDoc => 
-      val text = docParser.parseDoc(kbpRawDoc).get.debugText
+    spliterator flatMap docParser.parseDoc foreach { parsedDoc => 
+      val text = parsedDoc.debugText
       output.println(text)
     }
   }

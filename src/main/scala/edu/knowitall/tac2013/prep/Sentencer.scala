@@ -26,7 +26,7 @@ class Sentencer(val segmenter: Segmenter) {
       val msg = msgFmt.format(errorCounter.incrementAndGet(), parsedDoc.docIdLine.line)
       System.err.println(msg)
       Seq.empty
-    } else {
+    } else /* if docId.isDefined */ {
       buildKbpSentences(docId.get, author, date, parsedDoc.textLines)
     }
   }
