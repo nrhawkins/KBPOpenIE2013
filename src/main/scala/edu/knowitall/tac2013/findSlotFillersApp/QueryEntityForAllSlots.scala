@@ -46,7 +46,7 @@ object QueryEntityForAllSlots {
         val listOfResultsMap = issueSolrQuery(queryString)
         
         //filter
-        val listOfFilteredResultsMap = filterResults(listOfResultsMap,relationData)
+        val listOfFilteredResultsMap = filterResults(listOfResultsMap,relationData,queryEntity)
         
         
         //construct tuple entry to go into results Array
