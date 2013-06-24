@@ -139,7 +139,7 @@ class KbpRelnounExtractor(val relnoun: Relnoun = new Relnoun()) extends KbpExtra
     } catch {
       case e: Throwable => {
         System.err.println(
-          "Relnoun error #%d on input: %s".format(errorCounter.incrementAndGet(), parsedSentence.tokens))
+          "Relnoun error #%d on input: %s".format(errorCounter.incrementAndGet(), parsedSentence.dgraph.text))
         Seq.empty
       }
     }
@@ -157,7 +157,7 @@ class KbpSrlExtractor(
 
   override def extract(parsedSentence: ParsedKbpSentence): Seq[KbpExtraction] = {
 
-    val graph = DependencyGraph.deserialize(parsedSentence.dgraph)
+    val graph = parsedSentence.dgraph
 
     val srlInstances =
       try {
@@ -165,7 +165,7 @@ class KbpSrlExtractor(
       } catch {
         case e: Throwable =>
           System.err.println(
-            "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.tokens))
+            "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.dgraph.text))
           Seq.empty
       }
 
