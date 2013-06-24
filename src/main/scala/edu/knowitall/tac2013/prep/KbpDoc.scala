@@ -23,7 +23,7 @@ case class KbpDocLine(val line: String, val offset: Int) {
   def length = line.length()
 }
 
-object KbpParsedDoc {
+object KbpProcessedDoc {
   val docIdPattern = Pattern.compile("^<DOC\\s+id=.*", Pattern.CASE_INSENSITIVE)
   val trailingWs = Pattern.compile("\\s+$")
   val quotes = Pattern.compile("^\"([^\"]+)\"$")
@@ -103,13 +103,13 @@ object KbpParsedDoc {
   }
 }
 
-class KbpParsedDoc(
-  val docIdLine: KbpDocLine,
-  val authorLine: Option[KbpDocLine],
-  val datetimeLine: Option[KbpDocLine],
+class KbpProcessedDoc(
+  val docIdLine: KbpDocLine, 
+  val authorLine: Option[KbpDocLine], 
+  val datetimeLine: Option[KbpDocLine], 
   val textLines: List[KbpDocLine]) {
 
-  import KbpParsedDoc._
+  import KbpProcessedDoc._
 
   def debugText = {
     val allFields = Seq(docIdLine) ++ authorLine ++ datetimeLine ++ textLines
@@ -138,9 +138,9 @@ class KbpParsedDoc(
     }
   }
 
-  def extractAuthor: Option[KbpDocLine] = authorLine flatMap { a => KbpParsedDoc.extractAuthor(a) }
+  def extractAuthor: Option[KbpDocLine] = authorLine flatMap { (a => KbpProcessedDoc.extractAuthor(a)) }
 
-  def extractDate: Option[KbpDocLine] = datetimeLine flatMap { d => KbpParsedDoc.extractDate(d)}
+  def extractDate: Option[KbpDocLine] = datetimeLine flatMap { (d => KbpProcessedDoc.extractDate(d))}
 }
 
 /*

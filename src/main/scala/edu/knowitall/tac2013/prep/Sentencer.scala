@@ -15,7 +15,7 @@ class Sentencer(val segmenter: Segmenter) {
   /**
    * Returns an empty collection on error.
    */
-  def convertToSentences(parsedDoc: KbpParsedDoc): Seq[KbpSentence] = {
+  def convertToSentences(parsedDoc: KbpProcessedDoc): Seq[KbpSentence] = {
     
     val docId = parsedDoc.extractDocId
     val author = parsedDoc.extractAuthor
@@ -111,14 +111,14 @@ object Sentencer {
     if (!news && !forum && !web) throw new IllegalArgumentException("Unknown corpus: %s".format(args(1)))
 
     val docSplitter = new DocSplitter()
-    val docParser = KbpDocParser.getParser(corpus)
+    val docParser = KbpDocProcessor.getProcessor(corpus)
     val sentencer = defaultInstance
     
     val source = io.Source.fromFile(inputFile)
     val output = if (outputFile.equals("stdout")) System.out else new java.io.PrintStream(outputFile)
     
     val docs = docSplitter.splitDocs(source)
-    val parsedDocs = docs flatMap docParser.parseDoc
+    val parsedDocs = docs flatMap docParser.process
     val sentences = parsedDocs foreach { doc =>
       sentencer.convertToSentences(doc) foreach { s =>
         output.println(KbpSentence.write(s))

@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.nio.file.Path;
 
 
-class KbpDocParserSpec extends FlatSpec {
+class KbpDocProcessorSpec extends FlatSpec {
   
   val docSplitter = new DocSplitter()
   val splitDocsDir = "src/main/resources/samples/docs-split/"
@@ -20,7 +20,7 @@ class KbpDocParserSpec extends FlatSpec {
   "DocSplitter" should "Tag lines with correct byte offsets" in {
     
     val files = allDocsDirs.flatMap { case (dir, corpus) => 
-      new File(dir+corpus).listFiles().map(f => (f, KbpDocParser.getParser(corpus)))
+      new File(dir+corpus).listFiles().map(f => (f, KbpDocProcessor.getProcessor(corpus)))
     }
       
     for ((file, parser) <- files) {
@@ -32,7 +32,7 @@ class KbpDocParserSpec extends FlatSpec {
   /*
    * Assumes that a file contains a single kbp doc
    */
-  def testFile(file: File, docParser: KbpDocParser): Unit = {
+  def testFile(file: File, docParser: KbpDocProcessor): Unit = {
     
     val source = io.Source.fromFile(file)
     
@@ -43,7 +43,7 @@ class KbpDocParserSpec extends FlatSpec {
     
     require(!spliterator.hasNext)
     
-    val parsedDoc = docParser.parseDoc(kbpDoc)
+    val parsedDoc = docParser.process(kbpDoc)
     
     val fileString = DocSplitterSpec.fileString(file)
     

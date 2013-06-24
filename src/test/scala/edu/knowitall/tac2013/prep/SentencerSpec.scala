@@ -11,20 +11,20 @@ class SentencerSpec extends FlatSpec {
   // tuple of (Parser for corpus, corpus sample/test file)
   // can add to this list to add new test sample files. 
   val corpora = Seq(
-    (KbpDocParser.getParser("web"),  "src/main/resources/samples/docs-split/web"),
-    (KbpDocParser.getParser("news"), "src/main/resources/samples/docs-split/news"),
-    (KbpDocParser.getParser("forum"),"src/main/resources/samples/docs-split/forum")
+    (KbpDocProcessor.getProcessor("web"),  "src/main/resources/samples/docs-split/web"),
+    (KbpDocProcessor.getProcessor("news"), "src/main/resources/samples/docs-split/news"),
+    (KbpDocProcessor.getProcessor("forum"),"src/main/resources/samples/docs-split/forum")
   )
 
   // Except for newlines being converted to spaces, should match exactly.
   "The Sentencer" should "produce meaningful byte offsets" in {
 
     corpora foreach {
-      case (docParser, sampleDir) => {
+      case (docProcessor, sampleDir) => {
         for (
             file <- new File(sampleDir).listFiles;
             rawDoc <- docSplitter.splitDocs(io.Source.fromFile(file, "UTF8"));
-            parsedDoc <- docParser.parseDoc(rawDoc).toList;
+            parsedDoc <- docProcessor.process(rawDoc).toList;
             s <- sentencer.convertToSentences(parsedDoc)
          ) {
           val fileString = DocSplitterSpec.fileString(file)

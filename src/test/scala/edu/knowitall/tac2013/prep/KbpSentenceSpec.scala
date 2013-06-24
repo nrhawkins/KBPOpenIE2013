@@ -20,7 +20,7 @@ class KbpSentenceSpec extends FlatSpec {
     lines.foreach { line =>
       val sent = KbpSentence.read(line).get
       val reserialized = KbpSentence.write(sent)
-      require(reserialized.equals(line))
+      assert(reserialized === line)
     } 
   }
   
@@ -38,9 +38,9 @@ class KbpSentenceSpec extends FlatSpec {
     corpora.zip(rawFiles) foreach {
       case (corpus, sample) => 
         val source = io.Source.fromFile(sample)
-        val parser = KbpDocParser.getParser(corpus)
+        val docProcessor = KbpDocProcessor.getProcessor(corpus)
         val docSplitterator = docSplitter.splitDocs(source)
-        for (rawDoc <- docSplitterator; parsedDoc <- parser.parseDoc(rawDoc); docId <- parsedDoc.extractDocId) {
+        for (rawDoc <- docSplitterator; parsedDoc <- docProcessor.process(rawDoc); docId <- parsedDoc.extractDocId) {
           val rawString = rawDoc.getString
           val sents = sentenceMap(docId)
           sents foreach { s =>

@@ -42,12 +42,12 @@ class ParsedKbpSentenceSpec extends FlatSpec {
     }
     
     // -- Second, get Map[DocId => RawDoc, ParsedDoc]
-    val rawDocsParsers = rawDocs map { case (rawDocs, corpus) => 
-      (rawDocs, KbpDocParser.getParser(corpus)) 
+    val rawDocProcessors = rawDocs map { case (rawDocs, corpus) => 
+      (rawDocs, KbpDocProcessor.getProcessor(corpus)) 
     } 
-    val parsedDocsMap = rawDocsParsers flatMap { case (rawDocs, parser) =>
+    val processedDocsMap = rawDocProcessors flatMap { case (rawDocs, docProcessor) =>
       rawDocs.flatMap { rawDoc => 
-        parser.parseDoc(rawDoc) flatMap { parsed =>
+        docProcessor.process(rawDoc) flatMap { parsed =>
           parsed.extractDocId map { docId =>
             (docId, (rawDoc, parsed))  
           }
@@ -61,8 +61,8 @@ class ParsedKbpSentenceSpec extends FlatSpec {
     } groupBy (_.docId)
 
     for (
-      docId <- parsedDocsMap.keys;
-      (rawDoc, parsedDoc) <- parsedDocsMap.get(docId)) {
+      docId <- processedDocsMap.keys;
+      (rawDoc, processedDoc) <- processedDocsMap.get(docId)) {
       val rawDocString = rawDoc.getString
       for (sentences <- parsedSentencesMap.get(docId); sentence <- sentences) {
         testSentence(sentence, rawDocString)

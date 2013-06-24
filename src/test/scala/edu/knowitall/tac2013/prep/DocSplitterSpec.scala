@@ -46,7 +46,7 @@ class DocSplitterSpec extends FlatSpec {
     
     for (kbpline <- kbpDoc.lines) {
       val targetString = fileString.drop(kbpline.offset).take(kbpline.length)
-      assert(targetString.equals(kbpline.line))
+      assert(targetString.equals(kbpline.line), "Not equal:\n%s\n%s".format(targetString, kbpline.line))
     }
     source.close()
   }
