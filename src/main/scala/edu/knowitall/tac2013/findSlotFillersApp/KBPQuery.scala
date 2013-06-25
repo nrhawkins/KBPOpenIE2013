@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import edu.knowitall.tac2013.findSlotFillersApp.KBPEntityType._
+import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 //import scala.io._
 import scala.xml.XML
 
@@ -8,32 +8,22 @@ import scala.xml.XML
 
 
 class KBPQuery (idArg: String, nameArg: String, docArg: String,
-    begOffsetArg: Int, endOffsetArg: Int, entityTypeArg: KBPEntityType,
+    begOffsetArg: Int, endOffsetArg: Int, entityTypeArg: KBPQueryEntityType,
     nodeIdArg: String, slotsToFillArg: Set[String]){
   
-  private val id = idArg
-  private val name = nameArg
-  private val docID = docArg
-  private val begOffset = begOffsetArg
-  private val endOffset = endOffsetArg
-  private val entityType = entityTypeArg
-  private val nodeId = nodeIdArg
-  private val slotsToFill = slotsToFillArg
-  
-  def getID = id
-  def getName = name
-  def getDocID = docID
-  def getBegOffset = begOffset
-  def getEndOffset = endOffset
-  def getEntityType = entityType
-  def getNodeId = nodeId
-  def getSlotsToFill = slotsToFill
-  
+  val id = idArg
+  val name = nameArg
+  val docID = docArg
+  val begOffset = begOffsetArg
+  val endOffset = endOffsetArg
+  val entityType = entityTypeArg
+  val nodeId = nodeIdArg
+  val slotsToFill = slotsToFillArg  
 }
 
 object KBPQuery {
 
-  import KBPEntityType._
+  import KBPQueryEntityType._
 
   //parses a single query from an XML file, will not work if there are more than one query in the XML file
   def parseKBPQuery(pathToFile: String): KBPQuery = {

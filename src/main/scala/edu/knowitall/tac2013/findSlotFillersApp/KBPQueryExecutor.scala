@@ -13,7 +13,7 @@ object KBPQueryExecutor {
      val OutputPath = args(1)
      
      val KbpQuery = KBPQuery.parseKBPQuery(KBPQueryPath)
-     println(KbpQuery.getSlotsToFill)
+     println(KbpQuery.slotsToFill)
          
   }
          
