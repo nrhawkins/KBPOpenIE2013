@@ -67,6 +67,8 @@ object SolrPopulator {
       opt("inputRaw", "Input is raw XML, not KbpExtractions.", { inputExtrs = false })
       opt("corpus", "For inputRaw, specifies corpus type (news, web, forum.", { s => corpus = s })
     }
+
+    if (!parser.parse(args)) return
     
     val source =  io.Source.fromFile(inputFile, "UTF8")
     val extrs = if (inputExtrs) source.getLines flatMap KbpExtraction.read else loadFromXml(source, corpus)

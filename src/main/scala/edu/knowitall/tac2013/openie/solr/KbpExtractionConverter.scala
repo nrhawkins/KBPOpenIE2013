@@ -89,7 +89,7 @@ object KbpExtractionConverter {
     doc.addField("chunks", chunks)
     doc.addField("dgraph", dgraph)
     
-    assert(kbpExtractionFields.toSeq.equals(doc.getFieldNames().asScala.toSet))
+    assert(kbpExtractionFields.toSeq.equals(doc.getFieldNames().asScala.toSeq))
     
     doc
   }
