@@ -31,7 +31,7 @@ object SolrSimpleExecutor {
     
     val extrs = result.documents.flatMap { doc =>
       val fieldMap = doc.asInstanceOf[Map[String, String]]
-      KbpExtractionConverter.fromFieldMap(fieldMap)
+      KbpExtraction.fromFieldMap(fieldMap)
     } 
     
     System.err.println("%d exrs retrieved.".format(extrs.size))

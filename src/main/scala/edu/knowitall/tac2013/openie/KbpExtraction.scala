@@ -236,7 +236,7 @@ object KbpExtraction {
     new KbpExtraction(
         arg1 = KbpArgument.fromRelnounArgument(extr.arg1),
         rel = KbpRelation.fromRelnounRelation(extr.rel),
-        arg2 = KbpArgument.fromRelnounArgument(extr.arg1),
+        arg2 = KbpArgument.fromRelnounArgument(extr.arg2),
         confidence = 0.9, 
         extractor = "relnoun",
         sentence = parsedSentence)

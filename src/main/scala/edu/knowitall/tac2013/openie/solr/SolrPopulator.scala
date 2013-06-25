@@ -86,6 +86,7 @@ object SolrPopulator {
 
     // Move data through the pipe in parallel.
     docSplitter.splitDocs(source).grouped(100).flatMap { docs =>
+      
       val processedDocs = docs.par flatMap docProcessor.process
       val sentences = processedDocs flatMap sentencer.convertToSentences
       val filteredSentences = sentences flatMap SentenceFilter.apply
