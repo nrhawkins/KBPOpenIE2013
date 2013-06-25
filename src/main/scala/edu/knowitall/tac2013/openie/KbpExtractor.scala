@@ -67,12 +67,10 @@ object KbpExtractor {
         val insts = sentences.flatMap { sent =>
           sentencesProcessed.getAndIncrement()
           val extrs = extractor.extract(sent)
-          extrs.map { 
-            extractionsProcessed.getAndIncrement()
-            extr => new KbpExtractionInstance(extr, sent) 
-          }
+          extractionsProcessed.addAndGet(extrs.size)
+          extrs
         }
-        val outStrings = insts map KbpExtractionInstance.write
+        val outStrings = insts map KbpExtraction.write
         outStrings foreach output.println
       }
     }
@@ -92,12 +90,11 @@ object KbpExtractor {
       	    ParsedKbpSentence.read(line) 
       	  }
       	  val insts = parsed.flatMap { sent =>
-      	    extractor.extract(sent).map {
-      	      extractionsProcessed.getAndIncrement()
-      	      extr => new KbpExtractionInstance(extr, sent) 
-      	    }
+      	    val extrs = extractor.extract(sent)
+      	    extractionsProcessed.addAndGet(extrs.size)
+      	    extrs
       	  }
-      	  insts map KbpExtractionInstance.write
+      	  insts map KbpExtraction.write
       	}
       	outStrings foreach output.println
       }

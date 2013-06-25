@@ -6,44 +6,77 @@ import edu.knowitall.tool.parse.graph.DependencyGraph
 import edu.knowitall.chunkedextractor.BinaryExtractionInstance
 import edu.knowitall.chunkedextractor.Relnoun
 import edu.knowitall.srlie.confidence.SrlConfidenceFunction.SrlConfidenceFunction
-import edu.knowitall.tool.chunk.ChunkedToken
+import edu.knowitall.tool.postag.PostaggedToken
 import edu.knowitall.chunkedextractor.ExtractionPart
 import edu.knowitall.tac2013.prep.ParsedKbpSentence
+import edu.knowitall.srlie.SrlExtraction
+
+abstract class KbpRelation {
+  def tokenInterval: Interval
+  def originalText: String
+  def tokens: Seq[PostaggedToken]
+}
+object KbpRelation {
+  def fromSrlRelation(rel: SrlExtraction.Relation) = new KbpRelation() {
+    val tokenInterval = rel.span
+    val originalText = rel.text
+    val tokens = rel.tokens
+  }
+  def fromRelnounRelation(rel: ExtractionPart[Relnoun.Token]) = new KbpRelation() {
+    val tokenInterval = rel.interval
+    val originalText = rel.text
+    val tokens = rel.tokens
+  }
+}
+
+abstract class KbpArgument {
+  def tokenInterval: Interval
+  def originalText: String
+  def tokens: Seq[PostaggedToken]
+  def wikiLink: Option[String]
+  def types: Seq[String] // Seq[Type]?
+}
+object KbpArgument {
+  
+  val intervalRegex = "%d %d".r
+  
+  def fromSrlArgument(arg: SrlExtraction.Argument) = new KbpArgument() {
+    val tokenInterval = arg.tokenInterval
+    val originalText = arg.text
+    val tokens = arg.tokens
+    val wikiLink = None
+    val types = Nil
+  }
+  def fromRelnounArgument(arg: ExtractionPart[Relnoun.Token]) = new KbpArgument() {
+    val tokenInterval = arg.interval
+    val originalText = arg.text
+    val tokens = arg.tokens
+    val wikiLink = None
+    val types = Nil
+  }
+  
+  // Just write the interval and original text.
+  // Tokens are reconstructed from the sentence.
+  def write(arg: KbpArgument): String = {
+    val intervalString = "%d %d".format(arg.tokenInterval.start, arg.tokenInterval.end)
+    val wikiLinkString = arg.wikiLink.getOrElse("")
+    val typeString = arg.types.mkString(" ")
+    Seq(intervalString, arg.originalText, wikiLinkString, typeString).map(_.replaceAll("\t", " ")).mkString(" ")
+  }
+}
 
 case class KbpExtraction(
-  val arg1: String,
-  val rel: String,
-  val arg2: String,
-  val arg1postags: String,
-  val relpostags: String,
-  val arg2postags: String,
-  val confidence: String,
-  val extractor: String
+  val arg1: KbpArgument,
+  val rel: KbpRelation,
+  val arg2: KbpArgument,
+  val confidence: Double,
+  val extractor: String,
+  val sentence: ParsedKbpSentence
 )
 
 object KbpExtraction {
   
-  val NUM_FIElDS = 8
-  
-  def write(e: KbpExtraction): String = {
-    val fields = Seq(e.arg1, e.rel, e.arg2, e.arg1postags, e.relpostags, e.arg2postags, e.confidence, e.extractor)
-    fields.map(field => field.replaceAll("\t", " ")).mkString("\t")
-  }
- 
-  def read(str: String): Option[KbpExtraction] = read(str.split("\t"))
-  
-  def read(split: Array[String]): Option[KbpExtraction] = {
-    
-    split match {
-      case Array(arg1, rel, arg2, arg1postags, relpostags, arg2postags, confidence, extractor, _*) => {
-        Some(new KbpExtraction(arg1, rel, arg2, arg1postags, relpostags, arg2postags, confidence, extractor))
-      }
-      case _ => {
-        System.err.println("Error parsing KbpExtraction: %s".format(split.mkString("\t")))
-        None
-      }
-    }
-  }
+  def write(extr: KbpExtraction): String = throw new RuntimeException("not implemented")
   
   def fromRelnounInstance(
       relnounInst: BinaryExtractionInstance[Relnoun.Token], 
@@ -51,17 +84,13 @@ object KbpExtraction {
     
     val extr = relnounInst.extr
     
-    def postags(epart: ExtractionPart[ChunkedToken]) = epart.tokens.map(_.postag).mkString(" ")
-    
     new KbpExtraction(
-        arg1 = extr.arg1.text,
-        rel = extr.rel.text,
-        arg2 = extr.arg2.text,
-        arg1postags = postags(extr.arg1),
-        relpostags = postags(extr.rel), 
-        arg2postags = postags(extr.arg2),
-        confidence = "0.9",
-        extractor = "relnoun")
+        arg1 = KbpArgument.fromRelnounArgument(extr.arg1),
+        rel = KbpRelation.fromRelnounRelation(extr.rel),
+        arg2 = KbpArgument.fromRelnounArgument(extr.arg1),
+        confidence = 0.9, 
+        extractor = "relnoun",
+        sentence = parsedSentence)
   }
   
   def fromSrlInstance(
@@ -69,23 +98,17 @@ object KbpExtraction {
       parsedSent: ParsedKbpSentence, 
       confFunc: SrlConfidenceFunction): Iterable[KbpExtraction] = {
     
-    def postags(interval: Interval, graph: DependencyGraph): String = 
-      graph.nodes.drop(interval.start).take(interval.size).map(_.postag).mkString(" ")
-    
     val triplized = srlInst.triplize(false).filter(_.extr.arg2s.size == 1) // Some could have zero arg2s
+    
     val kbpExtractions = triplized.map { triple =>
       val extr = triple.extr
-      val graph = triple.dgraph
-      require(extr.arg2s.size == 1)
       new KbpExtraction(
-        arg1 = extr.arg1.text,
-        rel = extr.rel.text,
-        arg2 = extr.arg2s(0).text,
-        arg1postags = postags(extr.arg1.interval, graph),
-        relpostags = postags(extr.rel.span, graph),
-        arg2postags = postags(extr.arg2s(0).interval, graph),
-        confidence = "%.04f".format(confFunc.getConf(triple)),
-        extractor = "srl"
+        arg1 = KbpArgument.fromSrlArgument(extr.arg1),
+        rel = KbpRelation.fromSrlRelation(extr.rel),
+        arg2 = KbpArgument.fromSrlArgument(extr.arg2s(0)), // requires triplized filter { args.size == 1 } 
+        confidence = confFunc.getConf(triple),
+        extractor = "srl",
+        sentence = parsedSent
       )
     }
     kbpExtractions
