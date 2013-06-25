@@ -43,9 +43,9 @@ object KbpRelation {
   private def readHelper(intervalString: String, originalTextString: String, sentence: ParsedKbpSentence): Option[KbpRelation] = {
     
     intervalString match {
-      case intervalRegex(start, end) => {
+      case intervalRegex(start, last) => {
         Some(new KbpRelation() {
-          val tokenInterval = Interval.closed(start.toInt, end.toInt)
+          val tokenInterval = Interval.closed(start.toInt, last.toInt)
           val originalText = originalTextString
           def tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
         })
@@ -123,9 +123,9 @@ object KbpArgument {
       sentence: ParsedKbpSentence): Option[KbpArgument] = {
     
     intervalString match {
-      case intervalRegex(start, end) => {
+      case intervalRegex(start, last) => {
         Some(new KbpArgument() {
-          val tokenInterval = Interval.closed(start.toInt, end.toInt)
+          val tokenInterval = Interval.closed(start.toInt, last.toInt)
           val originalText = originalTextString
           val wikiLink = if (wikiLinkString.isEmpty()) None else Some(wikiLinkString)
           val types = typesString.split(" ").toSeq
