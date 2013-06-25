@@ -1,15 +1,18 @@
 package edu.knowitall.tac2013.openie.solr
 
 import org.apache.solr.common.SolrInputDocument
-import edu.knowitall.tac2013.openie.KbpExtraction
+import edu.knowitall.tac2013.openie._
+import edu.knowitall.tac2013.prep.ParsedKbpSentence
 import scala.collection.JavaConverters._
 
 /**
  * Helper object for converting between KbpExtractions and SolrDocuments
  */
 object KbpExtractionConverter {
-
-  val kbpExtractionFields = Seq(
+  
+  private val errorCounter = new java.util.concurrent.atomic.AtomicInteger(0)
+  
+  val kbpExtractionFields = Set(
       "arg1Text",
       "arg1Interval",
       "arg1WikiLink",
@@ -32,11 +35,46 @@ object KbpExtractionConverter {
       "chunks",
       "dgraph"
     )
+    
+  def fromFieldMap(fieldMap: Map[String, String]): Option[KbpExtraction] = {
+    
+    if (!kbpExtractionFields.subsetOf(fieldMap.keySet)) {
+      val missingFields = kbpExtractionFields.filter(f => !fieldMap.contains(f))
+      val msgFmt = "KbpExtractionConverter error #%d: Missing fields [%s]"
+      val msg = msgFmt.format(errorCounter.incrementAndGet(), missingFields.mkString(", "))
+      System.err.println(msg)
+      None
+    } else {
+      val sentenceFields = Seq("docId", "sentNum", "sentOffset", "chunks", "dgraph").map(fieldMap(_))
+      ParsedKbpSentence.read(sentenceFields) flatMap { sentence =>
+        val arg1Fields = Seq("arg1Interval", "arg1Text",  "arg1WikiLink", "arg1Types").map(fieldMap(_))
+        val relFields = Seq("relInterval", "relText").map(fieldMap(_))
+        val arg2Fields = Seq("arg2Interval", "arg2Text", "arg2WikiLink", "arg2Types").map(fieldMap(_))
+        val arg1Opt = KbpArgument.readHelper(arg1Fields, sentence)
+        val relOpt = KbpRelation.readHelper(relFields, sentence)
+        val arg2Opt = KbpArgument.readHelper(arg2Fields, sentence)
+        if (arg1Opt.isEmpty || relOpt.isEmpty || arg2Opt.isEmpty) {
+          val msg = "KbpExtractionConverter error #%d: Error parsing args or rel.".format(errorCounter.incrementAndGet())
+          System.err.println(msg)
+          None
+        } else {
+          val confidence = fieldMap("confidence").toDouble
+          val extractor = fieldMap("extractor")
+          Some(new KbpExtraction(
+            arg1 = arg1Opt.get,
+            rel = relOpt.get,
+            arg2 = arg2Opt.get,
+            confidence = confidence,
+            extractor = extractor,
+            sentence = sentence))
+        }
+      }
+    }
+  }
   
   def toSolrInputDocument(extr: KbpExtraction): SolrInputDocument = {
     
     // Prepare fields as strings
-    
     val arg1 = extr.arg1
     val rel = extr.rel
     val arg2 = extr.arg2
@@ -89,7 +127,7 @@ object KbpExtractionConverter {
     doc.addField("chunks", chunks)
     doc.addField("dgraph", dgraph)
     
-    assert(kbpExtractionFields.toSeq.equals(doc.getFieldNames().asScala.toSeq))
+    assert(kbpExtractionFields.equals(doc.getFieldNames().asScala.toSet))
     
     doc
   }

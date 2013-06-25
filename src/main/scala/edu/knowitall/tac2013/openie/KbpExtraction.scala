@@ -152,6 +152,8 @@ object KbpExtraction {
   
   val tabRegex = "\t".r
   
+  def fromFieldMap(fieldMap: Map[String, String]) = solr.KbpExtractionConverter.fromFieldMap(fieldMap)
+  
   def write(extr: KbpExtraction): String = {
     
     val arg1Strings = KbpArgument.writeHelper(extr.arg1)
