@@ -48,7 +48,7 @@ class KbpSentenceParser() {
     val chunks = chunked.map(_.chunk)
     
     Some(
-        ParsedKbpSentence(
+        new ParsedKbpSentence(
             kbpSentence.docId, 
             kbpSentence.sentNum, 
             kbpSentence.offset,  

@@ -31,6 +31,7 @@ object KbpExtractor {
     var inputFile = "stdin"
     var outputFile = "stdout"
     var parallel = false
+    var limitOpt = Option.empty[Int]
   }
   
   def getInput = if (Settings.inputFile.equals("stdin")) io.Source.stdin else io.Source.fromFile(Settings.inputFile)
@@ -42,6 +43,7 @@ object KbpExtractor {
       opt("inputFile", "ParsedKbpSentences for input, default stdinput", { s => Settings.inputFile = s })
       opt("outputFile", "KbpExtractionInstances output file, default stdout", { s => Settings.outputFile = s})
       opt("parallel", "Run over input in parallel, default false", { Settings.parallel = true })
+      intOpt("limit", "Max extractions to output", { i => Settings.limitOpt = Some(i) })
     }
     
     if (!parser.parse(args)) return
@@ -71,7 +73,12 @@ object KbpExtractor {
           extrs
         }
         val outStrings = insts map KbpExtraction.write
-        outStrings foreach output.println
+        val limited = Settings.limitOpt match {
+          case Some(limit) => outStrings.take(limit)
+          case None => outStrings
+          
+        }
+        limited foreach output.println
       }
     }
   }
@@ -96,7 +103,12 @@ object KbpExtractor {
       	  }
       	  insts map KbpExtraction.write
       	}
-      	outStrings foreach output.println
+        val limited = Settings.limitOpt match {
+          case Some(limit) => outStrings.take(limit)
+          case None => outStrings
+          
+        }
+        limited foreach output.println
       }
     }
   }
