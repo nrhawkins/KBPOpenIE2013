@@ -90,7 +90,7 @@ object KbpSentenceParser {
       
       val parser = new KbpSentenceParser
       
-      val sentencesGrouped = Sentencer.processXml(input.getLines, corpus).grouped(1000)
+      val sentencesGrouped = Sentencer.processXml(input.getLines, corpus).take(limit).grouped(1000)
       
       sentencesGrouped foreach { sentenceGroup =>
         sentenceGroup.par foreach { sentence =>

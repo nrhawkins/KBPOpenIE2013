@@ -134,5 +134,4 @@ object KbpExtractionConverter {
     
     doc
   }
-  
 }
