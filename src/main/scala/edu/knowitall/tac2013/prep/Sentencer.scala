@@ -102,7 +102,7 @@ object Sentencer {
   
   def processXml(lines: Iterator[String], corpus: String): Iterator[KbpSentence] = {
     KbpDocProcessor.processXml(lines, corpus).grouped(100) flatMap { docGroup =>
-      docGroup.par flatMap defaultInstance.convertToSentences
+      docGroup.par flatMap defaultInstance.convertToSentences flatMap SentenceFilter.apply
     }
   }
   
