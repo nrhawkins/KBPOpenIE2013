@@ -127,19 +127,6 @@ class KbpCombinedExtractor(
 
 class KbpRelnounExtractor(val relnoun: Relnoun = new Relnoun()) extends KbpExtractor {
 
-//  val chunkerModel = OpenNlpChunker.loadDefaultModel
-//  val postagModel = OpenNlpPostagger.loadDefaultModel
-//  val tokenModel = OpenNlpTokenizer.loadDefaultModel
-//
-//  val chunkerLocal = new ThreadLocal[OpenNlpChunker] {
-//    override def initialValue = {
-//
-//      val tokenizer = new OpenNlpTokenizer(tokenModel)
-//      val postagger = new OpenNlpPostagger(postagModel, tokenizer)
-//      new OpenNlpChunker(chunkerModel, postagger)
-//    }
-//  }
-
   override def extract(parsedSentence: ParsedKbpSentence): Seq[KbpExtraction] = {
 
     val chunked = parsedSentence.chunkedTokens
@@ -170,15 +157,15 @@ class KbpSrlExtractor(
 
     val graph = parsedSentence.dgraph
 
-    val srlInstances =
-      try {
-        srl.apply(graph)
-      } catch {
-        case e: Throwable =>
-          System.err.println(
-            "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.dgraph.text))
-          Seq.empty
-      }
+    val srlInstances = try {
+      srl.apply(graph)
+    } catch {
+      case e: Throwable =>
+        System.err.println(
+          "SrlExtractor error #%d parsing input: %s".format(errorCounter.incrementAndGet(), parsedSentence.dgraph.text))
+        e.printStackTrace()
+        Seq.empty
+    }
 
     val kbpExtractions = srlInstances.flatMap { inst =>
       KbpExtraction.fromSrlInstance(inst, parsedSentence, confFunc)
