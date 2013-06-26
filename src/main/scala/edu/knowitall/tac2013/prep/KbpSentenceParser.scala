@@ -64,7 +64,10 @@ object KbpSentenceParser {
   
   def processXml(lines: Iterator[String], corpus: String): Iterator[ParsedKbpSentence] = {
     val parser = new KbpSentenceParser
-    Sentencer.processXml(lines, corpus) flatMap parser.parseKbpSentence
+    val groupedSentences = Sentencer.processXml(lines, corpus).grouped(100)
+    groupedSentences.flatMap { group =>
+      group.par flatMap parser.parseKbpSentence
+    }
   }
   
   def main(args: Array[String]): Unit = {
