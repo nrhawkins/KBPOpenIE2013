@@ -7,18 +7,10 @@ import scala.xml.XML
 
 
 
-class KBPQuery (idArg: String, nameArg: String, docArg: String,
-    begOffsetArg: Int, endOffsetArg: Int, entityTypeArg: KBPQueryEntityType,
-    nodeIdArg: String, slotsToFillArg: Set[String]){
-  
-  val id = idArg
-  val name = nameArg
-  val docID = docArg
-  val begOffset = begOffsetArg
-  val endOffset = endOffsetArg
-  val entityType = entityTypeArg
-  val nodeId = nodeIdArg
-  val slotsToFill = slotsToFillArg  
+class KBPQuery (val id: String, val name: String, val doc: String,
+    val begOffset: Int, val endOffset: Int, val entityType: KBPQueryEntityType,
+    val nodeId: String, val slotsToFill: Set[String]){
+
 }
 
 object KBPQuery {

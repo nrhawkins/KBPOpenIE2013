@@ -2,23 +2,16 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 // many of these variables can be empty like ""
 class KbpSlotToOpenIEData  (
-	kbpSlotNameArg: String,
-	maxValuesArg: Option[Int],
-	openIERelationStringArg: Option[String],
-	arg2BeginsArg: Option[String],
-	entityInArg: Option[String],
-	slotFillInArg: Option[String],
-	slotTypeArg: Option[String]
+	val kbpSlotName: String,
+	val maxValues: Option[Int],
+	val openIERelationString: Option[String],
+	val arg2Begins: Option[String],
+	val entityIn: Option[String],
+	val slotFillIn: Option[String],
+	val slotType: Option[String]
 )
 {
   
-    val kbpSlotName = kbpSlotNameArg 
-	val maxValues = maxValuesArg
-	val openIERelationString = openIERelationStringArg
-	val arg2Begins = arg2BeginsArg
-	val entityIn = entityInArg
-	val slotFillIn = slotFillInArg
-	val slotType = slotTypeArg
 	
 	
 	def isValid(): Boolean = {

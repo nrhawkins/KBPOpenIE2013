@@ -52,6 +52,7 @@ object KBPSlotOpenIERelationTranslator {
 			    } 
       }
     }
+    source.close()
     KBP_OpenIEMap
   }
     
@@ -102,6 +103,7 @@ object KBPSlotOpenIERelationTranslator {
 			    } 
       }
     }
+    source.close()
     KBP_OpenIEMap
   }
 
