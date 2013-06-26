@@ -70,6 +70,11 @@ object KbpSentenceParser {
   
   private val sentencesProcessed = new AtomicInteger(0)
   
+  def processXml(lines: Iterator[String], corpus: String): Iterator[ParsedKbpSentence] = {
+    val parser = new KbpSentenceParser
+    Sentencer.processXml(lines, corpus) flatMap parser.parseKbpSentence
+  }
+  
   def main(args: Array[String]): Unit = {
     
     var webRaw  = Option.empty[String]

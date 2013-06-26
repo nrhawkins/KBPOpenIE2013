@@ -8,7 +8,7 @@ import Sentencer._
 /**
  * Converts from KbpParsedDoc to KbpSentences
  */
-class Sentencer(val segmenter: Segmenter) {
+class Sentencer private (val segmenter: Segmenter) {
   
   private val errorCounter = new AtomicInteger(0)
   
@@ -99,6 +99,10 @@ object Sentencer {
   import edu.knowitall.tool.sentence.BreezeSentencer
   
   lazy val defaultInstance = new Sentencer(new BreezeSentencer())
+  
+  def processXml(lines: Iterator[String], corpus: String): Iterator[KbpSentence] = {
+    KbpDocProcessor.processXml(lines, corpus) flatMap defaultInstance.convertToSentences
+  }
   
   def main(args: Array[String]): Unit = {
     
