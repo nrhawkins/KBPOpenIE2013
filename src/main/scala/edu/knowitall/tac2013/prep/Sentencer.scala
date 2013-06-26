@@ -101,7 +101,9 @@ object Sentencer {
   lazy val defaultInstance = new Sentencer(new BreezeSentencer())
   
   def processXml(lines: Iterator[String], corpus: String): Iterator[KbpSentence] = {
-    KbpDocProcessor.processXml(lines, corpus) flatMap defaultInstance.convertToSentences
+    KbpDocProcessor.processXml(lines, corpus).grouped(100) flatMap { docGroup =>
+      docGroup.par flatMap defaultInstance.convertToSentences
+    }
   }
   
   def main(args: Array[String]): Unit = {

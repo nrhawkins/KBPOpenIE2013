@@ -6,7 +6,7 @@ import java.io.File
 
 class SentencerSpec extends FlatSpec {
   
-  val sentencer = new Sentencer(new BreezeSentencer())
+  val sentencer = Sentencer.defaultInstance
   // tuple of (Parser for corpus, corpus sample/test file)
   // can add to this list to add new test sample files. 
   val corpora = Seq(
