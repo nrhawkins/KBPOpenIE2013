@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.prep
 import edu.knowitall.tool.chunk.OpenNlpChunker
 import edu.knowitall.tool.postag.OpenNlpPostagger
-import edu.knowitall.tool.tokenize.OpenNlpTokenizer
+import edu.knowitall.tool.tokenize.ClearTokenizer
 import edu.knowitall.tool.parse.ClearParser
 import edu.knowitall.tool.postag.ClearPostagger
 import scopt.OptionParser
@@ -16,34 +16,26 @@ class KbpSentenceParser() {
 
   val chunkerModel = OpenNlpChunker.loadDefaultModel
   val postagModel = OpenNlpPostagger.loadDefaultModel
-  val tokenModel = OpenNlpTokenizer.loadDefaultModel
-  val postaggerLocal = new ThreadLocal[OpenNlpPostagger] {
-    override def initialValue = {
-      val tokenizer = new OpenNlpTokenizer(tokenModel)
-      new OpenNlpPostagger(postagModel, tokenizer)
-    }
-  }
+
   val chunkerLocal = new ThreadLocal[OpenNlpChunker] {
     override def initialValue = {
-      new OpenNlpChunker(chunkerModel, postaggerLocal.get)
+      val postagger = new OpenNlpPostagger(postagModel, tokenizer)
+      new OpenNlpChunker(chunkerModel, postagger)
     }
   }
   
-  lazy val parser = new ClearParser(new ClearPostagger(new OpenNlpTokenizer(tokenModel)))
+  lazy val tokenizer = new ClearTokenizer()
   
-  def isValid(kbpSentence: KbpSentence): Boolean = {
-    kbpSentence.text.length <= 750
-  }
+  lazy val parser = new ClearParser(new ClearPostagger(tokenizer))
   
   def parseKbpSentence(kbpSentence: KbpSentence): Option[ParsedKbpSentence] = {
     
-    if (!isValid(kbpSentence)) return None
     try {
     // chunks, then parse
     val chunker = chunkerLocal.get
     val chunked = chunker.chunk(kbpSentence.text) 
     // Synchronize because the OpenNlpTokenizer isn't threadsafe
-    val dgraph = parser.synchronized { parser.dependencyGraph(kbpSentence.text) }
+    val dgraph = parser.dependencyGraph(kbpSentence.text)
     val postags = chunked.map(_.postag).mkString(" ")
     val chunks = chunked.map(_.chunk)
     
@@ -101,7 +93,10 @@ object KbpSentenceParser {
       val sentencesGrouped = Sentencer.processXml(input.getLines, corpus).grouped(1000)
       
       sentencesGrouped foreach { sentenceGroup =>
-        sentenceGroup.par flatMap parser.parseKbpSentence map ParsedKbpSentence.write foreach output.println
+        sentenceGroup.par foreach { sentence =>
+          sentencesProcessed.incrementAndGet()
+          parser.parseKbpSentence(sentence) map ParsedKbpSentence.write foreach output.println
+        }
       }
       
     }

@@ -45,7 +45,7 @@ object KbpExtractor {
       opt("outputFile", "KbpExtractionInstances output file, default stdout", { s => Settings.outputFile = s})
       opt("parallel", "Run over input in parallel, default false", { Settings.parallel = true })
       intOpt("limit", "Max extractions to output", { i => Settings.limitOpt = Some(i) })
-      opt("inputRaw", "Input raw XML instead of ParsedKbpSentences.", { s => Settings.inputRaw = true})
+      opt("inputRaw", "Input raw XML instead of ParsedKbpSentences.", { Settings.inputRaw = true})
     }
     
     if (!parser.parse(args)) return
@@ -172,7 +172,7 @@ class KbpSrlExtractor(
 
     val srlInstances =
       try {
-        this.synchronized { srl.apply(graph) }
+        srl.apply(graph)
       } catch {
         case e: Throwable =>
           System.err.println(
