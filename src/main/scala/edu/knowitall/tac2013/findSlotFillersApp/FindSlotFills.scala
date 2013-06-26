@@ -4,8 +4,7 @@ package edu.knowitall.tac2013.findSlotFillersApp
 import KBPSlotOpenIERelationTranslator.getOrganizationMap
 import KBPSlotOpenIERelationTranslator.getPersonMap
 import QueryEntityForAllSlots.executeEntityQueryForAllSlots
-import KbpQueryOutput.printPersonOutput
-
+import KbpQueryOutput.printUnformattedOutput
 
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
@@ -24,15 +23,15 @@ object FindSlotFills {
      
      if (semanticType == "organization"){
 	     val orgMap = getOrganizationMap()
-	     val arrayOfResults = executeEntityQueryForAllSlots(entityName, orgMap.toMap)
-	     printPersonOutput(arrayOfResults,args(2))
+	     val listOfResults = executeEntityQueryForAllSlots(entityName, orgMap.toMap)
+	     printUnformattedOutput(listOfResults,args(2))
 
   	 }
      
      else if (semanticType == "person"){
 	     val perMap = getPersonMap()
-	     val arrayOfResults = executeEntityQueryForAllSlots(entityName, perMap.toMap)
-	     printPersonOutput(arrayOfResults,args(2))
+	     val listOfResults = executeEntityQueryForAllSlots(entityName, perMap.toMap)
+	     printUnformattedOutput(listOfResults,args(2))
      }
      
      else{

@@ -2,14 +2,15 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import scala.io._
 import java.io._
+import edu.knowitall.tac2013.openie.KbpExtraction
 
 object KbpQueryOutput {
   
-  def printPersonOutput(arrayOfResults: Array[(String,KbpSlotToOpenIEData,Array[Map[String,Any]])], filePath: String){
+  def printUnformattedOutput(listOfResults: List[(String,KbpSlotToOpenIEData,List[KbpExtraction])], filePath: String){
     
     val writer = new PrintWriter(new File(filePath))
     var printedKbpSlotNames = Array[String]()
-    for(result <- arrayOfResults){
+    for(result <- listOfResults){
       
       val kbpSlotName = result._1
       val kbpOpenIEData = result._2
@@ -34,9 +35,9 @@ object KbpQueryOutput {
       
       for (solrResult <- solrResultsArray){
         
-        writer.write("\t\targ1: " + solrResult("arg1") + "\t rel: " + solrResult("rel") + 
-            "\t arg2: " + solrResult("arg2") + "\t docID: " + solrResult("url") +
-            "\t confidence: " + solrResult("confidence") + "\t sentence: " + solrResult("sentence") + "\n\n")
+        writer.write("\t\targ1: " + solrResult.arg1.originalText + "\t rel: " + solrResult.rel.originalText + 
+            "\t arg2: " + solrResult.arg2.originalText + "\t docID: " + solrResult.sentence.docId +
+            "\t confidence: " + solrResult.confidence + "\t sentence: " + solrResult.sentence.chunks + "\n\n")
 
 
       }

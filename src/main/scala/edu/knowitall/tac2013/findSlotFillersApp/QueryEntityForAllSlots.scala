@@ -3,6 +3,7 @@ package edu.knowitall.tac2013.findSlotFillersApp
 import jp.sf.amateras.solr.scala._
 import SingleSolrQueryExecutor.issueSolrQuery
 import FilterSolrResults.filterResults
+import edu.knowitall.tac2013.openie.KbpExtraction
 
 
 
@@ -11,9 +12,9 @@ object QueryEntityForAllSlots {
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
   def executeEntityQueryForAllSlots(queryEntity: String, KBPOpenIERelationMap: Map[String,List[KbpSlotToOpenIEData]]):
-    Array[(String,KbpSlotToOpenIEData,Array[Map[String,Any]])] ={
+    List[(String,KbpSlotToOpenIEData,List[KbpExtraction])] ={
     
-    var resultsArray = Array[(String,KbpSlotToOpenIEData,Array[Map[String,Any]])]()
+    var resultsList = List[(String,KbpSlotToOpenIEData,List[KbpExtraction])]()
     //for every relevant slot 
     for( pair <- KBPOpenIERelationMap){
       
@@ -45,19 +46,19 @@ object QueryEntityForAllSlots {
 	        println(queryString)
 	        
 	        //issue query (don't cut off results yet)
-	        val listOfResultsMap = issueSolrQuery(queryString)
+	        val listOfResults = issueSolrQuery(queryString)
 	        
 	        //filter
-	        val listOfFilteredResultsMap = filterResults(listOfResultsMap,relationData,queryEntity)
+	        val listOfFilteredResults = filterResults(listOfResults,relationData,queryEntity)
 	        
 	        
 	        //construct tuple entry to go into results Array
-	        val t = (pair._1,relationData,listOfFilteredResultsMap)
-	        resultsArray = resultsArray :+ t
+	        val t = (pair._1,relationData,listOfFilteredResults)
+	        resultsList = resultsList ::: List(t)
         }
       }
       
     }
-    resultsArray
+    resultsList
   }
 }
