@@ -52,19 +52,22 @@ object KbpDocProcessor {
     val outputFile = args(1)
     val corpus = args(2) // web, forum, or news
 
-    val docSplitter = new DocSplitter()
     val docParser = getProcessor(corpus)
 
     val source = io.Source.fromFile(inputFile)
 
     val output = new java.io.PrintStream(outputFile, "UTF8")
 
-    val spliterator = docSplitter.splitDocs(source)
+    val spliterator = DocSplitter(source.getLines)
 
     spliterator flatMap docParser.process foreach { parsedDoc =>
       val text = parsedDoc.debugText
       output.println(text)
     }
+    
+    source.close()
+    output.close()
+    
   }
 }
 

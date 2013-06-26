@@ -124,12 +124,11 @@ object KbpSentenceParser {
   
   def run(input: Source, output: PrintStream, corpus: String, limit: Int): Unit = {
     
-    val docSplitter = new DocSplitter()
     val docParser = KbpDocProcessor.getProcessor(corpus)
     val sentencer = Sentencer.defaultInstance
     val kbpProcessor = new KbpSentenceParser();
     
-    val docs = docSplitter.splitDocs(input)
+    val docs = DocSplitter(input.getLines)
     val parsedDocs = docs flatMap docParser.process
     val sentences = parsedDocs flatMap sentencer.convertToSentences
     
@@ -145,12 +144,11 @@ object KbpSentenceParser {
   
   def runParallel(input: Source, output: PrintStream, corpus: String, limit: Int): Unit = {
     
-    val docSplitter = new DocSplitter()
     val docParser = KbpDocProcessor.getProcessor(corpus)
     val sentencer = Sentencer.defaultInstance
     val kbpProcessor = new KbpSentenceParser();
     
-    val docGroups = docSplitter.splitDocs(input).grouped(batchSize)
+    val docGroups = DocSplitter(input.getLines).grouped(batchSize)
 
     val parsedSentenceStrings = docGroups.flatMap { docs =>
       val parsedDocs = docs.par flatMap docParser.process

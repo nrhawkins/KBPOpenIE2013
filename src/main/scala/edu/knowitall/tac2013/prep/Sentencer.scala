@@ -122,14 +122,13 @@ object Sentencer {
     var web = corpus.equals("web")
     if (!news && !forum && !web) throw new IllegalArgumentException("Unknown corpus: %s".format(args(1)))
 
-    val docSplitter = new DocSplitter()
     val docParser = KbpDocProcessor.getProcessor(corpus)
     val sentencer = defaultInstance
     
     val source = io.Source.fromFile(inputFile)
     val output = if (outputFile.equals("stdout")) System.out else new java.io.PrintStream(outputFile)
     
-    val docs = docSplitter.splitDocs(source)
+    val docs = DocSplitter(source.getLines)
     val parsedDocs = docs flatMap docParser.process
     val allSentences = parsedDocs flatMap sentencer.convertToSentences
     val filteredSentences = if (filter) allSentences flatMap SentenceFilter.apply else allSentences
@@ -137,5 +136,8 @@ object Sentencer {
     filteredSentences foreach { s =>
         output.println(KbpSentence.write(s))
     }
+    
+    source.close()
+    output.close()
   }
 }
