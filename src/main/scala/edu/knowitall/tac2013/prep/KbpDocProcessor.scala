@@ -45,6 +45,11 @@ object KbpDocProcessor {
     case "forum" => KbpForumDocProcessor
     case _ => throw new IllegalArgumentException("Unknown corpus type \"%s\"".format(corpus))
   }
+  
+  def processXml(lines: Iterator[String], corpus: String): Iterator[KbpProcessedDoc] = {
+    
+    DocSplitter(lines) flatMap getProcessor(corpus).process
+  }
 
   def main(args: Array[String]): Unit = {
 
@@ -52,15 +57,11 @@ object KbpDocProcessor {
     val outputFile = args(1)
     val corpus = args(2) // web, forum, or news
 
-    val docParser = getProcessor(corpus)
-
     val source = io.Source.fromFile(inputFile)
 
     val output = new java.io.PrintStream(outputFile, "UTF8")
 
-    val spliterator = DocSplitter(source.getLines)
-
-    spliterator flatMap docParser.process foreach { parsedDoc =>
+    processXml(source.getLines, corpus) foreach { parsedDoc =>
       val text = parsedDoc.debugText
       output.println(text)
     }
