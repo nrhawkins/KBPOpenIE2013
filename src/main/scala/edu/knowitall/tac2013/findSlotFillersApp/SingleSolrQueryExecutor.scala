@@ -20,7 +20,7 @@ object SingleSolrQueryExecutor {
     
 
     val extrs = result.documents.flatMap { doc =>
-      val fieldMap = doc.asInstanceOf[Map[String, String]]
+      val fieldMap = doc.asInstanceOf[Map[String, Any]]
       KbpExtraction.fromFieldMap(fieldMap)
     }
     extrs

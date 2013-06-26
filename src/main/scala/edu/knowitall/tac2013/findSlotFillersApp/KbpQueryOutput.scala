@@ -37,7 +37,7 @@ object KbpQueryOutput {
         
         writer.write("\t\targ1: " + solrResult.arg1.originalText + "\t rel: " + solrResult.rel.originalText + 
             "\t arg2: " + solrResult.arg2.originalText + "\t docID: " + solrResult.sentence.docId +
-            "\t confidence: " + solrResult.confidence + "\t sentence: " + solrResult.sentence.chunks + "\n\n")
+            "\t confidence: " + solrResult.confidence + "\t sentence: " + solrResult.sentence.dgraph.text + "\n\n")
 
 
       }
