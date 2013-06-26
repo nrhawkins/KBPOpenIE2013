@@ -40,9 +40,9 @@ abstract class KbpDocProcessor() {
 object KbpDocProcessor {
 
   def getProcessor(corpus: String) = corpus match {
-    case "web" => new KbpWebDocProcessor()
-    case "news" => new KbpNewsDocProcessor()
-    case "forum" => new KbpForumDocProcessor()
+    case "web" => KbpWebDocProcessor
+    case "news" => KbpNewsDocProcessor
+    case "forum" => KbpForumDocProcessor
     case _ => throw new IllegalArgumentException("Unknown corpus type \"%s\"".format(corpus))
   }
 
@@ -71,7 +71,7 @@ object KbpDocProcessor {
   }
 }
 
-class KbpForumDocProcessor extends KbpDocProcessor {
+object KbpForumDocProcessor extends KbpDocProcessor {
   override def process(rawDoc: KbpRawDoc): Option[KbpProcessedDoc] = {
 
     var docIdLine = Option.empty[KbpDocLine]
@@ -90,7 +90,7 @@ class KbpForumDocProcessor extends KbpDocProcessor {
   }
 }
 
-class KbpNewsDocProcessor extends KbpDocProcessor {
+object KbpNewsDocProcessor extends KbpDocProcessor {
 
   override def process(rawDoc: KbpRawDoc): Option[KbpProcessedDoc] = {
 
@@ -115,7 +115,7 @@ class KbpNewsDocProcessor extends KbpDocProcessor {
   }
 }
 
-class KbpWebDocProcessor extends KbpDocProcessor {
+object KbpWebDocProcessor extends KbpDocProcessor {
 
   override def process(rawDoc: KbpRawDoc): Option[KbpProcessedDoc] = {
 
