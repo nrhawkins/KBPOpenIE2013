@@ -89,6 +89,14 @@ abstract class KbpArgument {
   def tokens: Seq[ChunkedToken]
   def wikiLink: Option[WikiLink]
   def types: Seq[String] // Seq[Type]?
+
+  def withLink(wlink: WikiLink): KbpArgument = new KbpArgument() {
+    def tokenInterval = this.tokenInterval
+    def originalText = this.originalText
+    def tokens = this.tokens
+    val wikiLink = Some(wlink)
+    def types = this.types
+  }
 }
 
 object KbpArgument {

@@ -64,4 +64,16 @@ object WikiMappingHelper {
       case _ => None
     }
   }
+  
+  def loadNameToNodeIdMap(lines: Iterator[String]): Map[String, String] = {
+    System.err.println("Loading wikipedia name to node id map...")
+    val tabSplit = "\t".r
+    lines.map { line =>
+      tabSplit.split(line) match {
+        case Array(id, name, typ, _*) => (name, id)
+        case _ => throw new RuntimeException(s"Error parsing entity info: $line")
+      }  
+    } toMap
+    
+  }
 }
