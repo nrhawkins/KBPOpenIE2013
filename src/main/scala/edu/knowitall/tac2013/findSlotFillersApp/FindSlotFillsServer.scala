@@ -53,8 +53,9 @@ object FindSlotFillsServer extends App {
        * Handles the POST input to the server
        */
       def handlePost(field1: String, field2: String) = {
+        
         val s = FindSlotFills.runForServerOutput(field1,field2)
-        ResponseString(s) ~> Ok
+        ResponseString(field1 + s) ~> Ok
       }
     }
 
