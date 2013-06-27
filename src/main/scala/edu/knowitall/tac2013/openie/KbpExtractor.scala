@@ -75,7 +75,6 @@ object KbpExtractor {
 
   def run(inputLines: Iterator[String], output: PrintStream): Unit = {
     val extractor = new KbpCombinedExtractor()
-    val batches = inputLines.grouped(batchSize)
     val parsedSentences = {
       if (Settings.inputRaw) 
         KbpSentenceParser.processXml(inputLines, Settings.corpus) 
