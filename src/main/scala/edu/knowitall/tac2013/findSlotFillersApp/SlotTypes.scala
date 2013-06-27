@@ -11,8 +11,19 @@ object SlotTypes {
   
   
   
-  private val personSource = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"))
-  private val organizationSource = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"))
+  //private val personSource = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"))
+  val personSource = {
+     val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"
+     val url = getClass.getResource(resourcePath)
+     require(url != null, "Could not find resource: " + resourcePath)
+     Source.fromURL(url)
+  }
+  val organizationSource = {
+     val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"
+     val url = getClass.getResource(resourcePath)
+     require(url != null, "Could not find resource: " + resourcePath)
+     Source.fromURL(url)
+    }
   personSource.getLines.foreach(l => {
 	  if (l.trim().contains("per:")){
 	    personSlotTypesSet = personSlotTypesSet + l.trim()
