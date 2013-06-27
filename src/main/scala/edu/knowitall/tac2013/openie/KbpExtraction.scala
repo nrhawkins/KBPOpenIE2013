@@ -81,16 +81,16 @@ abstract class KbpArgument {
 object KbpArgument {
   
   def fromSrlArgument(arg: SrlExtraction.Argument, sentence: ParsedKbpSentence) = new KbpArgument() {
-    val tokenInterval = arg.tokenInterval
-    val originalText = arg.text
-    val tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
+    def tokenInterval = arg.tokenInterval
+    def originalText = arg.text
+    def tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
     val wikiLink = None
     val types = Nil
   }
   def fromRelnounArgument(arg: ExtractionPart[Relnoun.Token]) = new KbpArgument() {
-    val tokenInterval = arg.interval
-    val originalText = arg.text
-    val tokens = arg.tokens
+    def tokenInterval = arg.interval
+    def originalText = arg.text
+    def tokens = arg.tokens
     val wikiLink = None
     val types = Nil
   }
@@ -130,10 +130,10 @@ object KbpArgument {
       case intervalRegex(start, last) => {
         Some(new KbpArgument() {
           val tokenInterval = Interval.closed(start.toInt, last.toInt)
-          val originalText = originalTextString
+          def originalText = originalTextString
           val wikiLink = if (wikiLinkString.isEmpty()) None else Some(wikiLinkString)
           val types = typesString.split(" ").toSeq
-          val tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
+          def tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
         })
       }
       case _ => None

@@ -126,8 +126,8 @@ object KbpSentenceParser {
   }
 
   /** 
-   *  Lazily get lines from an iterator of sources while ensuring
-   *  that exhausted sources are closed.
+   *  Lazily flatten the lines from an iterator of sources while
+   *  closing sources as they become empty.
    */
   def getLines(sources: Iterator[Source]): Iterator[String] = {
     val iter = new Iterator[Iterator[String]]() {
