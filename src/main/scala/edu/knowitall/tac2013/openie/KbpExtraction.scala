@@ -11,6 +11,19 @@ import edu.knowitall.chunkedextractor.ExtractionPart
 import edu.knowitall.tac2013.prep.ParsedKbpSentence
 import edu.knowitall.srlie.SrlExtraction
 
+case class WikiLink(val name: String, val fbid: String, val nodeId: Option[String]) {
+  def serialize = s"$name $fbid ${nodeId.getOrElse("-")}"
+}
+object WikiLink {
+  val deserializeRegex = "(.+) ([^\\s]+) ([^\\s]+)".r
+  def deserialize(str: String): WikiLink = {
+    str match {
+      case deserializeRegex(name, fbid, nodeIdRaw) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw))
+      case _ => throw new RuntimeException(s"Unable to deserialize wikilink string: $str")
+    }
+  }
+}
+
 abstract class KbpRelation {
   def tokenInterval: Interval
   def originalText: String
@@ -74,7 +87,7 @@ abstract class KbpArgument {
   def tokenInterval: Interval
   def originalText: String
   def tokens: Seq[ChunkedToken]
-  def wikiLink: Option[String]
+  def wikiLink: Option[WikiLink]
   def types: Seq[String] // Seq[Type]?
 }
 
@@ -103,7 +116,7 @@ object KbpArgument {
    */
   def writeHelper(arg: KbpArgument): Seq[String] = {
     val intervalString = "%d %d".format(arg.tokenInterval.start, arg.tokenInterval.last)
-    val wikiLinkString = arg.wikiLink.getOrElse("")
+    val wikiLinkString = arg.wikiLink.map(_.serialize).getOrElse("")
     val typeString = arg.types.mkString(" ")
     Seq(intervalString, arg.originalText, wikiLinkString, typeString)
   }
@@ -131,7 +144,7 @@ object KbpArgument {
         Some(new KbpArgument() {
           val tokenInterval = Interval.closed(start.toInt, last.toInt)
           def originalText = originalTextString
-          val wikiLink = if (wikiLinkString.isEmpty()) None else Some(wikiLinkString)
+          val wikiLink = if (wikiLinkString.isEmpty()) None else Some(WikiLink.deserialize(wikiLinkString))
           val types = typesString.split(" ").toSeq
           def tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
         })
