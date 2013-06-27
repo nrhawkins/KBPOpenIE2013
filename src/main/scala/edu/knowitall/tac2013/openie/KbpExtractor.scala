@@ -87,6 +87,7 @@ object KbpExtractor {
         val extrs = extractor.extract(sent)
         sentencesProcessed.incrementAndGet()
         extractionsProcessed.addAndGet(extrs.size)
+        bleat()
         extrs
       }
       insts map KbpExtraction.write
@@ -97,6 +98,12 @@ object KbpExtractor {
 
     }
     limited foreach output.println
+  }
+  
+  def bleat() {
+    if (sentencesProcessed.get % 10000 == 0) {
+      System.err.println(s"${sentencesProcessed.get} sentences processed, yielding ${extractionsProcessed.get} extractions.")
+    }
   }
 }
 
