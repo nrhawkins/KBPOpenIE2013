@@ -1,4 +1,5 @@
 package edu.knowitall.tac2013.prep
+
 import edu.knowitall.tool.chunk.OpenNlpChunker
 import edu.knowitall.tool.postag.OpenNlpPostagger
 import edu.knowitall.tool.tokenize.ClearTokenizer
@@ -7,10 +8,12 @@ import edu.knowitall.tool.postag.ClearPostagger
 import scopt.OptionParser
 import scala.io.Source
 import java.io.PrintStream
+import java.io.File
 import edu.knowitall.common.Resource.using
 import edu.knowitall.common.Timing
 import java.util.concurrent.atomic.AtomicInteger
 import scala.Option.option2Iterable
+import scala.collection.JavaConverters._
 
 class KbpSentenceParser() {
 
@@ -70,40 +73,86 @@ object KbpSentenceParser {
     }
   }
   
-  def main(args: Array[String]): Unit = {
-    
+  object Settings {
     var inputFile = ""
     var corpus = ""
     var limit = Int.MaxValue
     var outputFile = "stdout"
+    var recursive = false
+  }
+  
+  def main(args: Array[String]): Unit = {
     
     val cliParser = new OptionParser() {
-      arg("inputFile", "inputFile", { str => inputFile = str })
-      arg("corpus", "news, forum, or web", { str => corpus = str })
-      opt("outputFile", "File: ParsedKbpSentences, default stdout", { str => outputFile = str })
-      opt("limit", "Limit number of sentences output?", { str => limit = str.toInt })
+      arg("inputFile", "Raw XML input file or directory (recursive)", { str => Settings.inputFile = str })
+      arg("corpus", "news, forum, or web", { str => Settings.corpus = str })
+      opt("outputFile", "File: ParsedKbpSentences, default stdout", { str => Settings.outputFile = str })
+      opt("limit", "Limit number of sentences output?", { str => Settings.limit = str.toInt })
     }
 
     if (!cliParser.parse(args)) return 
+    System.err.println("Parsed args: " + args.toList)
     
-    val input = io.Source.fromFile(inputFile, "UTF8")
-    val output = if (outputFile.equals("stdout")) System.out else new PrintStream(outputFile, "UTF8")
+    val output = {
+      if (Settings.outputFile.equals("stdout")) 
+        System.out 
+      else new PrintStream(Settings.outputFile, "UTF8")
+    }
     
+    def getFilesRecursive(file: File): Iterator[File] = {
+      if (!file.isDirectory()) Iterator(file)
+      else (file.listFiles.iterator.flatMap { f => getFilesRecursive(f) })
+    }
+
+    val inputSources = getFilesRecursive(new File(Settings.inputFile)) map { f => io.Source.fromFile(f, "UTF8") }
+
     val nsTime = Timing.time {
-      
       val parser = new KbpSentenceParser
-      
-      val sentencesGrouped = Sentencer.processXml(input.getLines, corpus).take(limit).grouped(1000)
-      
+
+      val sentencesGrouped = Sentencer.processXml(getLines(inputSources), Settings.corpus).take(Settings.limit).grouped(100)
+
       sentencesGrouped foreach { sentenceGroup =>
         sentenceGroup.par foreach { sentence =>
-          sentencesProcessed.incrementAndGet()
+          if (sentencesProcessed.incrementAndGet() % 10000 == 0) System.err.println("%d sentences processed".format(sentencesProcessed.get))
           parser.parseKbpSentence(sentence) map ParsedKbpSentence.write foreach output.println
         }
       }
-      
     }
+    
     val seconds = Timing.Seconds.format(nsTime)
     System.err.println("Processed %d sentences in %s.".format(sentencesProcessed.get, seconds))
+    
+    output.close()
+  }
+
+  /** 
+   *  Lazily get lines from an iterator of sources while ensuring
+   *  that exhausted sources are closed.
+   */
+  def getLines(sources: Iterator[Source]): Iterator[String] = {
+    val iter = new Iterator[Iterator[String]]() {
+      def hasNext = sources.hasNext
+      def next = new Iterator[String]() {
+        val source = sources.next()
+        var closed = false
+        val lines = source.getLines
+        def hasNext = { // lines.hasNext will fail if source is closed.
+          if (closed) 
+            false 
+          else if (!lines.hasNext) {
+            closed = true
+            false
+          } else 
+            true
+        }
+        def next() = {
+          val line = lines.next
+          if (!lines.hasNext) { source.close; closed = true }
+          line
+        }
+      }
+    }
+    iter.flatten
   }
 }
+
