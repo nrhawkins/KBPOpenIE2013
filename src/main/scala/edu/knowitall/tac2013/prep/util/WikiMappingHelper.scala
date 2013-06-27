@@ -46,7 +46,10 @@ object WikiMappingHelper {
         smallGroup flatMap processLine
       }
     }
-    entityInfos map (_.serialize) foreach println
+    entityInfos map (_.serialize) foreach { e =>
+      entityCounter.incrementAndGet()
+      output.println(e)
+    }
   }
   
   val entityRegex = "<entity wiki_title=\"([^\"]+)\" type=\"([^\"]+)\" id=\"([^\"]+)\" name=\"([^\"]+)\">".r
