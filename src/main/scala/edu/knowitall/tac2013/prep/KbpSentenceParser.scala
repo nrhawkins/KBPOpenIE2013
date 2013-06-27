@@ -14,6 +14,7 @@ import edu.knowitall.common.Timing
 import java.util.concurrent.atomic.AtomicInteger
 import scala.Option.option2Iterable
 import scala.collection.JavaConverters._
+import util.FileUtils
 
 class KbpSentenceParser() {
 
@@ -99,17 +100,12 @@ object KbpSentenceParser {
       else new PrintStream(Settings.outputFile, "UTF8")
     }
     
-    def getFilesRecursive(file: File): Iterator[File] = {
-      if (!file.isDirectory()) Iterator(file)
-      else (file.listFiles.iterator.flatMap { f => getFilesRecursive(f) })
-    }
-
-    val inputSources = getFilesRecursive(new File(Settings.inputFile)) map { f => io.Source.fromFile(f, "UTF8") }
+    val inputSources = FileUtils.getFilesRecursive(new File(Settings.inputFile)) map { f => io.Source.fromFile(f, "UTF8") }
 
     val nsTime = Timing.time {
       val parser = new KbpSentenceParser
 
-      val sentencesGrouped = Sentencer.processXml(getLines(inputSources), Settings.corpus).take(Settings.limit).grouped(100)
+      val sentencesGrouped = Sentencer.processXml(FileUtils.getLines(inputSources), Settings.corpus).take(Settings.limit).grouped(100)
 
       sentencesGrouped foreach { sentenceGroup =>
         sentenceGroup.par foreach { sentence =>
@@ -123,36 +119,6 @@ object KbpSentenceParser {
     System.err.println("Processed %d sentences in %s.".format(sentencesProcessed.get, seconds))
     
     output.close()
-  }
-
-  /** 
-   *  Lazily flatten the lines from an iterator of sources while
-   *  closing sources as they become empty.
-   */
-  def getLines(sources: Iterator[Source]): Iterator[String] = {
-    val iter = new Iterator[Iterator[String]]() {
-      def hasNext = sources.hasNext
-      def next = new Iterator[String]() {
-        val source = sources.next()
-        var closed = false
-        val lines = source.getLines
-        def hasNext = { // lines.hasNext will fail if source is closed.
-          if (closed) 
-            false 
-          else if (!lines.hasNext) {
-            closed = true
-            false
-          } else 
-            true
-        }
-        def next() = {
-          val line = lines.next
-          if (!lines.hasNext) { source.close; closed = true }
-          line
-        }
-      }
-    }
-    iter.flatten
   }
 }
 
