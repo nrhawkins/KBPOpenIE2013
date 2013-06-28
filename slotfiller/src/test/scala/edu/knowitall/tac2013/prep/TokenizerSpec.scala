@@ -12,7 +12,7 @@ class TokenizerSpec extends FlatSpec {
 
   import KbpSentenceSpec._
   
-  import edu.knowitall.tac2013.preprocess.tac.ExtractSentencesAndTokenize.whitespace_charclass 
+  import util.Asciifier.whitespace_charclass 
   val wsPattern = Pattern.compile(whitespace_charclass)
   def fixWs(str: String): String = wsPattern.matcher(str).replaceAll(" ")
   

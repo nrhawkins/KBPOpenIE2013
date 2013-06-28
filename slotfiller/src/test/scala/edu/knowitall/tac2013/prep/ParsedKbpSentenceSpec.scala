@@ -12,7 +12,7 @@ class ParsedKbpSentenceSpec extends FlatSpec {
   val parsedFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-parsed.txt") }
   val rawFiles = corpora.map { c => "%s%s%s".format(samplesDir, c, "-xml.txt") }
   
-  import edu.knowitall.tac2013.preprocess.tac.ExtractSentencesAndTokenize.whitespace_charclass 
+  import util.Asciifier.whitespace_charclass 
   val wsPattern = Pattern.compile(whitespace_charclass)
   def fixWs(str: String): String = wsPattern.matcher(str).replaceAll(" ")
   
