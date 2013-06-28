@@ -16,6 +16,10 @@ organization := "edu.knowitall"
 
 resolvers += "amateras-repo" at "http://amateras.sourceforge.jp/mvn"
 
+resolvers ++= Seq("nicta" at "http://nicta.github.com/scoobi/releases",
+      "cloudera" at "https://repository.cloudera.com/content/repositories/releases",
+      "Sonatype snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/")
+
 libraryDependencies ++= Seq(
     "com.nicta" %% "scoobi" % "0.7.0-RC2-cdh3",
     "edu.washington.cs.knowitall.openie" %% "openie-linker" % "1.0",
