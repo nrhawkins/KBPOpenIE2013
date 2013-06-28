@@ -22,10 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger
 class KbpExtractionLinker private (val linker: EntityLinker, val wikiNodeMap: Map[String, String]) {
 
   val extractionsProcessed = new AtomicInteger(0)
-  
-  def linkArg(arg: KbpArgument, context: Seq[String]): Option[EntityLink] = {
-    // Skip if arg does not contain a proper noun
-    if (arg.tokens.exists(_.isProperNoun)) {
+    
+  def linkArg(arg: KbpArgument, extr: KbpExtraction, context: Seq[String]): Option[EntityLink] = {
+    // Skip if arg does not contain a proper noun or if confidence is low.
+    if (extr.confidence > 0.5 && arg.tokens.exists(_.isProperNoun)) {
       val argString = arg.originalText
       Option(linker.getBestEntity(argString, context))
     } else {
@@ -41,8 +41,8 @@ class KbpExtractionLinker private (val linker: EntityLinker, val wikiNodeMap: Ma
     
     val context = Seq(extr.sentenceText)
     
-    val arg1Link = linkArg(extr.arg1, context)
-    val arg2Link = linkArg(extr.arg2, context)
+    val arg1Link = linkArg(extr.arg1, extr, context)
+    val arg2Link = linkArg(extr.arg2, extr, context)
     
     def toWikiLink(elink: EntityLink): WikiLink = {
       WikiLink(elink.entity.name, elink.entity.fbid, wikiNodeMap.get(elink.entity.name))
