@@ -3,7 +3,7 @@ package edu.knowitall.tac2013.findSlotFillersApp
 import QueryEntityForAllSlots.executeEntityQueryForAllSlots
 import KBPSlotOpenIERelationTranslator.getOrganizationMap
 import KBPSlotOpenIERelationTranslator.getPersonMap
-import KbpQueryOutput.printFormattedOutput
+import KbpQueryOutput.printFormattedOutputForKBPQuery
 
 object KBPQueryExecutor {
   
@@ -19,7 +19,7 @@ object KBPQueryExecutor {
           filteredOrgMap += (slot -> orgMap(slot))
         }
         val results = executeEntityQueryForAllSlots(kbpQuery.name,filteredOrgMap)
-         printFormattedOutput(results,outputPath,KBPQueryEntityType.ORG)       
+         printFormattedOutputForKBPQuery(results,outputPath,kbpQuery)       
       }
       case KBPQueryEntityType.PER => {
         val perMap = getPersonMap()
@@ -30,7 +30,7 @@ object KBPQueryExecutor {
           filteredPerMap += (slot -> perMap(slot))
         }
         val results = executeEntityQueryForAllSlots(kbpQuery.name,filteredPerMap)
-        printFormattedOutput(results,outputPath,KBPQueryEntityType.PER)
+        printFormattedOutputForKBPQuery(results,outputPath,kbpQuery)
       }
       case _ => throw new Exception("Entity Type must be person or organization")
     }
