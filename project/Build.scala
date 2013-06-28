@@ -17,7 +17,7 @@ object SlotFillerBuild extends Build {
     scalaVersion <<= (crossScalaVersions) { versions => versions.head },
     publish := { },
     publishLocal := { }
-  ) aggregate(slotfiller, multir)
+  ) aggregate(slotfiller, multir, linker)
 
   // parent build definition
   val buildSettings = Defaults.defaultSettings ++ Seq (
@@ -69,7 +69,7 @@ object SlotFillerBuild extends Build {
         }
       }
     }
-  )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
+  )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).dependsOn(slotfiller)
 
   lazy val multir = Project(id = "multir", base = file("multir"), settings = buildSettings ++ Seq(
     libraryDependencies ++= Seq("edu.stanford.nlp" % "stanford-corenlp" % "1.3.4")
