@@ -32,7 +32,11 @@ class SolrPopulator private (val solrServer: ConcurrentUpdateSolrServer) {
   
   private def populate(extrs: Iterator[KbpExtraction]): Unit = {
     
-    extrs foreach tryAddSingle
+    extrs.grouped(100) foreach { bigGroup =>
+      bigGroup.grouped(10).toSeq.par foreach { smallGroup =>
+        smallGroup foreach tryAddSingle
+      }
+    }
     solrServer.commit()
     solrServer.shutdown()
   }
@@ -70,10 +74,18 @@ object SolrPopulator {
     if (!parser.parse(args)) return
     
     val source =  if (inputFile.equals("stdin")) io.Source.stdin else io.Source.fromFile(inputFile, "UTF8")
-    val extrs = if (inputExtrs) source.getLines flatMap KbpExtraction.read else loadFromXml(source, corpus)
+    val extrs = if (inputExtrs) loadFromKbpExtractions(source) else loadFromXml(source, corpus)
     populate(extrs, solrUrl)
     
     source.close()
+  }
+  
+  def loadFromKbpExtractions(source: io.Source): Iterator[KbpExtraction] = {
+    source.getLines.grouped(1000).flatMap { bigGroup => 
+      bigGroup.grouped(10).toSeq.par.flatMap { smallGroup =>
+        smallGroup flatMap KbpExtraction.read  
+      }
+    }
   }
   
   def loadFromXml(source: io.Source, corpus: String): Iterator[KbpExtraction] = {
