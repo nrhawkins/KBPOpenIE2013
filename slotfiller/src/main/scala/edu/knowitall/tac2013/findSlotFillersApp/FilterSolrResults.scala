@@ -99,11 +99,12 @@ object FilterSolrResults {
       case Some("relation") => kbpExtraction.rel.tokenInterval
       case _ => return false
     }
-    
+   
+    val sentence = kbpExtraction.sentence.dgraph.text
+
     
     if(slotType == "Organization" || slotType =="Person" || slotType =="Stateorprovince" ||
         slotType == "City" || slotType == "Country"){
-	    val sentence = kbpExtraction.sentence.dgraph.text
 	    val types = SemanticTaggers.useStandfordNERTagger(sentence)
 	    
 	    
@@ -132,6 +133,58 @@ object FilterSolrResults {
 	    }
 	    
 	    return false
+    }
+    
+    else if(slotType == "School"){
+      
+        val types = SemanticTaggers.useEducationalOrganizationTagger(sentence)
+        
+        for(t <- types){
+          if (t.interval().intersects(slotLocation)) return true
+          
+        }
+        
+        return false
+      
+    }
+    
+    else if(slotType == "JobTitle"){
+      
+        val types = SemanticTaggers.useJobTitleTagger(sentence)
+        
+        for(t <- types){
+          if (t.interval().intersects(slotLocation)) return true
+          
+        }
+        
+        return false
+      
+    }
+    
+    else if(slotType == "Nationality"){
+      
+        val types = SemanticTaggers.useNationalityTagger(sentence)
+        
+        for(t <- types){
+          if (t.interval().intersects(slotLocation)) return true
+          
+        }
+        
+        return false
+      
+    }
+    
+    else if(slotType == "Religion"){
+      
+        val types = SemanticTaggers.useReligionTagger(sentence)
+        
+        for(t <- types){
+          if (t.interval().intersects(slotLocation)) return true
+          
+        }
+        
+        return false
+      
     }
     else{
       

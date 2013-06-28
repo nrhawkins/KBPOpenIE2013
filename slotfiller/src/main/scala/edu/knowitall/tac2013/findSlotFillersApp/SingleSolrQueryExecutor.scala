@@ -16,7 +16,7 @@ object SingleSolrQueryExecutor {
     lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr")
     
     val query = client.query(queryString)
-    val result = query.rows(1000).sortBy("confidence",Order.desc).getResultAsMap()
+    val result = query.rows(10000).sortBy("confidence",Order.desc).getResultAsMap()
     
 
     val extrs = result.documents.flatMap { doc =>
