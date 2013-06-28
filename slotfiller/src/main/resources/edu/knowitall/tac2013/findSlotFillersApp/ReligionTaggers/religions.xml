@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taggers>
-	<CaseInsensitiveKeyWordTagger descriptor="Religion">
+	<CaseInsensitiveKeywordTagger descriptor="Religion">
 		<keywords>
 			<keyword>ADVENTIST</keyword>
 			<keyword>Amish</keyword>
@@ -50,6 +50,6 @@
 			<keyword>Zen-Buddhism</keyword>
 			<keyword>zoroastrianism</keyword>
 		</keywords>
-	</CaseInsensitiveKeyWordTagger>
+	</CaseInsensitiveKeywordTagger>
 </taggers>
 

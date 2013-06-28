@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <taggers>
-	<CaseInsensitiveKeyWordTagger descriptor="JobTitle">
+	<CaseInsensitiveKeywordTagger descriptor="JobTitle">
 		<keywords>
 			<keyword>Academic coordinator</keyword>
 			<keyword>academic specialist</keyword>
