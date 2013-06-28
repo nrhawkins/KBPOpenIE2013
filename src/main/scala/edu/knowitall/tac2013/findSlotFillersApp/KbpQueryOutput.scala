@@ -382,8 +382,8 @@ object KbpQueryOutput {
 	        		val entityOffsetEnd = startOffset + entityOffsetInterval.end
 	        		val entityOffsetString = entityOffsetStart.toString + "-" + entityOffsetEnd.toString()
 	        		
-	        		val justificationOffsetStart = startOffset + kbpExtraction.rel.tokenInterval.start
-	        		val justificationOffsetEnd = startOffset + kbpExtraction.rel.tokenInterval.end
+	        		val justificationOffsetStart = startOffset + kbpExtraction.arg1.tokenInterval.start
+	        		val justificationOffsetEnd = startOffset + kbpExtraction.arg2.tokenInterval.end
 	        		val justificationOffsetString = justificationOffsetStart.toString() +"-" + justificationOffsetEnd.toString()
 	        		
 	        		
