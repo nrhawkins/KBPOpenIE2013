@@ -24,6 +24,8 @@ object SlotFillerBuild extends Build {
     organization := buildOrganization,
     version := buildVersion,
     scalaVersion := "2.10.2",
+    fork in run := true,
+    javaOptions in run += "-Xmx8G",
     resolvers ++= Seq(
       "knowitall" at "http://knowitall.cs.washington.edu/maven2",
       "knowitall-snapshot" at "http://knowitall.cs.washington.edu/maven2-snapshot",
