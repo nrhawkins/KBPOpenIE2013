@@ -7,8 +7,8 @@ import AssemblyKeys._
 object SlotFillerBuild extends Build {
   // settings
   val buildOrganization = "edu.knowitall"
-  val buildVersion = "1.0.0"
-  val buildScalaVersions = Seq("2.10.2")
+  val buildVersion = "0.0.1"
+  val buildScalaVersions = Seq("2.10.1")
 
   val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
 
@@ -32,15 +32,15 @@ object SlotFillerBuild extends Build {
 
   lazy val slotfiller = Project(id = "slotfiller", base = file("slotfiller"), settings = buildSettings ++ Seq(
     libraryDependencies ++= Seq(
-    "edu.washington.cs.knowitall.taggers" %% "taggers" % "0.1",
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-sentence-breeze_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
+    "edu.washington.cs.knowitall.taggers" %% "taggers" % "0.1" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
+    "edu.washington.cs.knowitall.nlptools" %% "nlptools-sentence-breeze" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
     "com.googlecode.clearnlp" % "clearnlp-threadsafe" % "1.3.0-c",
     "net.databinder" %% "unfiltered-filter" % "0.6.8",
     "net.databinder" %% "unfiltered-jetty" % "0.6.8",
     "jp.sf.amateras.solr.scala" %% "solr-scala-client" % "0.0.7",
-    "org.scalatest" % "scalatest_2.10" % "1.9.1" % "test",
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-chunk-opennlp_2.10" % "2.4.2",
-    "edu.washington.cs.knowitall.nlptools" % "nlptools-parse-clear_2.10" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
+    "org.scalatest" %% "scalatest" % "1.9.1" % "test",
+    "edu.washington.cs.knowitall.nlptools" %% "nlptools-chunk-opennlp" % "2.4.2",
+    "edu.washington.cs.knowitall.nlptools" %% "nlptools-parse-clear" % "2.4.2" excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
     "edu.washington.cs.knowitall.srlie" %% "openie-srl" % "1.0.0-RC1"   excludeAll(ExclusionRule(organization = "com.googlecode.clearnlp")),
     "net.liftweb" %% "lift-json" % "2.5-RC5",
     "org.apache.solr" % "solr-solrj" % "4.3.0",
@@ -69,7 +69,7 @@ object SlotFillerBuild extends Build {
         }
       }
     }
-  )).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*).dependsOn(slotfiller)
+  )).dependsOn(slotfiller).settings(net.virtualvoid.sbt.graph.Plugin.graphSettings: _*)
 
   lazy val multir = Project(id = "multir", base = file("multir"), settings = buildSettings ++ Seq(
     libraryDependencies ++= Seq("edu.stanford.nlp" % "stanford-corenlp" % "1.3.4")
