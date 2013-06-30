@@ -32,7 +32,7 @@ object OffsetSanityChecker {
   def run(annotationsFile: File, corpusPath: File): Unit = {
    
     val annotations = Resource.using(io.Source.fromFile(annotationsFile, "UTF8")) { source =>
-      source.getLines map Annotation.read toSeq
+      source.getLines.drop(1) map Annotation.read toList
     }
     // load all of the files under corpusPath into a map by docId
     val getCorpusFile = loadCorpusFilesMap(annotations, corpusPath)
@@ -47,7 +47,7 @@ object OffsetSanityChecker {
       })
       if (verify(annot, corpusFile)) annotationsCorrect += 1
       annotationsProcessed += 1
-      if (annotationsProcessed % 1000 == 0)
+      if (annotationsProcessed % 100 == 0)
         println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
     }
   }
@@ -92,7 +92,7 @@ object OffsetSanityChecker {
         file.getName match {
           case dropExtensionRegex(docId, extension) => {
             numFilesLoaded += 1
-            if (numFilesLoaded % 2000 == 0) {
+            if (numFilesLoaded % 10000 == 0) {
               println(s"$numFilesLoaded files loaded, $numFilesSkipped files skipped.")
             }
             Some((docId, file))
@@ -107,7 +107,7 @@ object OffsetSanityChecker {
       filesOfInterest toMap
     }
     println
-    println(s"Loaded $numFilesLoaded files, skipped $numFilesSkipped, in ${Timing.Seconds.format(loadTimeNs)}.")
+    println(s"Scanned $numFilesLoaded files, skipped $numFilesSkipped, retained ${corpusFilesMap.size} in ${Timing.Seconds.format(loadTimeNs)}.")
     return corpusFilesMap
   }
 }
