@@ -31,24 +31,24 @@ object OffsetSanityChecker {
   
   def run(annotationsFile: File, corpusPath: File): Unit = {
    
+    val annotations = Resource.using(io.Source.fromFile(annotationsFile, "UTF8")) { source =>
+      source.getLines map Annotation.read toSeq
+    }
     // load all of the files under corpusPath into a map by docId
-    val getCorpusFile = loadCorpusFilesMap(corpusPath)
+    val getCorpusFile = loadCorpusFilesMap(annotations, corpusPath)
     
     var annotationsProcessed = 0
     var annotationsCorrect = 0
-    
-    // for each annotation, check it against its source doc according.
-    Resource.using(io.Source.fromFile(annotationsFile, "UTF8")) { source =>
 
-      for (annot <- source.getLines map Annotation.read) {
-        val corpusFile = getCorpusFile.getOrElse(annot.docId, { // or else...
-          throw new RuntimeException(s"No file found for docId=${annot.docId}")
-        })
-        if (verify(annot, corpusFile)) annotationsCorrect += 1
-        annotationsProcessed += 1
-        if (annotationsProcessed % 1000 == 0) 
-          println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
-      }
+    // for each annotation, check it against its source doc according.
+    for (annot <- annotations) {
+      val corpusFile = getCorpusFile.getOrElse(annot.docId, { // or else...
+        throw new RuntimeException(s"No file found for docId=${annot.docId}")
+      })
+      if (verify(annot, corpusFile)) annotationsCorrect += 1
+      annotationsProcessed += 1
+      if (annotationsProcessed % 1000 == 0)
+        println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
     }
   }
   
@@ -78,13 +78,16 @@ object OffsetSanityChecker {
   
   val dropExtensionRegex = "(.+)\\.([^\\.]+)".r
   
-  def loadCorpusFilesMap(corpusPath: File): Map[String, File] = {
+  def loadCorpusFilesMap(annotations: Seq[Annotation], corpusPath: File): Map[String, File] = {
     
     var numFilesLoaded = 0
     var numFilesSkipped = 0
+    
+    def docIds = annotations.map(_.docId).toSet
 
     val (loadTimeNs, corpusFilesMap) = Timing.time {
-      FileUtils.getFilesRecursive(corpusPath).flatMap { file =>
+      val allFiles = FileUtils.getFilesRecursive(corpusPath)
+      val docIdFiles = allFiles.flatMap { file =>
         // Convert filename to docId by dropping extension.
         file.getName match {
           case dropExtensionRegex(docId, extension) => {
@@ -99,7 +102,9 @@ object OffsetSanityChecker {
             None
           }
         }
-      } toMap
+      }
+      val filesOfInterest = docIdFiles filter { case (docId, file) => docIds.contains(docId) }
+      filesOfInterest toMap
     }
     println
     println(s"Loaded $numFilesLoaded files, skipped $numFilesSkipped, in ${Timing.Seconds.format(loadTimeNs)}.")
