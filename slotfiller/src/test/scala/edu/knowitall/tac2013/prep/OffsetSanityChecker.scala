@@ -51,6 +51,7 @@ object OffsetSanityChecker {
       if (annotationsProcessed % 100 == 0)
         println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct, $annotationsBogus bogus.")
     }
+    println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct, $annotationsBogus bogus.")
   }
   
   def verify(annot: Annotation, sourceFile: File): Boolean = {
@@ -96,7 +97,7 @@ object OffsetSanityChecker {
         line.split("\t") match {
           case Array(docId, fileName, _*) => (docId, new File(fileName))
           case _ => throw new RuntimeException(s"Invalid line in CorpusFiles.txt: $line")
-        }  
+        }
       } toMap
     }
   }
