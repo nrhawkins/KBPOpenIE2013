@@ -39,6 +39,7 @@ object OffsetSanityChecker {
     
     var annotationsProcessed = 0
     var annotationsCorrect = 0
+    var annotationsBogus = annotations.count(_.isBogus)
 
     // for each annotation, check it against its source doc according.
     for (annot <- annotations) {
@@ -48,7 +49,7 @@ object OffsetSanityChecker {
       if (verify(annot, corpusFile)) annotationsCorrect += 1
       annotationsProcessed += 1
       if (annotationsProcessed % 100 == 0)
-        println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
+        println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct, $annotationsBogus bogus.")
     }
   }
   
@@ -58,10 +59,10 @@ object OffsetSanityChecker {
     val fileString = DocSplitterSpec.fileString(sourceFile.toURL)
     
     // verify filler
-    val fillerLookup = fileString.substring(annot.finterval.start, annot.finterval.end)
+    val fillerLookup = fileString.substring(annot.finterval.start, annot.finterval.end).replaceAll("\n", " ")
     val fillerOk = fillerLookup.equals(annot.filler)
     
-    val justificationLookup = fileString.substring(annot.jinterval.start, annot.jinterval.end)
+    val justificationLookup = fileString.substring(annot.jinterval.start, annot.jinterval.end).replaceAll("\n", " ")
     val justificationOk = justificationLookup.equals(annot.justification)
     
     if (!fillerOk) {
@@ -70,7 +71,7 @@ object OffsetSanityChecker {
     }
     if (!justificationOk) {
       println(
-          s"Just Mismatch in ${annot.docId}, found: justificationLookup, exp: ${annot.justification} at ${annot.jinterval.toString}")
+          s"Just Mismatch in ${annot.docId}, found: $justificationLookup, exp: ${annot.justification} at ${annot.jinterval.toString}")
     }
     
     fillerOk && justificationOk
@@ -79,6 +80,28 @@ object OffsetSanityChecker {
   val dropExtensionRegex = "(.+)\\.([^\\.]+)".r
   
   def loadCorpusFilesMap(annotations: Seq[Annotation], corpusPath: File): Map[String, File] = {
+    
+    // try to load it, else generate and cache it.
+    val localFileNames = new File(".").listFiles.map(_.getName()).toSet
+    if (!localFileNames.contains("CorpusFiles.txt")) {
+      val corpusFiles = loadCorpusFilesMapHelper(annotations, corpusPath)
+      val output = new java.io.PrintStream("CorpusFiles.txt")
+      corpusFiles foreach { case (docId, file) => output.println(s"$docId\t${file.getAbsolutePath()}") }
+      output.close()
+      corpusFiles toMap
+    }
+    else {
+      val source = io.Source.fromFile("CorpusFiles.txt")
+      source.getLines map { line =>
+        line.split("\t") match {
+          case Array(docId, fileName, _*) => (docId, new File(fileName))
+          case _ => throw new RuntimeException(s"Invalid line in CorpusFiles.txt: $line")
+        }  
+      } toMap
+    }
+  }
+  
+  def loadCorpusFilesMapHelper(annotations: Seq[Annotation], corpusPath: File): Seq[(String, File)] = {
     
     var numFilesLoaded = 0
     var numFilesSkipped = 0
@@ -104,7 +127,7 @@ object OffsetSanityChecker {
         }
       }
       val filesOfInterest = docIdFiles filter { case (docId, file) => docIds.contains(docId) }
-      filesOfInterest toMap
+      filesOfInterest.toSeq
     }
     println
     println(s"Scanned $numFilesLoaded files, skipped $numFilesSkipped, retained ${corpusFilesMap.size} in ${Timing.Seconds.format(loadTimeNs)}.")
@@ -118,7 +141,12 @@ object OffsetSanityChecker {
  * 609	SF_ENG_041	LDC	org:alternate_names	APW_ENG_20070319.1047.LDC2009T13	1579	1586	Carnival281	301	Carnival Cruise Lines	Carnival	438	1
  * 
  */
-case class Annotation(val docId: String, val filler: String, val finterval: Interval, val justification: String, val jinterval: Interval)
+case class Annotation(val docId: String, val filler: String, val finterval: Interval, val justification: String, val jinterval: Interval) {
+      
+  def fillerBogus = filler.length != finterval.length
+  def justificationBogus = justification.length != jinterval.length
+  def isBogus = fillerBogus || justificationBogus
+}
 
 object Annotation {
   /**
