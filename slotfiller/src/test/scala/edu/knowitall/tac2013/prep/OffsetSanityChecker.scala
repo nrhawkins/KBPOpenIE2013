@@ -11,28 +11,26 @@ object OffsetSanityChecker {
 
   def main(args: Array[String]): Unit = {
     
-    var annotationsFileName = "."
-    var corpusPathName = "."
+    var annotationsFileName = ""
+    var corpusPathName = ""
     
     val parser = new OptionParser() {
-      arg("Annotation File", "Path to tac query annotation file.", { annotationsFileName = _ })
-      arg("Corpus directory", "Path to tac corpus.", { corpusPathName = _ })
+      arg("Annotation File", "Path to tac query annotation file.", { str => annotationsFileName = str })
+      arg("Corpus directory", "Path to tac corpus.", { str => corpusPathName = str })
     }
       
-    val annotationsFile = new File(annotationsFileName)
-    val corpusPath = new File(corpusPathName)
-    
-    if (!parser.parse(args)) return
-    else if (!annotationsFile.isFile || !corpusPath.isDirectory()) {
-      System.err.println("Invalid annot. file or corpus path.")
+    if (!parser.parse(args)) 
       return
-    } else {
+    else {
+      println(s"Running with:\nAnnotations at: $annotationsFileName\nCorpus at:$corpusPathName")
+      val annotationsFile = new File(annotationsFileName)
+      val corpusPath = new File(corpusPathName)
       run(annotationsFile, corpusPath) 
     } 
   }
   
   def run(annotationsFile: File, corpusPath: File): Unit = {
-    
+   
     // load all of the files under corpusPath into a map by docId
     val getCorpusFile = loadCorpusFilesMap(corpusPath)
     
@@ -49,7 +47,7 @@ object OffsetSanityChecker {
         if (verify(annot, corpusFile)) annotationsCorrect += 1
         annotationsProcessed += 1
         if (annotationsProcessed % 1000 == 0) 
-          System.err.println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
+          println(s"$annotationsProcessed annotations processed, $annotationsCorrect correct.")
       }
     }
   }
@@ -67,11 +65,11 @@ object OffsetSanityChecker {
     val justificationOk = justificationLookup.equals(annot.justification)
     
     if (!fillerOk) {
-      System.err.println(
+      println(
           s"Fill Mismatch in ${annot.docId}, found: $fillerLookup, exp: ${annot.filler} at ${annot.finterval.toString}")
     }
     if (!justificationOk) {
-      System.err.println(
+      println(
           s"Just Mismatch in ${annot.docId}, found: justificationLookup, exp: ${annot.justification} at ${annot.jinterval.toString}")
     }
     
@@ -83,22 +81,28 @@ object OffsetSanityChecker {
   def loadCorpusFilesMap(corpusPath: File): Map[String, File] = {
     
     var numFilesLoaded = 0
-    System.err.print("Loading corpus filenames.")
+    var numFilesSkipped = 0
 
     val (loadTimeNs, corpusFilesMap) = Timing.time {
-      FileUtils.getFilesRecursive(corpusPath).map { file =>
+      FileUtils.getFilesRecursive(corpusPath).flatMap { file =>
         // Convert filename to docId by dropping extension.
-        val docId = file.getName match {
-          case dropExtensionRegex(fileName, extension) => fileName
-          case _ => throw new RuntimeException(s"Could not get DocId from filename: ${file.getName}")
+        file.getName match {
+          case dropExtensionRegex(docId, extension) => {
+            numFilesLoaded += 1
+            if (numFilesLoaded % 2000 == 0) {
+              println(s"$numFilesLoaded files loaded, $numFilesSkipped files skipped.")
+            }
+            Some((docId, file))
+          }
+          case _ => {
+            numFilesSkipped += 1
+            None
+          }
         }
-        numFilesLoaded += 1
-        if (numFilesLoaded % 2000 == 0) System.err.print(".")
-        (docId, file)
       } toMap
     }
-    System.err.println
-    System.err.println(s"Loaded $numFilesLoaded files in ${Timing.Seconds.format(loadTimeNs)}.")
+    println
+    println(s"Loaded $numFilesLoaded files, skipped $numFilesSkipped, in ${Timing.Seconds.format(loadTimeNs)}.")
     return corpusFilesMap
   }
 }
