@@ -59,23 +59,15 @@ object OffsetSanityChecker {
     // load the file as a big string
     val fileString = DocSplitterSpec.fileString(sourceFile.toURL)
     
-    // verify filler
-    val fillerLookup = fileString.substring(annot.finterval.start, annot.finterval.end).replaceAll("\n", " ")
-    val fillerOk = fillerLookup.equals(annot.filler)
-    
     val justificationLookup = fileString.substring(annot.jinterval.start, annot.jinterval.end).replaceAll("\n", " ")
     val justificationOk = justificationLookup.equals(annot.justification)
     
-    if (!fillerOk) {
-      println(
-          s"Fill Mismatch in ${annot.docId}, found: $fillerLookup, exp: ${annot.filler} at ${annot.finterval.toString}")
-    }
     if (!justificationOk) {
       println(
           s"Just Mismatch in ${annot.docId}, found: $justificationLookup, exp: ${annot.justification} at ${annot.jinterval.toString}")
     }
     
-    fillerOk && justificationOk
+    justificationOk
   }
   
   val dropExtensionRegex = "(.+)\\.([^\\.]+)".r
@@ -144,9 +136,7 @@ object OffsetSanityChecker {
  */
 case class Annotation(val docId: String, val filler: String, val finterval: Interval, val justification: String, val jinterval: Interval) {
       
-  def fillerBogus = filler.length != finterval.length
-  def justificationBogus = justification.length != jinterval.length
-  def isBogus = fillerBogus || justificationBogus
+  def isBogus = justification.length != jinterval.length
 }
 
 object Annotation {
