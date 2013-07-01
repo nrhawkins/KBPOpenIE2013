@@ -2,6 +2,7 @@ package edu.knowitall.tac2013.prep.util
 
 import scala.io.Source
 import java.io.File
+import java.io.InputStream
 
 /**
  * Some general helper methods pertaining to file i/o.
@@ -45,5 +46,55 @@ object FileUtils {
       }
     }
     iter.flatten
+  }
+}
+
+case class Line(val text: String, val terminator: String)
+
+/**
+ * A wrapper for io.Source that includes newlines.
+ */
+class LineReader private (source: Source) extends Iterator[Line] {
+  
+  private lazy val iter = source.buffered
+ 
+  private val textBuffer = new StringBuilder
+  private val termBuffer = new StringBuilder
+
+  def getc() = iter.hasNext && {
+    val ch = iter.next()
+    if (ch == '\n') {
+      termBuffer append ch
+      false
+    } else if (ch == '\r') {
+      termBuffer append ch
+      if (iter.hasNext && iter.head == '\n')
+        termBuffer append iter.next()
+
+      false
+    } else {
+      textBuffer append ch
+      true
+    }
+  }
+  def hasNext = iter.hasNext
+  def next = {
+    textBuffer.clear()
+    termBuffer.clear()
+    while (getc()) {}
+    Line(textBuffer.toString, termBuffer.toString)
+  }
+  
+  def close() = source.close()
+}
+
+object LineReader {
+  
+  def fromFile(file: File, charset: String): LineReader = {
+    new LineReader(io.Source.fromFile(file, charset))
+  }
+  
+  def fromInputStream(istream: InputStream, charset: String): LineReader = {
+    new LineReader(io.Source.fromInputStream(istream, charset))
   }
 }
