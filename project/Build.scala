@@ -8,7 +8,7 @@ object SlotFillerBuild extends Build {
   // settings
   val buildOrganization = "edu.knowitall"
   val buildVersion = "0.0.1"
-  val buildScalaVersions = Seq("2.10.1")
+  val buildScalaVersions = Seq("2.10.2")
 
   val mavenLocal = "Local Maven Repository" at "file://"+Path.userHome+"/.m2/repository"
 
@@ -26,8 +26,8 @@ object SlotFillerBuild extends Build {
     scalaVersion := "2.10.2",
     fork in run := true,
     fork in Test := true,
-    javaOptions in run += "-Xmx8G",
     javaOptions in Test += "-Xmx8G",
+    javaOptions in run += "-Xmx8G",
     resolvers ++= Seq(
       "knowitall" at "http://knowitall.cs.washington.edu/maven2",
       "knowitall-snapshot" at "http://knowitall.cs.washington.edu/maven2-snapshot",
