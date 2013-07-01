@@ -46,6 +46,13 @@ object SemanticTaggers {
     TaggerCollection.fromPath(url.getPath())
   }
   
+  private val DateTagger = {
+    val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/DateTaggers"
+    val url = getClass.getResource(resourcePath)
+    require(url != null, "Could not find resource: " + resourcePath)
+    TaggerCollection.fromPath(url.getPath())
+  }
+  
   def useStandfordNERTagger(sentence: String): List[Type] = {
       val chunker = new OpenNlpChunker();
 	  val morpha = new MorphaStemmer();
@@ -113,6 +120,20 @@ object SemanticTaggers {
 	        tokens = tokens ::: List(lemma)
 	  }
 	  val types = scala.collection.JavaConversions.asScalaIterable(ReligionTagger.tag(scala.collection.JavaConversions.asJavaList(tokens)))
+	  types.toList
+  }
+  
+  def useDateTagger(sentence: String): List[Type] = {
+      val chunker = new OpenNlpChunker();
+	  val morpha = new MorphaStemmer();
+	  
+	  val chunkedSentence = chunker.chunk(sentence)
+	  var tokens = List[Lemmatized[ChunkedToken]]()
+	  for (token <- chunkedSentence) {
+	        val lemma = morpha.lemmatizeToken(token);
+	        tokens = tokens ::: List(lemma)
+	  }
+	  val types = scala.collection.JavaConversions.asScalaIterable(DateTagger.tag(scala.collection.JavaConversions.asJavaList(tokens)))
 	  types.toList
   }
   

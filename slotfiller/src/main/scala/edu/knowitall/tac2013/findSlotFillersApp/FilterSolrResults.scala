@@ -72,8 +72,8 @@ object FilterSolrResults {
 	    var count = 0
 	    for(term <- queryEntityReversedSplit){
 	      val extractionWord = entityFromExtractionSplit(entityFromExtractionSplit.length-1-count)
-	      if((term.toLowerCase() != extractionWord.toLowerCase()) &&
-	          (term.toLowerCase() != extractionWord.substring(1,extractionWord.length-1).toLowerCase())){
+	      if(term.toLowerCase() != extractionWord.toLowerCase()){
+	          //(term.toLowerCase() != extractionWord.substring(1,extractionWord.length-1).toLowerCase())){
 	         return false
 	      }
 	      
@@ -177,6 +177,17 @@ object FilterSolrResults {
     else if(slotType == "Religion"){
       
         val types = SemanticTaggers.useReligionTagger(sentence)
+        
+        for(t <- types){
+          if (t.interval().intersects(slotLocation)) return true
+          
+        }
+        
+        return false
+      
+    }
+    else if (slotType == "Date"){
+        val types = SemanticTaggers.useDateTagger(sentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
