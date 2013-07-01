@@ -55,8 +55,7 @@ object DocSplitter {
     var numDocs = 0
     
     val lineReader = LineReader.fromFile(inputFile, "UTF8")
-    val docSpliterator = new DocSplitter(lineReader)
-    val limitedDocs = docSpliterator.take(docsToSplit)
+    val docSpliterator = new DocSplitter(lineReader).take(docsToSplit)
     
     docSpliterator.foreach { kbpDoc =>
       val output = new PrintStream("%s/doc%d.txt".format(outputDir, numDocs), "UTF8")
