@@ -9,15 +9,12 @@ import edu.knowitall.tac2013.openie.solr.KbpExtractionConverter
 object SingleSolrQueryExecutor {
   import jp.sf.amateras.solr.scala._
 
+  lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr")
   
   def issueSolrQuery(queryString: String): List[KbpExtraction] = {
-    //not sure where the best place to put this val is so I'm hoping making it lazy
-    //will be a good idea
-    lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr")
     
     val query = client.query(queryString)
-    val result = query.rows(10000).sortBy("confidence",Order.desc).getResultAsMap()
-    
+    val result = query.sortBy("confidence",Order.desc).rows(10000).getResultAsMap()
 
     val extrs = result.documents.flatMap { doc =>
       val fieldMap = doc.asInstanceOf[Map[String, Any]]
