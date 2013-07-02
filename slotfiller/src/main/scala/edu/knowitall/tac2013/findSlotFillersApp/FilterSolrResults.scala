@@ -100,12 +100,12 @@ object FilterSolrResults {
       case _ => return false
     }
    
-    val sentence = kbpExtraction.sentence.dgraph.text
+    val chunkedSentence = kbpExtraction.sentence.chunkedTokens
 
     
     if(slotType == "Organization" || slotType =="Person" || slotType =="Stateorprovince" ||
         slotType == "City" || slotType == "Country"){
-	    val types = SemanticTaggers.useStandfordNERTagger(sentence)
+	    val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
 	    
 	    
 	    
@@ -137,7 +137,7 @@ object FilterSolrResults {
     
     else if(slotType == "School"){
       
-        val types = SemanticTaggers.useEducationalOrganizationTagger(sentence)
+        val types = SemanticTaggers.useEducationalOrganizationTagger(chunkedSentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
@@ -150,7 +150,7 @@ object FilterSolrResults {
     
     else if(slotType == "JobTitle"){
       
-        val types = SemanticTaggers.useJobTitleTagger(sentence)
+        val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
@@ -163,7 +163,7 @@ object FilterSolrResults {
     
     else if(slotType == "Nationality"){
       
-        val types = SemanticTaggers.useNationalityTagger(sentence)
+        val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
@@ -176,7 +176,7 @@ object FilterSolrResults {
     
     else if(slotType == "Religion"){
       
-        val types = SemanticTaggers.useReligionTagger(sentence)
+        val types = SemanticTaggers.useReligionTagger(chunkedSentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
@@ -187,7 +187,7 @@ object FilterSolrResults {
       
     }
     else if (slotType == "Date"){
-        val types = SemanticTaggers.useDateTagger(sentence)
+        val types = SemanticTaggers.useDateTagger(chunkedSentence)
         
         for(t <- types){
           if (t.interval().intersects(slotLocation)) return true
