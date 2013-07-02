@@ -10,16 +10,15 @@ object FilterSolrResults {
 	      val solrResultsArg2 = kbpExtraction.arg2.originalText
 	      val arg2PrepositionString = relationData.arg2Begins.get.trim()
 	      
-	      if(solrResultsArg2.toString().toLowerCase().substring(0,arg2PrepositionString.length) == arg2PrepositionString.toLowerCase() ||
-	          solrResultsArg2.toString().toLowerCase().substring(1,arg2PrepositionString.length+1) == arg2PrepositionString.toLowerCase())
-	        true
+	      if(solrResultsArg2.toString().toLowerCase().substring(0,arg2PrepositionString.length) == arg2PrepositionString.toLowerCase())
+	        return true
 	      
       	  else{
-            false
+            return false
           }
       }
       else{
-        true
+        return true
       }
   }
   
@@ -37,8 +36,7 @@ object FilterSolrResults {
 	    var count = 0 
 	    for(term <- relationTermsReversed){
 	      val sentenceWord = relationTermsFromExtraction(relationTermsFromExtraction.length-1-count)
-	      if( (term.toLowerCase() != sentenceWord.toLowerCase()) &&
-	          (term.toLowerCase() != sentenceWord.substring(1,sentenceWord.length-1).toLowerCase())){
+	      if (term.toLowerCase() != sentenceWord.toLowerCase()){
 	         return false
 	      }
 	      count = count +1
