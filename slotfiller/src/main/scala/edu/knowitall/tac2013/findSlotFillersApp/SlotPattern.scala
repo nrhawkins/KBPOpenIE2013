@@ -58,7 +58,7 @@ object SlotPattern {
 
     Resource.using(Source.fromURL(getClass.getResource(patternResource))) { source =>
       val patternLines = source.getLines.filterNot(_.trim().startsWith(","))
-      val patterns = patternLines flatMap SlotPattern.read
+      val patterns = patternLines flatMap SlotPattern.read filter(_.isValid)
       val patternsMap = patterns.toSeq.groupBy(_.slotName)
       // turn Seq values into Lists
       patternsMap.map { case (key, value) => (key, value.toList) }
