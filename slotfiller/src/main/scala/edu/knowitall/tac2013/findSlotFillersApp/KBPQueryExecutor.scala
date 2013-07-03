@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryEntityForAllSlots.executeEntityQueryForAllSlots
+import QueryEntityForAllSlots.executeQueryForAllSlots
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest
@@ -19,7 +19,7 @@ object KBPQueryExecutor {
           }
         }
 
-        val results = executeEntityQueryForAllSlots(kbpQuery.name, filteredOrgMap, kbpQuery.nodeId)
+        val results = executeQueryForAllSlots(kbpQuery, filteredOrgMap, kbpQuery.nodeId)
         
         var slotCandidateSetMap = Map[String,SlotCandidateSet]()
 	    for( x <- results.keys){
@@ -39,7 +39,7 @@ object KBPQueryExecutor {
           }
         }
 
-        val results = executeEntityQueryForAllSlots(kbpQuery.name,filteredPerMap,kbpQuery.nodeId)
+        val results = executeQueryForAllSlots(kbpQuery,filteredPerMap,kbpQuery.nodeId)
         
         var slotCandidateSetMap = Map[String,SlotCandidateSet]()
 	    for( x <- results.keys){

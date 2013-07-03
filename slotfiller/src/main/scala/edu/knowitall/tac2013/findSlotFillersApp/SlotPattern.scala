@@ -47,10 +47,14 @@ object SlotPattern {
 
   lazy val personPatterns = getPatternsAsMap(personPatternResource)
 
-  def patternsFor(entityType: KBPQueryEntityType): Map[String, List[SlotPattern]] = {
-    entityType match {
+  def patternsForQuery(query: KBPQuery): Map[String, List[SlotPattern]] = {
+    val entityPatterns = query.entityType match {
       case KBPQueryEntityType.ORG => organizationPatterns
       case KBPQueryEntityType.PER => personPatterns
+    }
+    entityPatterns.filter {
+      case (slotname, patterns) =>
+        query.slotsToFill.contains(slotname)
     }
   }
 

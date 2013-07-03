@@ -11,8 +11,8 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
-  def executeEntityQueryForAllSlots(
-      queryEntity: String, 
+  def executeQueryForAllSlots(
+      kbpQuery: KBPQuery, 
       KBPOpenIERelationMap: Map[String,List[SlotPattern]], 
       nodeId: Option[String] = None): Map[String, List[CandidateSet]] = {
     
@@ -22,11 +22,11 @@ object QueryEntityForAllSlots {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
-        val qb = new QueryBuilder(pattern, queryEntity, nodeId) //solr query builder
+        val qb = new QueryBuilder(pattern, kbpQuery.name, nodeId) //solr query builder
         
-        val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
+        val combinedResults = qb.getQueries.flatMap { solrQuery => issueSolrQuery(solrQuery) }
         
-        val filteredResults = filterResults(combinedResults.toList, pattern, queryEntity)
+        val filteredResults = filterResults(combinedResults.toList, pattern, kbpQuery.name)
 
         new CandidateSet(pattern, filteredResults)
       }
@@ -42,8 +42,8 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
-  def executeEntityQueryForAllSlotsWithoutFilter(
-      queryEntity: String, 
+  def executeQueryForAllSlotsWithoutFilter(
+      kbpQuery: KBPQuery, 
       KBPOpenIERelationMap: Map[String,List[SlotPattern]], 
       nodeId: Option[String] = None): Map[String, List[CandidateSet]] = {
     
@@ -53,7 +53,7 @@ object QueryEntityForAllSlots {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
-        val qb = new QueryBuilder(pattern, queryEntity, nodeId) //solr query builder
+        val qb = new QueryBuilder(pattern, kbpQuery.name, nodeId) //solr query builder
         
         val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
 

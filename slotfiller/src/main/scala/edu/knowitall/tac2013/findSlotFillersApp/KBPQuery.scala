@@ -17,6 +17,11 @@ object KBPQuery {
 
   import KBPQueryEntityType._
 
+  // fabricate a KBPQuery for just an entity name (for testing)
+  def forEntityName(name: String, entityType: KBPQueryEntityType, nodeId: Option[String] = None): KBPQuery = {
+    new KBPQuery("TEST", name, "NULL", -1, -1, entityType, nodeId, SlotTypes.getSlotTypesList(entityType).toSet)
+  }
+  
   //parses a single query from an XML file, will not work if there are more than one query in the XML file
   def parseKBPQuery(pathToFile: String): KBPQuery = {
     
