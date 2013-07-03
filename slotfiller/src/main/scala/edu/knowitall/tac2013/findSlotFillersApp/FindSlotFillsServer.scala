@@ -60,7 +60,7 @@ object FindSlotFillsServer extends App {
         if(field1Split.length > 1){
           var  isNodeId = false
           for( c <- field1Split(field1Split.length-1)){
-            if(c.isValidInt){
+            if(c.isDigit){
               isNodeId = true
             }
           }
