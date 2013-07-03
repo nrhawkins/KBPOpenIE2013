@@ -1,8 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
 import QueryEntityForAllSlots.executeEntityQueryForAllSlots
-import KBPSlotOpenIERelationTranslator.getOrganizationMap
-import KBPSlotOpenIERelationTranslator.getPersonMap
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest
@@ -13,14 +11,15 @@ object KBPQueryExecutor {
   def executeKbpQuery(kbpQuery: KBPQuery, outputPath: String){
     kbpQuery.entityType match {
       case KBPQueryEntityType.ORG => {
-        val orgMap = getOrganizationMap()
         
-        //filter out ignored slots
-        var filteredOrgMap = Map[String,List[SlotPattern]]()
-        for(slot <- kbpQuery.slotsToFill){
-          filteredOrgMap += (slot -> orgMap(slot))
+        val filteredOrgMap = {
+          val orgMap = SlotPattern.organizationPatterns
+          orgMap.filter { case (slotname, patterns) => 
+            kbpQuery.slotsToFill.contains(slotname) 
+          }
         }
-        val results = executeEntityQueryForAllSlots(kbpQuery.name,filteredOrgMap,kbpQuery.id)
+
+        val results = executeEntityQueryForAllSlots(kbpQuery.name, filteredOrgMap, kbpQuery.id)
         
         var slotCandidateSetMap = Map[String,SlotCandidateSet]()
 	    for( x <- results.keys){
@@ -32,13 +31,14 @@ object KBPQueryExecutor {
       }
       
       case KBPQueryEntityType.PER => {
-        val perMap = getPersonMap()
         
-        //filter out ignored slots
-        var filteredPerMap = Map[String,List[SlotPattern]]()
-        for(slot <- kbpQuery.slotsToFill){
-          filteredPerMap += (slot -> perMap(slot))
+    	val filteredPerMap = {
+          val perMap = SlotPattern.personPatterns
+          perMap.filter { case (slotname, patterns) => 
+            kbpQuery.slotsToFill.contains(slotname) 
+          }
         }
+
         val results = executeEntityQueryForAllSlots(kbpQuery.name,filteredPerMap,kbpQuery.id)
         
         var slotCandidateSetMap = Map[String,SlotCandidateSet]()

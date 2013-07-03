@@ -1,6 +1,5 @@
 package edu.knowitall.tac2013.experiment
 
-import edu.knowitall.tac2013.findSlotFillersApp.KBPSlotOpenIERelationTranslator
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import edu.knowitall.tac2013.findSlotFillersApp.QueryBuilder
 import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
@@ -10,32 +9,32 @@ import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
  * how many results match for a given entity, or for a wildcard entity.
  */
 class PatternStats(val solrExec: SolrSimpleExecutor) {
-  def this(url: String) = this(new SolrSimpleExecutor(url, 10000))
+  def this(url: String) = this(new SolrSimpleExecutor(url, 1000))
 
   val sampleOrgs = Set("Carnival Cruise", "Microsoft", "Apple", "Washington Post", "Discovery Channel", "Stanford University")
   val samplePers = Set("Bill Gates", "Steve Jobs", "Ronnie Sinclair", "Barack Obama", "Steve Ballmer", "Abraham Lincoln", "George Washington", "Babe Ruth")
   
   def run() {
 
-    val orgPatterns = KBPSlotOpenIERelationTranslator.getOrganizationMap
-    val perPatterns = KBPSlotOpenIERelationTranslator.getPersonMap
-    
-    val orgPatternStats = orgPatterns.iterator.toSeq map {
-      case (slotname, patterns) =>
-        patternStats(slotname, patterns, sampleOrgs)
-    }
-    
-    reportResults(orgPatternStats)
-    println()
-    println()
-    
+    val orgPatterns = SlotPattern.organizationPatterns
+    val perPatterns = SlotPattern.personPatterns
+
     val perPatternStats = perPatterns.iterator.toSeq map {
       case (slotname, patterns) =>
         patternStats(slotname, patterns, samplePers)
     }
 
     reportResults(perPatternStats)
+
+    println()
+    println()
+        
+    val orgPatternStats = orgPatterns.iterator.toSeq map {
+      case (slotname, patterns) =>
+        patternStats(slotname, patterns, sampleOrgs)
+    }
     
+    reportResults(orgPatternStats)    
   }
   
   def reportResults(stats: Seq[(String, Double, Double)]): Unit = {

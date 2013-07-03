@@ -1,8 +1,6 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import KBPSlotOpenIERelationTranslator.getOrganizationMap
-import KBPSlotOpenIERelationTranslator.getPersonMap
 import QueryEntityForAllSlots.executeEntityQueryForAllSlots
 import QueryEntityForAllSlots.executeEntityQueryForAllSlotsWithoutFilter
 import KbpQueryOutput.printUnformattedOutput
@@ -26,8 +24,8 @@ object FindSlotFills {
      println(semanticType)
      
      if (semanticType == "organization"){
-	     val orgMap = getOrganizationMap()
-	     val mapOfResults = executeEntityQueryForAllSlots(entityName, orgMap.toMap)
+       
+	     val mapOfResults = executeEntityQueryForAllSlots(entityName, SlotPattern.organizationPatterns)
 	     
 	     // rank candidate extractions and build a map from slot names to SlotCandidateSet
 	     var slotCandidateSetMap = Map[String,SlotCandidateSet]()
@@ -43,8 +41,8 @@ object FindSlotFills {
   	 }
      
      else if (semanticType == "person"){
-	     val perMap = getPersonMap()
-	     val mapOfResults = executeEntityQueryForAllSlots(entityName, perMap.toMap)
+       
+	     val mapOfResults = executeEntityQueryForAllSlots(entityName, SlotPattern.personPatterns)
 	     
 	     // rank candidate extractions and build a map from slot names to SlotCandidateSet
 	     var slotCandidateSetMap = Map[String,SlotCandidateSet]()
@@ -74,7 +72,7 @@ object FindSlotFills {
 
      
      if (semanticType == "organization"){
-	     val orgMap = getOrganizationMap()
+	     val orgMap = SlotPattern.organizationPatterns
 	     val mapOfResults = executeEntityQueryForAllSlots(entityName, orgMap.toMap,nodeId)
 	     val unfilteredMapOfResults = executeEntityQueryForAllSlotsWithoutFilter(entityName, orgMap.toMap,nodeId)
 	     
@@ -101,7 +99,7 @@ object FindSlotFills {
   	 }
      
      else if (semanticType == "person"){
-	     val perMap = getPersonMap()
+	     val perMap = SlotPattern.personPatterns
 	     val mapOfResults = executeEntityQueryForAllSlots(entityName, perMap.toMap,nodeId)
 	     val unfilteredMapOfResults = executeEntityQueryForAllSlotsWithoutFilter(entityName, perMap.toMap,nodeId)
 	     
