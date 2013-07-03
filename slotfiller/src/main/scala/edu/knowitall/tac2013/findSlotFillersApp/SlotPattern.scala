@@ -61,8 +61,8 @@ object SlotPattern {
   private def getPatternsAsMap(patternResource: String): Map[String, List[SlotPattern]] = {
 
     Resource.using(Source.fromURL(getClass.getResource(patternResource))) { source =>
-      val patternLines = source.getLines.filterNot(_.trim().startsWith(","))
-      val patterns = patternLines flatMap SlotPattern.read filter(_.isValid)
+      val patternLines = source.getLines.drop(1).filterNot(_.trim().startsWith(","))
+      val patterns = patternLines flatMap SlotPattern.read
       val patternsMap = patterns.toSeq.groupBy(_.slotName)
       // turn Seq values into Lists
       patternsMap.map { case (key, value) => (key, value.toList) }
@@ -77,7 +77,14 @@ object SlotPattern {
         val pattern = getSlotPattern(slotName, maxValues, relString, arg2Begins, entityIn, slotFillIn, slotType)
         Some(pattern)
       }
-      case _ => None
+      case Array(slotName, maxValues, _*) => {
+        val pattern = getSlotPattern(slotName, maxValues, "", "", "", "", "")
+        Some(pattern)
+      }
+      case _ => {
+        System.err.println("Couldn't parse pattern (%d fields): %s".format(csvDataArray.length, str))
+        None
+      }
     }
   }
 

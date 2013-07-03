@@ -70,7 +70,7 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
 
   def getQueryString(entity: String, pattern: SlotPattern): String = {
     val qb = new QueryBuilder(pattern, entity, None)
-    qb.buildQuery.queryString
+    qb.buildQuery.get.queryString
   }
 
   def padToEllipses(str: String, len: Int): String = {
