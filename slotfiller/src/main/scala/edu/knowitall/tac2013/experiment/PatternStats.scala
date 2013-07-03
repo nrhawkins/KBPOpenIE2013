@@ -69,22 +69,8 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
   }
 
   def getQueryString(entity: String, pattern: SlotPattern): String = {
-    val qb = new QueryBuilder //solr query builder
-    val entityIn = pattern.entityIn.getOrElse({ "" })
-    if (entityIn.trim() == "arg1") {
-      qb.setArg1String(entity)
-    } else if (entityIn.trim() == "arg2") {
-      qb.setArg2String(entity)
-    } else {
-      throw new Exception("entityIn contains invalid string")
-    }
-    qb.setRelString(pattern.openIERelationString.getOrElse({ "" }))
-    val beginningOfArg2 = pattern.arg2Begins.getOrElse({ "" })
-    if (beginningOfArg2 != "") {
-      qb.setBeginningOfArg2String(pattern.arg2Begins.get)
-    }
-    val queryString = qb.getQueryString
-    queryString
+    val qb = new QueryBuilder(pattern, entity, None)
+    qb.buildQuery
   }
 
   def padToEllipses(str: String, len: Int): String = {

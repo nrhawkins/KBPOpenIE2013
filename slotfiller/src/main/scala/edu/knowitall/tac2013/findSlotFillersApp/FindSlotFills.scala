@@ -63,7 +63,7 @@ object FindSlotFills {
      }
   }
   
-    def runForServerOutput(field1: String, field2:String, nodeId:String =""): String = {
+    def runForServerOutput(field1: String, field2:String, nodeId: Option[String] = None): String = {
 
 
          

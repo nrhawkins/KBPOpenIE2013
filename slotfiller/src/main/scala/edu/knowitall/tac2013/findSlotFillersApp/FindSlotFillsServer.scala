@@ -69,7 +69,7 @@ object FindSlotFillsServer extends App {
             entityString = field1.substring(0,field1.size - nodeId.size)
           }
         }
-        val s = FindSlotFills.runForServerOutput(entityString,field2,nodeId)
+        val s = FindSlotFills.runForServerOutput(entityString,field2, if (nodeId.nonEmpty) Some(nodeId) else None)
         
         ResponseString(field1 + s) ~> Ok
       }

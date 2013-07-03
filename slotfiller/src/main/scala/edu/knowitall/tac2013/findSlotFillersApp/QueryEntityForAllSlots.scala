@@ -11,7 +11,7 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
-  def executeEntityQueryForAllSlots(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeID: String = ""):
+  def executeEntityQueryForAllSlots(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeId: Option[String] = None):
     Map[String,List[CandidateSet]] ={
     
     //var resultsList = List[(String,KbpSlotToOpenIEData,List[KbpExtraction])]()
@@ -28,9 +28,9 @@ object QueryEntityForAllSlots {
         
         //first check if the specifications in the KBPSlotToOpenIEData are valid
         if(relationData.isValid()){
-	        val qb = new QueryBuilder //solr query builder
-	        qb.buildQuery(relationData,queryEntity)
-	        val queryString = qb.getQueryString
+	        val qb = new QueryBuilder(relationData, queryEntity, nodeId) //solr query builder
+
+	        val queryString = qb.buildQuery
 	        
 	        println(queryString)
 	        
@@ -39,10 +39,9 @@ object QueryEntityForAllSlots {
 	        var combinedListOfResults : Option[List[CandidateExtraction]] = None
 	        
 	        //issue an entity link query too if it was given
-	        if(nodeID != ""){
-		        val qbLink = new QueryBuilder
-		        qbLink.buildLinkedQuery(relationData,nodeID)
-		        val linkQueryString = qbLink.getQueryString
+	        if(nodeId.nonEmpty) {
+
+		        val linkQueryString = qb.buildLinkedQuery
 		        println(linkQueryString)
 		        combinedListOfResults = Some(listOfResults ::: issueSolrQuery(linkQueryString,CandidateType.LINKED,relationData))
 	        }
@@ -69,7 +68,7 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
-  def executeEntityQueryForAllSlotsWithoutFilter(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeID: String = ""):
+  def executeEntityQueryForAllSlotsWithoutFilter(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeId: Option[String] = None):
     Map[String,List[CandidateSet]] ={
     
     //var resultsList = List[(String,KbpSlotToOpenIEData,List[KbpExtraction])]()
@@ -86,9 +85,8 @@ object QueryEntityForAllSlots {
         
         //first check if the specifications in the KBPSlotToOpenIEData are valid
         if(relationData.isValid()){
-	        val qb = new QueryBuilder //solr query builder
-	        qb.buildQuery(relationData,queryEntity)
-	        val queryString = qb.getQueryString
+	        val qb = new QueryBuilder(relationData, queryEntity, nodeId) //solr query builder
+	        val queryString = qb.buildQuery
 	        
 	        println(queryString)
 	        
@@ -97,10 +95,9 @@ object QueryEntityForAllSlots {
 	        var combinedListOfResults : Option[List[CandidateExtraction]] = None
 	        
 	        //issue an entity link query too if it was given
-	        if(nodeID != ""){
-		        val qbLink = new QueryBuilder
-		        qbLink.buildLinkedQuery(relationData,nodeID)
-		        val linkQueryString = qbLink.getQueryString
+	        if(nodeId.nonEmpty){
+
+		        val linkQueryString = qb.buildLinkedQuery
 		        println(linkQueryString)
 		        combinedListOfResults = Some(listOfResults ::: issueSolrQuery(linkQueryString,CandidateType.LINKED,relationData))
 	        }
