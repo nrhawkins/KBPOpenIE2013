@@ -2,6 +2,8 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import CandidateType._
 
+case class KbpSolrQuery(val queryString: String, val resultType: CandidateType)
+
 class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId: Option[String]) {
   
   private def getQueryString(fields: Seq[String]) = {
@@ -60,19 +62,30 @@ class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId:
       case _ => None
     }
   }
+  
+  def getQueries: Seq[KbpSolrQuery] = {
+    
+    Seq(buildQuery) ++ {
+      nodeId match {
+        case Some(id) => Some(buildLinkedQuery)
+        case None => None
+      }
+    }
+  }
+  
 
-  def buildQuery: String = {
+  def buildQuery: KbpSolrQuery = {
     
     val queryFields = Seq(arg1TextConstraint, arg2TextConstraint, relTextConstraint, arg2StartConstraint).flatten
     
-    getQueryString(queryFields)
+    KbpSolrQuery(getQueryString(queryFields), CandidateType.REGULAR)
   }
 
-  def buildLinkedQuery: String = {
+  def buildLinkedQuery: KbpSolrQuery = {
     
     val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
     
-    getQueryString(queryFields)
+    KbpSolrQuery(getQueryString(queryFields), CandidateType.LINKED)
   }
 
 }
