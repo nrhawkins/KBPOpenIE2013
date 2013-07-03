@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.experiment
 
 import edu.knowitall.tac2013.findSlotFillersApp.KBPSlotOpenIERelationTranslator
-import edu.knowitall.tac2013.findSlotFillersApp.KbpSlotToOpenIEData
+import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import edu.knowitall.tac2013.findSlotFillersApp.QueryBuilder
 import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
 
@@ -10,7 +10,7 @@ import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
  * how many results match for a given entity, or for a wildcard entity.
  */
 class PatternStats(val solrExec: SolrSimpleExecutor) {
-  def this(url: String) = this(new SolrSimpleExecutor(url, 1000))
+  def this(url: String) = this(new SolrSimpleExecutor(url, 10000))
 
   val sampleOrgs = Set("Carnival Cruise", "Microsoft", "Apple", "Washington Post", "Discovery Channel", "Stanford University")
   val samplePers = Set("Bill Gates", "Steve Jobs", "Ronnie Sinclair", "Barack Obama", "Steve Ballmer", "Abraham Lincoln", "George Washington", "Babe Ruth")
@@ -20,7 +20,7 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
     val orgPatterns = KBPSlotOpenIERelationTranslator.getOrganizationMap
     val perPatterns = KBPSlotOpenIERelationTranslator.getPersonMap
     
-    val orgPatternStats = orgPatterns.iterator.toSeq flatMap {
+    val orgPatternStats = orgPatterns.iterator.toSeq map {
       case (slotname, patterns) =>
         patternStats(slotname, patterns, sampleOrgs)
     }
@@ -29,7 +29,7 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
     println()
     println()
     
-    val perPatternStats = perPatterns.iterator.toSeq flatMap {
+    val perPatternStats = perPatterns.iterator.toSeq map {
       case (slotname, patterns) =>
         patternStats(slotname, patterns, samplePers)
     }
@@ -37,17 +37,19 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
     reportResults(perPatternStats)
     
   }
-  def reportResults(stats: Seq[(String, Long, Double)]): Unit = {
+  
+  def reportResults(stats: Seq[(String, Double, Double)]): Unit = {
     stats foreach {
-      case (wcQuery, wcNumResults, avgNumResults) =>
-        println(Seq(padToEllipses(wcQuery, 75), padToEllipses(wcNumResults.toString, 15), "%.02f" format avgNumResults).mkString("\t"))
+      case (slotname, avgWcResults, normTotalResults) =>
+        println(Seq(padToEllipses(slotname, 50), padToEllipses(avgWcResults.toString, 15), "%.02f" format normTotalResults).mkString("\t"))
     }
     val avgAllWc = stats.map(_._2).sum / stats.size
     val avgAllSamp = stats.map(_._3).sum / stats.size
     println(Seq(padToEllipses("OVERALL AVERAGE", 75), padToEllipses(avgAllWc.toString, 15), "%.02f" format avgAllSamp).mkString("\t"))
   }
 
-  def patternStats(slotname: String, patterns: Seq[KbpSlotToOpenIEData], sampleEntities: Set[String]): Seq[(String, Long, Double)] = {
+  /** Return Slotname, avg wildcard results, avg normal results */
+  def patternStats(slotname: String, patterns: Seq[SlotPattern], sampleEntities: Set[String]): (String, Double, Double) = {
     // map patterns to wildcard queries
     val wildcardQueries = patterns.filter(_.isValid).map { p => getQueryString("*", p) }
 
@@ -56,18 +58,18 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
       sampleEntities.map { e => getQueryString(e, p) }
     }
 
-    // build list of (wildcard query string, wildcard results, avg results over samples)
+    // build list of (wildcard query string, total wildcard results, total results over samples)
     val patternStats = wildcardQueries.zip(sampleQuerySets).map {
       case (wc, samples) =>
         val numWildcardResults = solrExec.query(wc).numResults
-        val avgSampleResults = samples.map(s => solrExec.query(s).numResults).sum.toDouble / samples.size.toDouble
+        val avgSampleResults = samples.map(s => solrExec.query(s).numResults).sum / samples.size.toDouble
         (wc, numWildcardResults, avgSampleResults)
     }
 
-    patternStats
+    (slotname, patternStats.map(_._2).sum, patternStats.map(_._3).sum)
   }
 
-  def getQueryString(entity: String, pattern: KbpSlotToOpenIEData): String = {
+  def getQueryString(entity: String, pattern: SlotPattern): String = {
     val qb = new QueryBuilder //solr query builder
     val entityIn = pattern.entityIn.getOrElse({ "" })
     if (entityIn.trim() == "arg1") {

@@ -5,7 +5,7 @@ import edu.knowitall.tac2013.openie.KbpExtraction
 object FilterSolrResults {
 
   //filter for arg2 beginning with proper preposition
-  private def satisfiesArg2PrepositionFilter(relationData: KbpSlotToOpenIEData, candidateExtraction: CandidateExtraction ): Boolean ={
+  private def satisfiesArg2PrepositionFilter(relationData: SlotPattern, candidateExtraction: CandidateExtraction ): Boolean ={
     
       val kbpExtraction = candidateExtraction.kbpExtraction
       if (relationData.arg2Begins.nonEmpty){
@@ -24,7 +24,7 @@ object FilterSolrResults {
       }
   }
   
-  private def satisfiesRelFilter(relationData: KbpSlotToOpenIEData, candidateExtraction: CandidateExtraction ): Boolean ={
+  private def satisfiesRelFilter(relationData: SlotPattern, candidateExtraction: CandidateExtraction ): Boolean ={
     
     val kbpExtraction = candidateExtraction.kbpExtraction
     if(relationData.isValid){
@@ -70,7 +70,7 @@ object FilterSolrResults {
     }
   }
   
-  private def satisfiesEntityFilter(relationData: KbpSlotToOpenIEData, candidateExtraction: CandidateExtraction, queryEntity: String ): Boolean ={
+  private def satisfiesEntityFilter(relationData: SlotPattern, candidateExtraction: CandidateExtraction, queryEntity: String ): Boolean ={
     
     val kbpExtraction = candidateExtraction.kbpExtraction
     val candidateType = candidateExtraction.candidateType
@@ -113,7 +113,7 @@ object FilterSolrResults {
     }
   }
   
-  private def satisfiesSemanticFilter(relationData: KbpSlotToOpenIEData, candidateExtraction: CandidateExtraction) : Boolean = {
+  private def satisfiesSemanticFilter(relationData: SlotPattern, candidateExtraction: CandidateExtraction) : Boolean = {
     
     val slotType = relationData.slotType.getOrElse({""})
     val kbpExtraction = candidateExtraction.kbpExtraction
@@ -233,7 +233,7 @@ object FilterSolrResults {
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
   //
-  def filterResults(resultsList: List[CandidateExtraction],relationData: KbpSlotToOpenIEData, queryEntity: String) : List[CandidateExtraction] = {
+  def filterResults(resultsList: List[CandidateExtraction],relationData: SlotPattern, queryEntity: String) : List[CandidateExtraction] = {
     
     var filteredResultsList = List[CandidateExtraction]()
     //loop over each solr result

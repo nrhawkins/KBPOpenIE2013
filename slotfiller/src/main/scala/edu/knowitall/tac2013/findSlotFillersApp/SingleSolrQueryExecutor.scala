@@ -12,7 +12,7 @@ object SingleSolrQueryExecutor {
   
   lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr")
   
-  def issueSolrQuery(queryString: String, candidateType: CandidateType.Value, pattern: KbpSlotToOpenIEData): List[CandidateExtraction] = {
+  def issueSolrQuery(queryString: String, candidateType: CandidateType.Value, pattern: SlotPattern): List[CandidateExtraction] = {
     //not sure where the best place to put this val is so I'm hoping making it lazy
     //will be a good idea
     

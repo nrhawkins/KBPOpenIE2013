@@ -11,7 +11,7 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
-  def executeEntityQueryForAllSlots(queryEntity: String, KBPOpenIERelationMap: Map[String,List[KbpSlotToOpenIEData]], nodeID: String = ""):
+  def executeEntityQueryForAllSlots(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeID: String = ""):
     Map[String,List[CandidateSet]] ={
     
     //var resultsList = List[(String,KbpSlotToOpenIEData,List[KbpExtraction])]()
@@ -69,7 +69,7 @@ object QueryEntityForAllSlots {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
-  def executeEntityQueryForAllSlotsWithoutFilter(queryEntity: String, KBPOpenIERelationMap: Map[String,List[KbpSlotToOpenIEData]], nodeID: String = ""):
+  def executeEntityQueryForAllSlotsWithoutFilter(queryEntity: String, KBPOpenIERelationMap: Map[String,List[SlotPattern]], nodeID: String = ""):
     Map[String,List[CandidateSet]] ={
     
     //var resultsList = List[(String,KbpSlotToOpenIEData,List[KbpExtraction])]()

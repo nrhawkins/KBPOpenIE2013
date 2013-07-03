@@ -6,10 +6,10 @@ import scala.collection.mutable.Map
 object KBPSlotOpenIERelationTranslator {
   
   //returns a Map from the String of each KBPSlot to a list of all the specified query information
-  def getOrganizationMap(): Map[String,List[KbpSlotToOpenIEData]] = {
+  def getOrganizationMap(): Map[String,List[SlotPattern]] = {
     val source = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Organization.csv"))
     val lines = source.getLines().toList
-    var KBP_OpenIEMap = Map[String,List[KbpSlotToOpenIEData]]()
+    var KBP_OpenIEMap = Map[String,List[SlotPattern]]()
     var lastMaxValue = -1
     for( line <- lines){
      //println(line)
@@ -37,7 +37,7 @@ object KBPSlotOpenIERelationTranslator {
 			        maxValue = lastMaxValue.toString
 			      }
 			      
-			      val kbpOpenIEData = KbpSlotToOpenIEData.getKbpSlotToOpenIEDataInstance(csvDataArray(0).trim(),maxValue.trim(),
+			      val kbpOpenIEData = SlotPattern.getKbpSlotToOpenIEDataInstance(csvDataArray(0).trim(),maxValue.trim(),
 			          csvDataArray(2).trim(),csvDataArray(3).trim(),csvDataArray(4).trim(),csvDataArray(5).trim(),csvDataArray(6).trim())
 			      
 			      val kbpSlotName = csvDataArray(0).trim()    
@@ -59,10 +59,10 @@ object KBPSlotOpenIERelationTranslator {
   }
     
   
-  def getPersonMap(): Map[String,List[KbpSlotToOpenIEData]] = {
+  def getPersonMap(): Map[String,List[SlotPattern]] = {
     val source = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Person.csv"))
     val lines = source.getLines().toList
-    var KBP_OpenIEMap = Map[String,List[KbpSlotToOpenIEData]]()
+    var KBP_OpenIEMap = Map[String,List[SlotPattern]]()
     var lastMaxValue = -1
     for( line <- lines){
      //println(line)
@@ -90,7 +90,7 @@ object KBPSlotOpenIERelationTranslator {
 			        maxValue = lastMaxValue.toString
 			      }
 			      
-			      val kbpOpenIEData = KbpSlotToOpenIEData.getKbpSlotToOpenIEDataInstance(csvDataArray(0).trim(),maxValue.trim(),
+			      val kbpOpenIEData = SlotPattern.getKbpSlotToOpenIEDataInstance(csvDataArray(0).trim(),maxValue.trim(),
 			          csvDataArray(2).trim(),csvDataArray(3).trim(),csvDataArray(4).trim(),csvDataArray(5).trim(),csvDataArray(6).trim())
 			      
 			      val kbpSlotName = csvDataArray(0).trim()  

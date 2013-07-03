@@ -66,7 +66,7 @@ class QueryBuilder {
 	  arg2WikiLinkNodeIdString = "+arg2WikiLinkNodeId:\"" + nodeId + "\""
 	}
 	
-	def buildQuery(relationData: KbpSlotToOpenIEData, queryEntity: String){
+	def buildQuery(relationData: SlotPattern, queryEntity: String){
 	  
 	  	    val entityIn = relationData.entityIn.getOrElse({""})
 	        if (entityIn.trim() == "arg1"){
@@ -85,7 +85,7 @@ class QueryBuilder {
 	        }	  
 	}
 	
-	def buildLinkedQuery(relationData: KbpSlotToOpenIEData, nodeID: String){
+	def buildLinkedQuery(relationData: SlotPattern, nodeID: String){
 	  
 	  	    val entityIn = relationData.entityIn.getOrElse({""})
 	        if (entityIn.trim() == "arg1"){

@@ -16,7 +16,7 @@ object KBPQueryExecutor {
         val orgMap = getOrganizationMap()
         
         //filter out ignored slots
-        var filteredOrgMap = Map[String,List[KbpSlotToOpenIEData]]()
+        var filteredOrgMap = Map[String,List[SlotPattern]]()
         for(slot <- kbpQuery.slotsToFill){
           filteredOrgMap += (slot -> orgMap(slot))
         }
@@ -35,7 +35,7 @@ object KBPQueryExecutor {
         val perMap = getPersonMap()
         
         //filter out ignored slots
-        var filteredPerMap = Map[String,List[KbpSlotToOpenIEData]]()
+        var filteredPerMap = Map[String,List[SlotPattern]]()
         for(slot <- kbpQuery.slotsToFill){
           filteredPerMap += (slot -> perMap(slot))
         }
