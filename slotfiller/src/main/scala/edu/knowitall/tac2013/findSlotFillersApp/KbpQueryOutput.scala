@@ -10,7 +10,7 @@ import edu.knowitall.collection.immutable.Interval
 object KbpQueryOutput {
 
   val runID = "UWashington-1"
-    
+
   def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
 
     val writer = new PrintWriter(new File(filePath))
@@ -18,46 +18,15 @@ object KbpQueryOutput {
     writer.close()
   }
 
-  /*
-   * Overloaded to return a string for server usage
-   */
   def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], kbpQueryEntityType: KBPQueryEntityType): String = {
 
     val sb = new StringBuilder()
-    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) {
-
+    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
       if (mapOfResults.contains(kbpSlot)) {
         val kbpSlotName = kbpSlot
         val candidateSets = mapOfResults(kbpSlot)
 
-        //only return up to 20 solr Results
-        //val solrResultsArray = result._2._2.slice(0,20)
-
-        sb.append("KBP SLOT NAME: " + kbpSlotName + "\n")
-
-        for (candidateSet <- candidateSets) {
-
-          val kbpOpenIEData = candidateSet.pattern
-          val candidateExtractionsList = candidateSet.allExtractions.take(20)
-
-          sb.append("\tQuery Data:\t" + "RelationTerms: " + kbpOpenIEData.openIERelationString.getOrElse({ "" })
-            + "\t Arg2Begins: " + kbpOpenIEData.arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
-            kbpOpenIEData.entityIn.getOrElse({ "" }) + "\t SlotFill In: " + kbpOpenIEData.slotFillIn.getOrElse({ "" }) +
-            "\t Slot type: " + kbpOpenIEData.slotType.getOrElse({ "" }) + "\n")
-
-          sb.append("\tResults:\n")
-          if (candidateExtractionsList.length == 0) {
-            sb.append("\t\tNil" + "\n")
-          }
-
-          for (candidateExtraction <- candidateExtractionsList) {
-
-            sb.append("\t\targ1: " + candidateExtraction.arg1.originalText + "\t rel: " + candidateExtraction.rel.originalText +
-              "\t arg2: " + candidateExtraction.arg2.originalText + "\t docID: " + candidateExtraction.sentence.docId +
-              "\t confidence: " + candidateExtraction.confidence + "\t sentence: " + candidateExtraction.sentence.dgraph.text + "\n\n")
-
-          }
-        }
+        sb.append(printUnformattedSlotOutput(sb, kbpSlotName, candidateSets))
       } else {
         sb.append("KBP SLOT NAME: " + kbpSlot + "\n" + "\t\tNil\n")
 
@@ -66,6 +35,38 @@ object KbpQueryOutput {
     }
 
     sb.toString()
+  }
+
+  private def printUnformattedSlotOutput(kbpSlotName: String, candidateSets: Seq[CandidateSet]): String = {
+
+    val sb = new StringBuilder
+
+    sb.append("KBP SLOT NAME: " + kbpSlotName + "\n")
+
+    for (candidateSet <- candidateSets) {
+
+      val kbpOpenIEData = candidateSet.pattern
+      val candidateExtractionsList = candidateSet.allExtractions.take(20)
+
+      sb.append("\tQuery Data:\t" + "RelationTerms: " + kbpOpenIEData.openIERelationString.getOrElse({ "" })
+        + "\t Arg2Begins: " + kbpOpenIEData.arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
+        kbpOpenIEData.entityIn.getOrElse({ "" }) + "\t SlotFill In: " + kbpOpenIEData.slotFillIn.getOrElse({ "" }) +
+        "\t Slot type: " + kbpOpenIEData.slotType.getOrElse({ "" }) + "\n")
+
+      sb.append("\tResults:\n")
+      if (candidateExtractionsList.length == 0) {
+        sb.append("\t\tNil" + "\n")
+      }
+
+      for (candidateExtraction <- candidateExtractionsList) {
+
+        sb.append("\t\targ1: " + candidateExtraction.arg1.originalText + "\t rel: " + candidateExtraction.rel.originalText +
+          "\t arg2: " + candidateExtraction.arg2.originalText + "\t docID: " + candidateExtraction.sentence.docId +
+          "\t confidence: " + candidateExtraction.confidence + "\t sentence: " + candidateExtraction.sentence.dgraph.text + "\n\n")
+
+      }
+    }
+    return sb.toString
   }
 
   def printFormattedOutput(
@@ -139,9 +140,9 @@ object KbpQueryOutput {
    * Overloaded to return a string for server usage
    */
   def printFormattedOutput(
-      slotCandidateSets: Map[String, Seq[CandidateSet]], 
-      bestAnswers: Map[String,List[Answer]], 
-      kbpQueryEntityType: KBPQueryEntityType): String = {
+    slotCandidateSets: Map[String, Seq[CandidateSet]],
+    bestAnswers: Map[String, List[Answer]],
+    kbpQueryEntityType: KBPQueryEntityType): String = {
 
     val sb = new StringBuilder()
 
