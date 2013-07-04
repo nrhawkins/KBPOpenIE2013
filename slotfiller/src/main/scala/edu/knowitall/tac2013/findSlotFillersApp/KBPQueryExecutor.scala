@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryExecutor.executeQuery
+import SolrQueryExecutor.executeQuery
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest

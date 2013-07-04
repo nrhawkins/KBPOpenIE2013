@@ -1,12 +1,32 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
 import jp.sf.amateras.solr.scala._
-import SingleSolrQueryExecutor.issueSolrQuery
 import FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
 
-object QueryExecutor {
+object SolrQueryExecutor {
 
+  lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr")
+  
+  def issueSolrQuery(kbpSolrQuery: KbpSolrQuery): List[CandidateExtraction] = {
+    //not sure where the best place to put this val is so I'm hoping making it lazy
+    //will be a good idea
+    
+    println(kbpSolrQuery.queryString)
+    
+    val query = client.query(kbpSolrQuery.queryString)
+    val result = query.sortBy("confidence",Order.desc).rows(10000).getResultAsMap()
+
+    val extrs = result.documents.flatMap { doc =>
+      val fieldMap = doc.asInstanceOf[Map[String, Any]]
+      KbpExtraction.fromFieldMap(fieldMap) match {
+        case Some(x) => { Option(new CandidateExtraction(x, kbpSolrQuery.resultType, kbpSolrQuery.pattern)) }
+        case None => { None }
+      }
+    }
+    extrs
+  }
+  
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
   def executeQuery(kbpQuery: KBPQuery): Map[String, List[CandidateSet]] = {
