@@ -8,8 +8,4 @@ class CandidateSet(val pattern: SlotPattern, val extractionsMap: Map[CandidateTy
   val allExtractions = extractionsMap.values.toSeq.flatten
   
   def extractionsFrom(extrType: CandidateType) = extractionsMap.getOrElse(extrType, Seq.empty)
-  
-  var rankedAnswers = List[KbpExtraction]()
-  
-  def setRankedAnswers(newRankedAnswers: List[KbpExtraction]) { rankedAnswers = newRankedAnswers }
 }

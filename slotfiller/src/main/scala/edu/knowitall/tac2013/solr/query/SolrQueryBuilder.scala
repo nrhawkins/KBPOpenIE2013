@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.solr.query
 
-import edu.knowitall.tac2013.findSlotFillersApp.CandidateType._
-import edu.knowitall.tac2013.findSlotFillersApp.CandidateType
+import edu.knowitall.tac2013.findSlotFillersApp.QueryType._
+import edu.knowitall.tac2013.findSlotFillersApp.QueryType
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import scala.Option.option2Iterable
