@@ -11,29 +11,14 @@ object QueryEntityForAllSlots {
   //to our solr instance for every type of OpenIERelation
   def executeQuery(kbpQuery: KBPQuery): Map[String, List[CandidateSet]] = {
 
-    val patternMap = SlotPattern.patternsForQuery(kbpQuery)
-    
-    //for every relevant slot 
-    val resultsMap = for ((slotname, patterns) <- patternMap) yield {
-
-      // aggregate and filter results for every different query formulation
-      val resultsList = for (pattern <- patterns) yield {
-
-        val qb = new QueryBuilder(pattern, kbpQuery)
-
-        val combinedResults = qb.getQueries.flatMap { solrQuery => issueSolrQuery(solrQuery) }
-
-        val filteredResults = filterResults(combinedResults.toList, pattern, kbpQuery.name)
-
-        new CandidateSet(pattern, filteredResults)
+    executeUnfilteredQuery(kbpQuery).map { case (slotname, candidateSets) =>
+  
+      val filteredCandidateSets = candidateSets.map { candidateSet =>
+        val filteredCandidates = filterResults(candidateSet.candidateExtractions, kbpQuery.name)
+        new CandidateSet(candidateSet.pattern, filteredCandidates)
       }
-
-      //store list of query formulations and solr results with the string
-      //of the slot
-      (slotname, resultsList)
+      (slotname, filteredCandidateSets)
     }
-
-    resultsMap
   }
 
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
@@ -43,23 +28,16 @@ object QueryEntityForAllSlots {
     val patternMap = SlotPattern.patternsForQuery(kbpQuery)
     
     //for every relevant slot 
-    val resultsMap = for ((slotname, patterns) <- patternMap) yield {
-
+    for ((slotname, patterns) <- patternMap) yield {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
         val qb = new QueryBuilder(pattern, kbpQuery)
-
         val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
-
         new CandidateSet(pattern, combinedResults.toList)
       }
-
-      //store list of query formulations and solr results with the string
-      //of the slot
+      //store list of query formulations and solr results with the string of the slot
       (slotname, resultsList)
     }
-
-    resultsMap
   }
 }

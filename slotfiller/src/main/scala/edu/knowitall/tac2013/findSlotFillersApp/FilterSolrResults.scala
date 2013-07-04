@@ -211,16 +211,18 @@ object FilterSolrResults {
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
   //
-  def filterResults(resultsList: List[CandidateExtraction], relationData: SlotPattern, queryEntity: String): List[CandidateExtraction] = {
+  def filterResults(resultsList: List[CandidateExtraction], queryEntity: String): List[CandidateExtraction] = {
 
     var filteredResultsList = List[CandidateExtraction]()
     //loop over each solr result
     for (candidateExtraction <- resultsList) {
 
-      if (satisfiesArg2PrepositionFilter(relationData, candidateExtraction) &&
-        satisfiesEntityFilter(relationData, candidateExtraction, queryEntity) &&
-        satisfiesRelFilter(relationData, candidateExtraction) &&
-        satisfiesSemanticFilter(relationData, candidateExtraction)) {
+      val pattern = candidateExtraction.pattern
+      
+      if (satisfiesArg2PrepositionFilter(pattern, candidateExtraction) &&
+        satisfiesEntityFilter(pattern, candidateExtraction, queryEntity) &&
+        satisfiesRelFilter(pattern, candidateExtraction) &&
+        satisfiesSemanticFilter(pattern, candidateExtraction)) {
 
         filteredResultsList = filteredResultsList ::: List(candidateExtraction)
 
