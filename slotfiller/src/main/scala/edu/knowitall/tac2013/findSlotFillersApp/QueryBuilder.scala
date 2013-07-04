@@ -4,7 +4,7 @@ import CandidateType._
 
 case class KbpSolrQuery(val queryString: String, val resultType: CandidateType, val pattern: SlotPattern)
 
-class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId: Option[String]) {
+class QueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
 
   private def getQueryString(fields: Seq[String]) = {
     val nonEmptyFields = fields.filter(_.nonEmpty)
@@ -12,14 +12,14 @@ class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId:
     nonEmptyFields.mkString(" AND ")
   }
 
-  lazy val arg1TextConstraint: Option[String] = {
+  val arg1TextConstraint: Option[String] = {
     pattern.entityIn match {
-      case Some("arg1") => Some("+arg1Text:\"%s\"".format(entityName))
+      case Some("arg1") => Some("+arg1Text:\"%s\"".format(kbpQuery.name))
       case _ => None
     }
   }
 
-  lazy val relTextConstraint: Option[String] = {
+  val relTextConstraint: Option[String] = {
     pattern.openIERelationString match {
       case Some(relString) => {
         val noJobTitle = relString.replace("<JobTitle>", "")
@@ -33,40 +33,35 @@ class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId:
     }
   }
 
-  lazy val arg2TextConstraint: Option[String] = {
+  val arg2TextConstraint: Option[String] = {
     pattern.entityIn match {
-      case Some("arg2") => Some("+arg2Text:\"%s\"".format(entityName))
+      case Some("arg2") => Some("+arg2Text:\"%s\"".format(kbpQuery.name))
       case _ => None
     }
   }
 
-  lazy val arg2StartConstraint: Option[String] = {
+  val arg2StartConstraint: Option[String] = {
     pattern.arg2Begins match {
       case Some(arg2Begins) => Some("+arg2Text:\"%s\"".format(arg2Begins))
       case None => None
     }
   }
 
-  lazy val arg1LinkConstraint: Option[String] = {
-    (pattern.entityIn, nodeId) match {
+  val arg1LinkConstraint: Option[String] = {
+    (pattern.entityIn, kbpQuery.nodeId) match {
       case (Some("arg1"), Some(id)) => Some("+arg1WikiLinkNodeId:\"%s\"".format(id))
       case _ => None
     }
   }
 
-  lazy val arg2LinkConstraint: Option[String] = {
-    (pattern.entityIn, nodeId) match {
+  val arg2LinkConstraint: Option[String] = {
+    (pattern.entityIn, kbpQuery.nodeId) match {
       case (Some("arg2"), Some(id)) => Some("+arg2WikiLinkNodeId:\"%s\"".format(id))
       case _ => None
     }
   }
 
-  lazy val getQueries: Seq[KbpSolrQuery] = {
-
-    buildQuery.toSeq ++ buildLinkedQuery
-  }
-
-  def buildQuery: Option[KbpSolrQuery] = {
+  val regularQuery: Option[KbpSolrQuery] = {
 
     if (!pattern.isValid) {
       None
@@ -77,14 +72,19 @@ class QueryBuilder(val pattern: SlotPattern, val entityName: String, val nodeId:
     }
   }
 
-  def buildLinkedQuery: Option[KbpSolrQuery] = {
+  val linkedQuery: Option[KbpSolrQuery] = {
 
-    if (!pattern.isValid || nodeId.isEmpty) {
+    if (!pattern.isValid || kbpQuery.nodeId.isEmpty) {
       None
     } else {
       val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
       val query = KbpSolrQuery(getQueryString(queryFields), CandidateType.LINKED, pattern)
       Some(query)
     }
+  }
+  
+  val getQueries: Seq[KbpSolrQuery] = {
+
+    regularQuery.toSeq ++ linkedQuery
   }
 }

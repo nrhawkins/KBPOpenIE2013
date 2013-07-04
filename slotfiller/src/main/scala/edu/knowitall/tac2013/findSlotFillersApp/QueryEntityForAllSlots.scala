@@ -19,7 +19,7 @@ object QueryEntityForAllSlots {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
-        val qb = new QueryBuilder(pattern, kbpQuery.name, kbpQuery.nodeId) //solr query builder
+        val qb = new QueryBuilder(pattern, kbpQuery)
 
         val combinedResults = qb.getQueries.flatMap { solrQuery => issueSolrQuery(solrQuery) }
 
@@ -48,7 +48,7 @@ object QueryEntityForAllSlots {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
-        val qb = new QueryBuilder(pattern, kbpQuery.name, kbpQuery.nodeId) //solr query builder
+        val qb = new QueryBuilder(pattern, kbpQuery)
 
         val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
 

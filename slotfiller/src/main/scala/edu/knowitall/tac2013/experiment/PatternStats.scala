@@ -2,6 +2,7 @@ package edu.knowitall.tac2013.experiment
 
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import edu.knowitall.tac2013.findSlotFillersApp.QueryBuilder
+import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
 
 /**
@@ -69,8 +70,9 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
   }
 
   def getQueryString(entity: String, pattern: SlotPattern): String = {
-    val qb = new QueryBuilder(pattern, entity, None)
-    qb.buildQuery.get.queryString
+    val kbpQuery = KBPQuery.forEntityName(entity, pattern.entityType, None)
+    val qb = new QueryBuilder(pattern, kbpQuery)
+    qb.regularQuery.get.queryString
   }
 
   def padToEllipses(str: String, len: Int): String = {

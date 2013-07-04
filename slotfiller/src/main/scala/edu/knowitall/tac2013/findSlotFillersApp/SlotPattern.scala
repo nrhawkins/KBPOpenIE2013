@@ -16,16 +16,17 @@ class SlotPattern private (
 
   import SlotPattern.requireTrimmed
 
-  requireTrimmed(kbpSlotName)
+  requireTrimmed(slotName)
   openIERelationString foreach requireTrimmed
   arg2Begins foreach requireTrimmed
   entityIn foreach requireTrimmed
   slotFillIn foreach requireTrimmed
   slotType foreach requireTrimmed
+  
+  require(slotName.startsWith("per:") || slotName.startsWith("org:"))
 
-  @deprecated
-  def kbpSlotName = slotName
-
+  val entityType: KBPQueryEntityType = if (slotName.startsWith("per:")) PER else ORG
+  
   def isValid(): Boolean = {
     if (openIERelationString.nonEmpty && maxValues.nonEmpty &&
       entityIn.nonEmpty && slotFillIn.nonEmpty) {
