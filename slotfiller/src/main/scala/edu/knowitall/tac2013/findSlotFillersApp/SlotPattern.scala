@@ -5,7 +5,7 @@ import io.Source
 import KBPQueryEntityType._
 
 // many of these variables can be empty like ""
-class SlotPattern private (
+case class SlotPattern private (
   val slotName: String,
   val maxValues: Option[Int],
   val openIERelationString: Option[String],

@@ -6,28 +6,30 @@ import QueryType._
 object FilterSolrResults {
 
   //filter for arg2 beginning with proper preposition
-  private def satisfiesArg2PrepositionFilter(sourceSet: CandidateSet, extraction: KbpExtraction): Boolean = {
+  private def satisfiesArg2PrepositionFilter(candidate: Candidate): Boolean = {
 
-    sourceSet.pattern.arg2Begins match {
+    candidate.pattern.arg2Begins match {
       case Some(arg2PrepositionString) => {
-        val solrResultsArg2 = extraction.arg2.originalText
+        val solrResultsArg2 = candidate.extr.arg2.originalText
         (solrResultsArg2.toString().toLowerCase().substring(0, arg2PrepositionString.length) == arg2PrepositionString.toLowerCase())
       }
       case None => true
     }
   }
 
-  private def satisfiesRelFilter(relationData: SlotPattern, extraction: KbpExtraction): Boolean = {
+  private def satisfiesRelFilter(candidate: Candidate): Boolean = {
 
-    if (relationData.isValid) {
+    val pattern = candidate.pattern
+    
+    if (pattern.isValid) {
 
-      if (!relationData.openIERelationString.get.contains("<JobTitle>")) {
+      if (!pattern.openIERelationString.get.contains("<JobTitle>")) {
 
-        val relationTerms = relationData.openIERelationString.get.trim().split(" ")
+        val relationTerms = pattern.openIERelationString.get.trim().split(" ")
 
         val relationTermsReversed = relationTerms.reverse
 
-        val relationTermsFromExtraction = extraction.rel.originalText.trim().split(" ")
+        val relationTermsFromExtraction = candidate.extr.rel.originalText.trim().split(" ")
 
         var count = 0
         for (term <- relationTermsReversed) {
@@ -40,9 +42,9 @@ object FilterSolrResults {
         }
         return true
       } else {
-        val chunkedSentence = extraction.sentence.chunkedTokens
+        val chunkedSentence = candidate.extr.sentence.chunkedTokens
         val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
-        val relLocation = extraction.rel.tokenInterval
+        val relLocation = candidate.extr.rel.tokenInterval
 
         for (t <- types) {
           if (t.interval().intersects(relLocation)) {
@@ -58,17 +60,17 @@ object FilterSolrResults {
     }
   }
 
-  private def satisfiesEntityFilter(sourceSet: CandidateSet, queryType: CandidateType, extraction: KbpExtraction, queryEntity: String): Boolean = {
+  private def satisfiesEntityFilter(queryEntity: String)(candidate: Candidate): Boolean = {
 
-    val pattern = sourceSet.pattern
+    val pattern = candidate.pattern
     
-    if (queryType == QueryType.REGULAR) {
+    if (candidate == QueryType.REGULAR) {
       if (pattern.isValid) {
 
         val entityIn = pattern.entityIn.get.trim()
         val entityFromExtraction = entityIn.toLowerCase() match {
-          case "arg1" => extraction.arg1.originalText
-          case "arg2" => extraction.arg2.originalText
+          case "arg1" => candidate.extr.arg1.originalText
+          case "arg2" => candidate.extr.arg2.originalText
           case _ => throw new Exception("Poorly formatted entityIn field, should be arg1 or arg2")
         }
 
@@ -98,17 +100,19 @@ object FilterSolrResults {
     }
   }
 
-  private def satisfiesSemanticFilter(relationData: SlotPattern, extraction: KbpExtraction): Boolean = {
+  private def satisfiesSemanticFilter(candidate: Candidate): Boolean = {
 
-    val slotType = relationData.slotType.getOrElse({ "" })
-    val slotLocation = relationData.slotFillIn match {
-      case Some("arg1") => extraction.arg1.tokenInterval
-      case Some("arg2") => extraction.arg2.tokenInterval
-      case Some("relation") => extraction.rel.tokenInterval
+    val pattern = candidate.pattern
+    
+    val slotType = pattern.slotType.getOrElse({ "" })
+    val slotLocation = pattern.slotFillIn match {
+      case Some("arg1") => candidate.extr.arg1.tokenInterval
+      case Some("arg2") => candidate.extr.arg2.tokenInterval
+      case Some("relation") => candidate.extr.rel.tokenInterval
       case _ => return false
     }
 
-    val chunkedSentence = extraction.sentence.chunkedTokens
+    val chunkedSentence = candidate.extr.sentence.chunkedTokens
 
     if (slotType == "Organization" || slotType == "Person" || slotType == "Stateorprovince" ||
       slotType == "City" || slotType == "Country") {
@@ -203,21 +207,14 @@ object FilterSolrResults {
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
   //
-  def filterResults(candidateSet: CandidateSet, queryEntity: String): CandidateSet = {
-
-    //loop over each solr result
-    val pattern = candidateSet.pattern
-
-    val filteredResults = candidateSet.extractionsMap.map { case (queryType, extractions) =>
-        val filteredExtractions = extractions.filter { extr =>
-          (satisfiesArg2PrepositionFilter(candidateSet, extr) &&
-            satisfiesEntityFilter(candidateSet, queryType, extr, queryEntity) &&
-            satisfiesRelFilter(pattern, extr) &&
-            satisfiesSemanticFilter(pattern, extr))
-        }
-        (queryType, filteredExtractions)
-    }
+  def filterResults(unfiltered: Seq[Candidate], queryEntity: String): Seq[Candidate] = {
     
-    new CandidateSet(pattern, filteredResults)
+    def combinedFilter(candidate: Candidate) = (
+            satisfiesArg2PrepositionFilter(candidate) &&
+            satisfiesEntityFilter(queryEntity)(candidate) &&
+            satisfiesRelFilter(candidate) &&
+            satisfiesSemanticFilter(candidate))
+    
+    unfiltered filter combinedFilter
   }
 }

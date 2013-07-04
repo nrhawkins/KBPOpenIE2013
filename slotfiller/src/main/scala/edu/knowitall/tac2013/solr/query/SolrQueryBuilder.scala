@@ -6,7 +6,7 @@ import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import scala.Option.option2Iterable
 
-case class SolrQuery(val queryString: String, val resultType: CandidateType, val pattern: SlotPattern)
+case class SolrQuery(val queryString: String, val resultType: QueryType, val pattern: SlotPattern)
 
 class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
 

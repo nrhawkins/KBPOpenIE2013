@@ -4,17 +4,12 @@ import edu.knowitall.tac2013.openie.KbpExtraction
 
 object SlotFillReranker {
 
-  def findAnswers(candidateSets: List[CandidateSet]): List[Answer] = {
+  def findAnswers(slotCandidates: Seq[Candidate]): List[Answer] = {
     
-    val expandedResults = candidateSets.flatMap({ candidateSet =>
-      QueryType.values.toSeq.flatMap({ queryType =>
-        candidateSet.extractionsFrom(queryType).map { extr => (candidateSet, queryType, extr) }
-      })
-    })
-    if (expandedResults.isEmpty) List.empty
+    if (slotCandidates.isEmpty) List.empty
     else {
-      val (bestCandidateSet, bestQueryType, bestExtr) = expandedResults.maxBy(_._3.confidence)
-      List(new Answer(bestCandidateSet.pattern, bestQueryType, bestExtr))
+      val bestExtr = slotCandidates.maxBy(_.extr.confidence)
+      List(new Answer(bestExtr.pattern, bestExtr.queryType, bestExtr.extr))
     }
   }
 }

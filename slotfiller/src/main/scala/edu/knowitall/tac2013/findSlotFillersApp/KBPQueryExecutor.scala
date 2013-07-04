@@ -17,7 +17,7 @@ object KBPQueryExecutor {
         
         val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, SlotFillReranker.findAnswers(candidateSets)) } toMap
+        val bestAnswers = filteredCandidates map { case (slot, slotCandidates) => (slot, SlotFillReranker.findAnswers(slotCandidates)) } toMap
 
         //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }
@@ -28,7 +28,7 @@ object KBPQueryExecutor {
         
         val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, SlotFillReranker.findAnswers(candidateSets)) } toMap
+        val bestAnswers = filteredCandidates map { case (slot, slotCandidates) => (slot, SlotFillReranker.findAnswers(slotCandidates)) } toMap
         
         //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }

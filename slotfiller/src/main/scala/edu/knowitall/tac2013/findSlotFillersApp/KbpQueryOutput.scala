@@ -10,14 +10,14 @@ object KbpQueryOutput {
 
   val runID = "UWashington-1"
 
-  def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], kbpQueryEntityType: KBPQueryEntityType): String = {
+  def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQueryEntityType: KBPQueryEntityType): String = {
 
     val sb = new StringBuilder()
     for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
       
       sb.append("KBP SLOT NAME: " + kbpSlot + "\n")
       
-      if (mapOfResults.contains(kbpSlot)) {
+      if (mapOfResults.contains(kbpSlot) && !mapOfResults(kbpSlot).isEmpty) {
         sb.append(printUnformattedSlotOutput(mapOfResults(kbpSlot)))
       } else {
         sb.append("Nil\n")
@@ -26,38 +26,41 @@ object KbpQueryOutput {
     sb.toString()
   }
 
-  private def printUnformattedSlotOutput(candidateSets: Seq[CandidateSet]): String = {
+  private def printUnformattedSlotOutput(slotCandidates: Seq[Candidate]): String = {
 
-    val kbpSlotName = candidateSets.head.pattern.slotName
+    require(slotCandidates.nonEmpty, "cant print output for empty slot candidates")
     
-    require(candidateSets.forall(_.pattern.slotName == kbpSlotName), "All candidates must be for the same slot.")
+    val kbpSlotName = slotCandidates.head.pattern.slotName
+    
+    require(slotCandidates.forall(_.pattern.slotName == kbpSlotName), "All candidates must be for the same slot.")
     
     val sb = new StringBuilder
 
-    for (candidateSet <- candidateSets) {
+    val patternCandidates = slotCandidates.groupBy(_.pattern)
+    
+    for ((pattern, candidates) <- patternCandidates) {
 
-      val pattern = candidateSet.pattern
-      val candidateExtractionsList = candidateSet.allExtractions.take(20)
+      val topCandidates = candidates.take(20)
 
       sb.append("Query pattern:\t" + pattern.debugString)
 
       sb.append("\tResults:\n")
-      if (candidateExtractionsList.length == 0) {
+      if (topCandidates.length == 0) {
         sb.append("\t\tNil" + "\n")
       }
 
-      for (candidateExtraction <- candidateExtractionsList) {
+      for (candidate <- topCandidates) {
 
-        sb.append("\t\targ1: " + candidateExtraction.arg1.originalText + "\t rel: " + candidateExtraction.rel.originalText +
-          "\t arg2: " + candidateExtraction.arg2.originalText + "\t docID: " + candidateExtraction.sentence.docId +
-          "\t confidence: " + candidateExtraction.confidence + "\t sentence: " + candidateExtraction.sentence.dgraph.text + "\n\n")
+        sb.append("\t\targ1: " + candidate.extr.arg1.originalText + "\t rel: " + candidate.extr.rel.originalText +
+          "\t arg2: " + candidate.extr.arg2.originalText + "\t docID: " + candidate.extr.sentence.docId +
+          "\t confidence: " + candidate.extr.confidence + "\t sentence: " + candidate.extr.sentence.dgraph.text + "\n\n")
       }
     }
     return sb.toString
   }
 
   def printFormattedOutput(
-    slotCandidateSets: Map[String, Seq[CandidateSet]],
+    slotCandidateSets: Map[String, Seq[Candidate]],
     bestAnswers: Map[String, List[Answer]],
     filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
 
@@ -74,7 +77,6 @@ object KbpQueryOutput {
         //or print NIL
 
         val kbpSlotName = kbpSlot
-        val candidateSets = slotCandidateSets(kbpSlot)
 
         val bestAnswerExtractions = bestAnswers(kbpSlot)
 
@@ -127,7 +129,7 @@ object KbpQueryOutput {
    * Overloaded to return a string for server usage
    */
   def printFormattedOutput(
-    slotCandidateSets: Map[String, Seq[CandidateSet]],
+    slotCandidateSets: Map[String, Seq[Candidate]],
     bestAnswers: Map[String, List[Answer]],
     kbpQueryEntityType: KBPQueryEntityType): String = {
 
@@ -142,9 +144,6 @@ object KbpQueryOutput {
         //for each slot print one response for single-valued slot
         //print k-slots for multi-valued slot
         //or print NIL
-
-        val kbpSlotName = kbpSlot
-        val candidateSets = slotCandidateSets(kbpSlot)
 
         val bestAnswerExtractions = bestAnswers(kbpSlot)
 
@@ -194,7 +193,7 @@ object KbpQueryOutput {
   }
 
   def printFormattedOutputForKBPQuery(
-    slotCandidateSets: Map[String, Seq[CandidateSet]],
+    slotCandidateSets: Map[String, Seq[Candidate]],
     bestAnswers: Map[String, List[Answer]],
     filePath: String, kbpQuery: KBPQuery) {
 
@@ -211,7 +210,6 @@ object KbpQueryOutput {
         //or print NIL
 
         val kbpSlotName = kbpSlot
-        val candidateSets = slotCandidateSets(kbpSlot)
 
         //for now assume every slot is single valued, use a
         //separate filter method to choose best answer
