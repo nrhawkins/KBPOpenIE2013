@@ -5,7 +5,7 @@ import SingleSolrQueryExecutor.issueSolrQuery
 import FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
 
-object QueryEntityForAllSlots {
+object QueryExecutor {
 
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation

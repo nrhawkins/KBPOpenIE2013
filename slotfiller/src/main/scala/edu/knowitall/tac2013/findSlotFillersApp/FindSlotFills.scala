@@ -1,8 +1,8 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryEntityForAllSlots.executeQuery
-import QueryEntityForAllSlots.executeUnfilteredQuery
+import QueryExecutor.executeQuery
+import QueryExecutor.executeUnfilteredQuery
 import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
 import SlotFillReranker.chooseBestTest
