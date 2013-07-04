@@ -3,7 +3,6 @@ package edu.knowitall.tac2013.solr.query
 import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.findSlotFillersApp.FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
-import edu.knowitall.tac2013.findSlotFillersApp.CandidateExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.CandidateSet
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
@@ -13,7 +12,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
   
   def this(url: String) = this(new SolrClient(url))
   
-  private def issueSolrQuery(kbpSolrQuery: SolrQuery): List[CandidateExtraction] = {
+  private def issueSolrQuery(kbpSolrQuery: SolrQuery): List[KbpExtraction] = {
     
     println(kbpSolrQuery.queryString)
     
@@ -22,10 +21,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
     val extrs = result.documents.flatMap { doc =>
       val fieldMap = doc.asInstanceOf[Map[String, Any]]
-      KbpExtraction.fromFieldMap(fieldMap) match {
-        case Some(x) => { Option(new CandidateExtraction(x, kbpSolrQuery.resultType, kbpSolrQuery.pattern)) }
-        case None => { None }
-      }
+      KbpExtraction.fromFieldMap(fieldMap)
     }
     extrs
   }
@@ -36,10 +32,8 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
     val unfilteredCandidates = executeUnfilteredQuery(kbpQuery, slot)
 
-    val filteredCandidateSets = unfilteredCandidates.map { candidateSet =>
-      val filteredCandidates = filterResults(candidateSet.candidateExtractions, kbpQuery.name)
-      new CandidateSet(candidateSet.pattern, filteredCandidates)
-    }
+    val filteredCandidateSets = unfilteredCandidates.map { candidateSet => filterResults(candidateSet, kbpQuery.name) }
+
     filteredCandidateSets
   }
 
@@ -53,8 +47,9 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
     val resultsList = for (pattern <- patterns) yield {
 
       val qb = new SolrQueryBuilder(pattern, kbpQuery)
-      val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
-      new CandidateSet(pattern, combinedResults.toList)
+      val combinedResults = qb.getQueries.map { query => (query.resultType, issueSolrQuery(query)) } toMap
+      
+      new CandidateSet(pattern, combinedResults)
     }
     //store list of query formulations and solr results with the string of the slot
     resultsList

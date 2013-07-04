@@ -1,9 +1,15 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-class CandidateSet (val pattern: SlotPattern, val candidateExtractions: List[CandidateExtraction]){
-   
-  val candidateType = { if(candidateExtractions.isEmpty) CandidateType.REGULAR else candidateExtractions(0).candidateType}
-  
-  
+import CandidateType._
+import edu.knowitall.tac2013.openie.KbpExtraction
 
+class CandidateSet(val pattern: SlotPattern, val extractionsMap: Map[CandidateType, Seq[KbpExtraction]]) {
+  
+  val allExtractions = extractionsMap.values.toSeq.flatten
+  
+  def extractionsFrom(extrType: CandidateType) = extractionsMap.getOrElse(extrType, Seq.empty)
+  
+  var rankedAnswers = List[KbpExtraction]()
+  
+  def setRankedAnswers(newRankedAnswers: List[KbpExtraction]) { rankedAnswers = newRankedAnswers }
 }

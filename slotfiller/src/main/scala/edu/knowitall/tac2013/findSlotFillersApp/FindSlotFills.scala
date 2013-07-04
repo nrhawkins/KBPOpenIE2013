@@ -31,17 +31,15 @@ object FindSlotFills {
     
     val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
     
-    val mapOfResults = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
+    val slotCandidateSets = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
 
-    // rank candidate extractions and build a map from slot names to SlotCandidateSet
-    var slotCandidateSetMap = Map[String, SlotCandidateSet]()
-    for (x <- mapOfResults.keys) {
-      slotCandidateSetMap += (x -> new SlotCandidateSet(entityName, mapOfResults(x)));
-      slotCandidateSetMap(x).setRankedAnswers(chooseBestTest(slotCandidateSetMap(x).candidateSets));
-    }
+    val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
+      (slot, chooseBestTest(patternCandidates))  
+    } toMap
+    
 
-    printUnformattedOutput(slotCandidateSetMap, args(2), kbpQuery.entityType)
-    printFormattedOutput(slotCandidateSetMap, args(2), kbpQuery.entityType)
+    printUnformattedOutput(slotCandidateSets, args(2), kbpQuery.entityType)
+    printFormattedOutput(slotCandidateSets, slotBestAnswers, args(2), kbpQuery.entityType)
   }
 
   def runForServerOutput(field1: String, field2: String, nodeId: Option[String] = None): String = {
@@ -59,27 +57,20 @@ object FindSlotFills {
     
     val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
     
-    val mapOfResults = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
+    val slotCandidateSets = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
 
-    val unfilteredMapOfResults = slots map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
-
-    //build a map from slot names to SlotCandidateSet
-    var filteredSlotCandidateSetMap = Map[String, SlotCandidateSet]()
-    for (x <- mapOfResults.keys) {
-      filteredSlotCandidateSetMap += (x -> new SlotCandidateSet(entityName, mapOfResults(x)))
-      filteredSlotCandidateSetMap(x).setRankedAnswers(chooseBestTest(filteredSlotCandidateSetMap(x).candidateSets));
-    }
-    var unFilteredSlotCandidateSetMap = Map[String, SlotCandidateSet]()
-    for (x <- unfilteredMapOfResults.keys) {
-      unFilteredSlotCandidateSetMap += (x -> new SlotCandidateSet(entityName, unfilteredMapOfResults(x)))
-    }
+    val unfilteredSlotCandidateSets = slots map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
+    
+    val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
+      (slot, chooseBestTest(patternCandidates))  
+    } toMap
 
     return (
       "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n" +
-      printUnformattedOutput(unFilteredSlotCandidateSetMap, kbpQuery.entityType) +
+      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery.entityType) +
       "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n" +
-      printUnformattedOutput(filteredSlotCandidateSetMap, kbpQuery.entityType) +
+      printUnformattedOutput(slotCandidateSets, kbpQuery.entityType) +
       "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n" +
-      printFormattedOutput(filteredSlotCandidateSetMap, kbpQuery.entityType))
+      printFormattedOutput(slotCandidateSets, slotBestAnswers, kbpQuery.entityType))
   }
 }

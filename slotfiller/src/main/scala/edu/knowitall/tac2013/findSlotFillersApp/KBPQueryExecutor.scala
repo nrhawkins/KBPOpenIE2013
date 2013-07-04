@@ -16,30 +16,22 @@ object KBPQueryExecutor {
 
         val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
         
-        val results = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
+        val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        var slotCandidateSetMap = Map[String, SlotCandidateSet]()
-        for (x <- results.keys) {
-          slotCandidateSetMap += (x -> new SlotCandidateSet(kbpQuery.name, results(x)));
-          slotCandidateSetMap(x).setRankedAnswers(chooseBestTest(slotCandidateSetMap(x).candidateSets));
-        }
+        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, chooseBestTest(candidateSets)) } toMap
 
-        printFormattedOutputForKBPQuery(slotCandidateSetMap, outputPath, kbpQuery)
+        //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }
 
       case KBPQueryEntityType.PER => {
 
         val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
         
-        val results = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
+        val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        var slotCandidateSetMap = Map[String, SlotCandidateSet]()
-        for (x <- results.keys) {
-          slotCandidateSetMap += (x -> new SlotCandidateSet(kbpQuery.name, results(x)));
-          slotCandidateSetMap(x).setRankedAnswers(chooseBestTest(slotCandidateSetMap(x).candidateSets));
-        }
-
-        printFormattedOutputForKBPQuery(slotCandidateSetMap, outputPath, kbpQuery)
+        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, chooseBestTest(candidateSets)) } toMap
+        
+        //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }
       case _ => throw new Exception("Entity Type must be person or organization")
     }

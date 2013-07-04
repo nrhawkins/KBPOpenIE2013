@@ -36,27 +36,18 @@ object SlotFillReranker {
   
     
   }
-  
-  def chooseBestTest(candidateSets: List[CandidateSet]) : List[CandidateExtraction] = {
-    var maxConfidence = -1.0
-    var bestChoice = Option.empty[CandidateExtraction]
-    for (candidateSet <- candidateSets){
-      
-      for (extr <- candidateSet.candidateExtractions){
-        if(extr.kbpExtraction.confidence > maxConfidence){
-          maxConfidence = extr.kbpExtraction.confidence
-          bestChoice = Some(extr)
-        }
-        
-      }
- 
-    }
-    
-    if(maxConfidence == -1.0){
-      List.empty[CandidateExtraction]
-    }
-    else{
-      List(bestChoice.get)
+
+  def chooseBestTest(candidateSets: List[CandidateSet]): List[Answer] = {
+
+    val expandedResults = candidateSets.flatMap({ candidateSet =>
+      CandidateType.values.toSeq.flatMap({ queryType =>
+        candidateSet.extractionsFrom(queryType).map { extr => (candidateSet, queryType, extr) }
+      })
+    })
+    if (expandedResults.isEmpty) List.empty
+    else {
+      val (bestCandidateSet, bestQueryType, bestExtr) = expandedResults.maxBy(_._3.confidence)
+      List(new Answer(bestCandidateSet.pattern, bestQueryType, bestExtr))
     }
   }
 }
