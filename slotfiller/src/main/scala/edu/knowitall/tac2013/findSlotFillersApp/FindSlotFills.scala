@@ -29,7 +29,9 @@ object FindSlotFills {
 
     val queryExecutor = SolrQueryExecutor.defaultInstance
     
-    val mapOfResults = queryExecutor.executeQuery(kbpQuery)
+    val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+    
+    val mapOfResults = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
 
     // rank candidate extractions and build a map from slot names to SlotCandidateSet
     var slotCandidateSetMap = Map[String, SlotCandidateSet]()
@@ -55,9 +57,11 @@ object FindSlotFills {
     
     val queryExecutor = SolrQueryExecutor.defaultInstance
     
-    val mapOfResults = queryExecutor.executeQuery(kbpQuery)
+    val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+    
+    val mapOfResults = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
 
-    val unfilteredMapOfResults = queryExecutor.executeUnfilteredQuery(kbpQuery)
+    val unfilteredMapOfResults = slots map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
 
     //build a map from slot names to SlotCandidateSet
     var filteredSlotCandidateSetMap = Map[String, SlotCandidateSet]()

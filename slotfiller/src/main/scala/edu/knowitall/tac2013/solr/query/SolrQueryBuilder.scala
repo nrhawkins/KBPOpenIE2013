@@ -10,12 +10,6 @@ case class SolrQuery(val queryString: String, val resultType: CandidateType, val
 
 class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
 
-  private def getQueryString(fields: Seq[String]) = {
-    val nonEmptyFields = fields.filter(_.nonEmpty)
-
-    nonEmptyFields.mkString(" AND ")
-  }
-
   val arg1TextConstraint: Option[String] = {
     pattern.entityIn match {
       case Some("arg1") => Some("+arg1Text:\"%s\"".format(kbpQuery.name))
@@ -63,6 +57,12 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
       case (Some("arg2"), Some(id)) => Some("+arg2WikiLinkNodeId:\"%s\"".format(id))
       case _ => None
     }
+  }
+  
+  private def getQueryString(fields: Seq[String]) = {
+    
+    val nonEmptyFields = fields.filter(_.nonEmpty)
+    nonEmptyFields.mkString(" AND ")
   }
 
   val regularQuery: Option[SolrQuery] = {

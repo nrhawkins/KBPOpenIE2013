@@ -8,10 +8,15 @@ import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 object KBPQueryExecutor {
 
   def executeKbpQuery(kbpQuery: KBPQuery, outputPath: String) {
+    
+    val qExec = SolrQueryExecutor.defaultInstance
+    
     kbpQuery.entityType match {
       case KBPQueryEntityType.ORG => {
 
-        val results = SolrQueryExecutor.defaultInstance.executeQuery(kbpQuery)
+        val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+        
+        val results = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {
@@ -24,7 +29,9 @@ object KBPQueryExecutor {
 
       case KBPQueryEntityType.PER => {
 
-        val results = SolrQueryExecutor.defaultInstance.executeQuery(kbpQuery)
+        val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+        
+        val results = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {
