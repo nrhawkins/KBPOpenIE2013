@@ -1,8 +1,8 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryEntityForAllSlots.executeQueryForAllSlots
-import QueryEntityForAllSlots.executeQueryForAllSlotsWithoutFilter
+import QueryEntityForAllSlots.executeQuery
+import QueryEntityForAllSlots.executeUnfilteredQuery
 import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
 import SlotFillReranker.chooseBestTest
@@ -28,7 +28,7 @@ object FindSlotFills {
 
     val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
 
-    val mapOfResults = executeQueryForAllSlots(kbpQuery, SlotPattern.patternsForQuery(kbpQuery))
+    val mapOfResults = executeQuery(kbpQuery)
 
     // rank candidate extractions and build a map from slot names to SlotCandidateSet
     var slotCandidateSetMap = Map[String, SlotCandidateSet]()
@@ -51,12 +51,10 @@ object FindSlotFills {
     }
 
     val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
-    
-    val patterns = SlotPattern.patternsForQuery(kbpQuery)
 
-    val mapOfResults = executeQueryForAllSlots(kbpQuery, patterns)
+    val mapOfResults = executeQuery(kbpQuery)
 
-    val unfilteredMapOfResults = executeQueryForAllSlotsWithoutFilter(kbpQuery, patterns)
+    val unfilteredMapOfResults = executeUnfilteredQuery(kbpQuery)
 
     //build a map from slot names to SlotCandidateSet
     var filteredSlotCandidateSetMap = Map[String, SlotCandidateSet]()

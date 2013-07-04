@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryEntityForAllSlots.executeQueryForAllSlots
+import QueryEntityForAllSlots.executeQuery
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest
@@ -11,15 +11,7 @@ object KBPQueryExecutor {
     kbpQuery.entityType match {
       case KBPQueryEntityType.ORG => {
 
-        val filteredOrgMap = {
-          val orgMap = SlotPattern.organizationPatterns
-          orgMap.filter {
-            case (slotname, patterns) =>
-              kbpQuery.slotsToFill.contains(slotname)
-          }
-        }
-
-        val results = executeQueryForAllSlots(kbpQuery, filteredOrgMap, kbpQuery.nodeId)
+        val results = executeQuery(kbpQuery)
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {
@@ -32,15 +24,7 @@ object KBPQueryExecutor {
 
       case KBPQueryEntityType.PER => {
 
-        val filteredPerMap = {
-          val perMap = SlotPattern.personPatterns
-          perMap.filter {
-            case (slotname, patterns) =>
-              kbpQuery.slotsToFill.contains(slotname)
-          }
-        }
-
-        val results = executeQueryForAllSlots(kbpQuery, filteredPerMap, kbpQuery.nodeId)
+        val results = executeQuery(kbpQuery)
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {
