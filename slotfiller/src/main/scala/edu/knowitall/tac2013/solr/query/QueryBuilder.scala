@@ -1,6 +1,10 @@
-package edu.knowitall.tac2013.findSlotFillersApp
+package edu.knowitall.tac2013.solr.query
 
 import CandidateType._
+import edu.knowitall.tac2013.findSlotFillersApp.CandidateType
+import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
+import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
+import scala.Option.option2Iterable
 
 case class KbpSolrQuery(val queryString: String, val resultType: CandidateType, val pattern: SlotPattern)
 

@@ -1,9 +1,9 @@
 package edu.knowitall.tac2013.experiment
 
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
-import edu.knowitall.tac2013.findSlotFillersApp.QueryBuilder
+import edu.knowitall.tac2013.solr.query.QueryBuilder
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
-import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
+import edu.knowitall.tac2013.solr.populate.SolrSimpleExecutor
 
 /**
  * Runs test queries for all of the per:/org: patterns and reports statistics about

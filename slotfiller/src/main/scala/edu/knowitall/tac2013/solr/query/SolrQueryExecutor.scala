@@ -1,8 +1,15 @@
-package edu.knowitall.tac2013.findSlotFillersApp
+package edu.knowitall.tac2013.solr.query
 
 import jp.sf.amateras.solr.scala._
 import FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
+import edu.knowitall.tac2013.findSlotFillersApp.CandidateExtraction
+import edu.knowitall.tac2013.findSlotFillersApp.CandidateSet
+import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
+import edu.knowitall.tac2013.solr.query.KbpSolrQuery
+import edu.knowitall.tac2013.solr.query.QueryBuilder
+import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
+import scala.Option.option2Iterable
 
 object SolrQueryExecutor {
 

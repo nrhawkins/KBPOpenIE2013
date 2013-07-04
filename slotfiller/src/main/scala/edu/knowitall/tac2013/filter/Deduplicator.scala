@@ -4,7 +4,7 @@ import edu.knowitall.tac2013.openie._
 import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.tac2013.openie.solr
 import scopt.OptionParser
-import edu.knowitall.tac2013.openie.solr.SolrSimpleExecutor
+import edu.knowitall.tac2013.solr.populate.SolrSimpleExecutor
 
 /**
  * Primary interface:

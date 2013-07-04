@@ -9,6 +9,7 @@ import edu.knowitall.srlie.confidence.SrlConfidenceFunction.SrlConfidenceFunctio
 import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.chunkedextractor.ExtractionPart
 import edu.knowitall.tac2013.prep.ParsedKbpSentence
+import edu.knowitall.tac2013.solr.KbpExtractionConverter
 import edu.knowitall.srlie.SrlExtraction
 
 case class WikiLink(val name: String, val fbid: String, val nodeId: Option[String]) {
@@ -187,7 +188,7 @@ object KbpExtraction {
   
   val tabRegex = "\t".r
   
-  def fromFieldMap(fieldMap: Map[String, Any]) = solr.KbpExtractionConverter.fromFieldMap(fieldMap)
+  def fromFieldMap(fieldMap: Map[String, Any]) = KbpExtractionConverter.fromFieldMap(fieldMap)
   
   def write(extr: KbpExtraction): String = {
     

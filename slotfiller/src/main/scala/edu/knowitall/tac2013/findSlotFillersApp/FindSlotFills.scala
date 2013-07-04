@@ -7,6 +7,7 @@ import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
 import SlotFillReranker.chooseBestTest
 import KBPQueryEntityType._
+import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type

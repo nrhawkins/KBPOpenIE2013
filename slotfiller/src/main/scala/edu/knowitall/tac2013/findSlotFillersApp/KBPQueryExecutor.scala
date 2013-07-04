@@ -4,6 +4,7 @@ import SolrQueryExecutor.executeQuery
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest
+import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 
 object KBPQueryExecutor {
 
