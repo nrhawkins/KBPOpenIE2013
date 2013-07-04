@@ -10,52 +10,11 @@ import edu.knowitall.collection.immutable.Interval
 object KbpQueryOutput {
 
   val runID = "UWashington-1"
-
+    
   def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
 
     val writer = new PrintWriter(new File(filePath))
-    //iterate over all possible slot names
-    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) {
-
-      if (mapOfResults.contains(kbpSlot)) {
-        val kbpSlotName = kbpSlot
-        val candidateSets = mapOfResults(kbpSlot)
-        
-        //only return up to 20 solr Results
-        //val solrResultsArray = result._2._2.slice(0,20)
-
-        writer.write("KBP SLOT NAME: " + kbpSlotName + "\n")
-
-        for (candidateSet <- candidateSets) {
-
-          val kbpOpenIEData = candidateSet.pattern
-          val candidateExtractionsList = candidateSet.allExtractions.take(20)
-
-          writer.write("\tQuery Data:\t" + "RelationTerms: " + kbpOpenIEData.openIERelationString.getOrElse({ "" })
-            + "\t Arg2Begins: " + kbpOpenIEData.arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
-            kbpOpenIEData.entityIn.getOrElse({ "" }) + "\t SlotFill In: " + kbpOpenIEData.slotFillIn.getOrElse({ "" }) +
-            "\t Slot type: " + kbpOpenIEData.slotType.getOrElse({ "" }) + "\n")
-
-          writer.write("\tResults:\n")
-          if (candidateExtractionsList.length == 0) {
-            writer.write("\t\tNil" + "\n")
-          }
-
-          for (candidateExtraction <- candidateExtractionsList) {
-
-            writer.write("\t\targ1: " + candidateExtraction.arg1.originalText + "\t rel: " + candidateExtraction.rel.originalText +
-              "\t arg2: " + candidateExtraction.arg2.originalText + "\t docID: " + candidateExtraction.sentence.docId +
-              "\t confidence: " + candidateExtraction.confidence + "\t sentence: " + candidateExtraction.sentence.dgraph.text + "\n\n")
-
-          }
-        }
-      } else {
-        writer.write("KBP SLOT NAME: " + kbpSlot + "\n" + "\t\tNil\n")
-
-      }
-
-    }
-
+    writer.write(printUnformattedOutput(mapOfResults, kbpQueryEntityType))
     writer.close()
   }
 
