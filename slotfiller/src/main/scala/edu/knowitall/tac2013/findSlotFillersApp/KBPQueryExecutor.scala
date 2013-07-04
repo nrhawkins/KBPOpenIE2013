@@ -1,6 +1,5 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import SolrQueryExecutor.executeQuery
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
 import SlotFillReranker.chooseBestTest
@@ -12,7 +11,7 @@ object KBPQueryExecutor {
     kbpQuery.entityType match {
       case KBPQueryEntityType.ORG => {
 
-        val results = executeQuery(kbpQuery)
+        val results = SolrQueryExecutor.defaultInstance.executeQuery(kbpQuery)
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {
@@ -25,7 +24,7 @@ object KBPQueryExecutor {
 
       case KBPQueryEntityType.PER => {
 
-        val results = executeQuery(kbpQuery)
+        val results = SolrQueryExecutor.defaultInstance.executeQuery(kbpQuery)
 
         var slotCandidateSetMap = Map[String, SlotCandidateSet]()
         for (x <- results.keys) {

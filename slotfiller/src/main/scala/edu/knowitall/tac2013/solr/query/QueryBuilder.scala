@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.solr.query
 
-import CandidateType._
+import edu.knowitall.tac2013.findSlotFillersApp.CandidateType._
 import edu.knowitall.tac2013.findSlotFillersApp.CandidateType
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern

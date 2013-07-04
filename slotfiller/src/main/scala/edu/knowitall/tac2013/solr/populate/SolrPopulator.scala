@@ -8,6 +8,7 @@ import edu.knowitall.tac2013.prep.util.FileUtils
 import scopt.OptionParser
 import edu.knowitall.tac2013.prep.util.Line
 import edu.knowitall.tac2013.prep.util.LineReader
+import edu.knowitall.tac2013.solr.KbpExtractionConverter
 import scala.Option.option2Iterable
 
 class SolrPopulator private (val solrServer: ConcurrentUpdateSolrServer) {

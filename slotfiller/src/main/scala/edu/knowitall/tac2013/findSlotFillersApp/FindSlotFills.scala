@@ -1,8 +1,6 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import SolrQueryExecutor.executeQuery
-import SolrQueryExecutor.executeUnfilteredQuery
 import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
 import SlotFillReranker.chooseBestTest
@@ -29,7 +27,9 @@ object FindSlotFills {
 
     val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
 
-    val mapOfResults = executeQuery(kbpQuery)
+    val queryExecutor = SolrQueryExecutor.defaultInstance
+    
+    val mapOfResults = queryExecutor.executeQuery(kbpQuery)
 
     // rank candidate extractions and build a map from slot names to SlotCandidateSet
     var slotCandidateSetMap = Map[String, SlotCandidateSet]()
@@ -52,10 +52,12 @@ object FindSlotFills {
     }
 
     val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
+    
+    val queryExecutor = SolrQueryExecutor.defaultInstance
+    
+    val mapOfResults = queryExecutor.executeQuery(kbpQuery)
 
-    val mapOfResults = executeQuery(kbpQuery)
-
-    val unfilteredMapOfResults = executeUnfilteredQuery(kbpQuery)
+    val unfilteredMapOfResults = queryExecutor.executeUnfilteredQuery(kbpQuery)
 
     //build a map from slot names to SlotCandidateSet
     var filteredSlotCandidateSetMap = Map[String, SlotCandidateSet]()

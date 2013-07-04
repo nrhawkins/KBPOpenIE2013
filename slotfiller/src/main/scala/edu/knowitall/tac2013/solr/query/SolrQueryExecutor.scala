@@ -1,27 +1,25 @@
 package edu.knowitall.tac2013.solr.query
 
 import jp.sf.amateras.solr.scala._
-import FilterSolrResults.filterResults
+import edu.knowitall.tac2013.findSlotFillersApp.FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.CandidateExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.CandidateSet
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
-import edu.knowitall.tac2013.solr.query.KbpSolrQuery
-import edu.knowitall.tac2013.solr.query.QueryBuilder
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import scala.Option.option2Iterable
 
-object SolrQueryExecutor {
-
-  lazy val client = new SolrClient("http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr")
+class SolrQueryExecutor(val solrClient: SolrClient) {
   
-  def issueSolrQuery(kbpSolrQuery: KbpSolrQuery): List[CandidateExtraction] = {
+  def this(url: String) = this(new SolrClient(url))
+  
+  private def issueSolrQuery(kbpSolrQuery: KbpSolrQuery): List[CandidateExtraction] = {
     //not sure where the best place to put this val is so I'm hoping making it lazy
     //will be a good idea
     
     println(kbpSolrQuery.queryString)
     
-    val query = client.query(kbpSolrQuery.queryString)
+    val query = solrClient.query(kbpSolrQuery.queryString)
     val result = query.sortBy("confidence",Order.desc).rows(10000).getResultAsMap()
 
     val extrs = result.documents.flatMap { doc =>
@@ -67,4 +65,11 @@ object SolrQueryExecutor {
       (slotname, resultsList)
     }
   }
+}
+
+object SolrQueryExecutor {
+  
+  val defaultSolrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
+    
+  lazy val defaultInstance = new SolrQueryExecutor(defaultSolrUrl) 
 }
