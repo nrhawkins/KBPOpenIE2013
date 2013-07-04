@@ -13,7 +13,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
   
   def this(url: String) = this(new SolrClient(url))
   
-  private def issueSolrQuery(kbpSolrQuery: KbpSolrQuery): List[CandidateExtraction] = {
+  private def issueSolrQuery(kbpSolrQuery: SolrQuery): List[CandidateExtraction] = {
     //not sure where the best place to put this val is so I'm hoping making it lazy
     //will be a good idea
     
@@ -57,7 +57,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
       // aggregate and filter results for every different query formulation
       val resultsList = for (pattern <- patterns) yield {
 
-        val qb = new QueryBuilder(pattern, kbpQuery)
+        val qb = new SolrQueryBuilder(pattern, kbpQuery)
         val combinedResults = qb.getQueries.flatMap { query => issueSolrQuery(query) }
         new CandidateSet(pattern, combinedResults.toList)
       }

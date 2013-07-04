@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.experiment
 
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
-import edu.knowitall.tac2013.solr.query.QueryBuilder
+import edu.knowitall.tac2013.solr.query.SolrQueryBuilder
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.solr.populate.SolrSimpleExecutor
 
@@ -71,7 +71,7 @@ class PatternStats(val solrExec: SolrSimpleExecutor) {
 
   def getQueryString(entity: String, pattern: SlotPattern): String = {
     val kbpQuery = KBPQuery.forEntityName(entity, pattern.entityType, None)
-    val qb = new QueryBuilder(pattern, kbpQuery)
+    val qb = new SolrQueryBuilder(pattern, kbpQuery)
     qb.regularQuery.get.queryString
   }
 

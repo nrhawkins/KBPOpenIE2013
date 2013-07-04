@@ -6,9 +6,9 @@ import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import scala.Option.option2Iterable
 
-case class KbpSolrQuery(val queryString: String, val resultType: CandidateType, val pattern: SlotPattern)
+case class SolrQuery(val queryString: String, val resultType: CandidateType, val pattern: SlotPattern)
 
-class QueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
+class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
 
   private def getQueryString(fields: Seq[String]) = {
     val nonEmptyFields = fields.filter(_.nonEmpty)
@@ -65,29 +65,29 @@ class QueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
     }
   }
 
-  val regularQuery: Option[KbpSolrQuery] = {
+  val regularQuery: Option[SolrQuery] = {
 
     if (!pattern.isValid) {
       None
     } else {
       val queryFields = Seq(arg1TextConstraint, arg2TextConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = KbpSolrQuery(getQueryString(queryFields), CandidateType.REGULAR, pattern)
+      val query = SolrQuery(getQueryString(queryFields), CandidateType.REGULAR, pattern)
       Some(query)
     }
   }
 
-  val linkedQuery: Option[KbpSolrQuery] = {
+  val linkedQuery: Option[SolrQuery] = {
 
     if (!pattern.isValid || kbpQuery.nodeId.isEmpty) {
       None
     } else {
       val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = KbpSolrQuery(getQueryString(queryFields), CandidateType.LINKED, pattern)
+      val query = SolrQuery(getQueryString(queryFields), CandidateType.LINKED, pattern)
       Some(query)
     }
   }
   
-  val getQueries: Seq[KbpSolrQuery] = {
+  val getQueries: Seq[SolrQuery] = {
 
     regularQuery.toSeq ++ linkedQuery
   }
