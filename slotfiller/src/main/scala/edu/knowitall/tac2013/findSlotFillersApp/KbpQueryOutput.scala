@@ -4,54 +4,42 @@ import scala.io._
 import java.io._
 import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
-import edu.knowitall.tac2013.findSlotFillersApp.SlotFillReranker.chooseBest
 import edu.knowitall.collection.immutable.Interval
 
 object KbpQueryOutput {
 
   val runID = "UWashington-1"
 
-  def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
-
-    val writer = new PrintWriter(new File(filePath))
-    writer.write(printUnformattedOutput(mapOfResults, kbpQueryEntityType))
-    writer.close()
-  }
-
   def printUnformattedOutput(mapOfResults: Map[String, Seq[CandidateSet]], kbpQueryEntityType: KBPQueryEntityType): String = {
 
     val sb = new StringBuilder()
     for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
+      
+      sb.append("KBP SLOT NAME: " + kbpSlot + "\n")
+      
       if (mapOfResults.contains(kbpSlot)) {
-        val kbpSlotName = kbpSlot
-        val candidateSets = mapOfResults(kbpSlot)
-
-        sb.append(printUnformattedSlotOutput(sb, kbpSlotName, candidateSets))
+        sb.append(printUnformattedSlotOutput(mapOfResults(kbpSlot)))
       } else {
-        sb.append("KBP SLOT NAME: " + kbpSlot + "\n" + "\t\tNil\n")
-
+        sb.append("Nil\n")
       }
-
     }
-
     sb.toString()
   }
 
-  private def printUnformattedSlotOutput(kbpSlotName: String, candidateSets: Seq[CandidateSet]): String = {
+  private def printUnformattedSlotOutput(candidateSets: Seq[CandidateSet]): String = {
 
+    val kbpSlotName = candidateSets.head.pattern.slotName
+    
+    require(candidateSets.forall(_.pattern.slotName == kbpSlotName), "All candidates must be for the same slot.")
+    
     val sb = new StringBuilder
-
-    sb.append("KBP SLOT NAME: " + kbpSlotName + "\n")
 
     for (candidateSet <- candidateSets) {
 
-      val kbpOpenIEData = candidateSet.pattern
+      val pattern = candidateSet.pattern
       val candidateExtractionsList = candidateSet.allExtractions.take(20)
 
-      sb.append("\tQuery Data:\t" + "RelationTerms: " + kbpOpenIEData.openIERelationString.getOrElse({ "" })
-        + "\t Arg2Begins: " + kbpOpenIEData.arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
-        kbpOpenIEData.entityIn.getOrElse({ "" }) + "\t SlotFill In: " + kbpOpenIEData.slotFillIn.getOrElse({ "" }) +
-        "\t Slot type: " + kbpOpenIEData.slotType.getOrElse({ "" }) + "\n")
+      sb.append("Query pattern:\t" + pattern.debugString)
 
       sb.append("\tResults:\n")
       if (candidateExtractionsList.length == 0) {
@@ -63,7 +51,6 @@ object KbpQueryOutput {
         sb.append("\t\targ1: " + candidateExtraction.arg1.originalText + "\t rel: " + candidateExtraction.rel.originalText +
           "\t arg2: " + candidateExtraction.arg2.originalText + "\t docID: " + candidateExtraction.sentence.docId +
           "\t confidence: " + candidateExtraction.confidence + "\t sentence: " + candidateExtraction.sentence.dgraph.text + "\n\n")
-
       }
     }
     return sb.toString

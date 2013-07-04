@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
 import edu.knowitall.tac2013.openie.KbpExtraction
-import CandidateType._
+import QueryType._
 
 object FilterSolrResults {
 
@@ -62,7 +62,7 @@ object FilterSolrResults {
 
     val pattern = sourceSet.pattern
     
-    if (queryType == CandidateType.REGULAR) {
+    if (queryType == QueryType.REGULAR) {
       if (pattern.isValid) {
 
         val entityIn = pattern.entityIn.get.trim()

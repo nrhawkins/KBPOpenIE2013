@@ -16,7 +16,7 @@ object Deduplicator {
    * Defines a function that maps "candidate duplicates"
    * to the same key.
    */
-  private def extractionKey(extr: KbpExtraction): String = {
+  def extractionKey(extr: KbpExtraction): String = {
     
     def tokenKey(tokens: TraversableOnce[ChunkedToken]): String = {
       tokens.filter(tok => tok.isNoun || tok.isPronoun || tok.isVerb).map(_.string).mkString(" ")

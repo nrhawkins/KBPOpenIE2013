@@ -71,7 +71,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
       None
     } else {
       val queryFields = Seq(arg1TextConstraint, arg2TextConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = SolrQuery(getQueryString(queryFields), CandidateType.REGULAR, pattern)
+      val query = SolrQuery(getQueryString(queryFields), QueryType.REGULAR, pattern)
       Some(query)
     }
   }
@@ -82,7 +82,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
       None
     } else {
       val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = SolrQuery(getQueryString(queryFields), CandidateType.LINKED, pattern)
+      val query = SolrQuery(getQueryString(queryFields), QueryType.LINKED, pattern)
       Some(query)
     }
   }

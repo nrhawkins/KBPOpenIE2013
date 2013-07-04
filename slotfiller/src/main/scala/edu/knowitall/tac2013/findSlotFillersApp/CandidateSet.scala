@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import CandidateType._
+import QueryType._
 import edu.knowitall.tac2013.openie.KbpExtraction
 
 class CandidateSet(val pattern: SlotPattern, val extractionsMap: Map[CandidateType, Seq[KbpExtraction]]) {

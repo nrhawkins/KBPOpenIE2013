@@ -35,6 +35,11 @@ class SlotPattern private (
       false
     }
   }
+  
+  def debugString = "RelationTerms: " + openIERelationString.getOrElse({ "" }) +
+        "\t Arg2Begins: " + arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
+        entityIn.getOrElse({ "" }) + "\t SlotFill In: " + slotFillIn.getOrElse({ "" }) +
+        "\t Slot type: " + slotType.getOrElse({ "" }) + "\n"
 }
 
 object SlotPattern {

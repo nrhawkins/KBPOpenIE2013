@@ -2,7 +2,6 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import KbpQueryOutput.printFormattedOutputForKBPQuery
 import java.io._
-import SlotFillReranker.chooseBestTest
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 
 object KBPQueryExecutor {
@@ -18,7 +17,7 @@ object KBPQueryExecutor {
         
         val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, chooseBestTest(candidateSets)) } toMap
+        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, SlotFillReranker.findAnswers(candidateSets)) } toMap
 
         //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }
@@ -29,7 +28,7 @@ object KBPQueryExecutor {
         
         val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 
-        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, chooseBestTest(candidateSets)) } toMap
+        val bestAnswers = filteredCandidates map { case (slot, candidateSets) => (slot, SlotFillReranker.findAnswers(candidateSets)) } toMap
         
         //printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
       }

@@ -3,9 +3,9 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
-import SlotFillReranker.chooseBestTest
 import KBPQueryEntityType._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
+import java.io.PrintWriter
 
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
@@ -34,11 +34,14 @@ object FindSlotFills {
     val slotCandidateSets = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
 
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot, chooseBestTest(patternCandidates))  
+      (slot, SlotFillReranker.findAnswers(patternCandidates))  
     } toMap
     
 
-    printUnformattedOutput(slotCandidateSets, args(2), kbpQuery.entityType)
+    val writer = new PrintWriter(args(2))
+    
+    writer.print(printUnformattedOutput(slotCandidateSets, kbpQuery.entityType))
+    
     printFormattedOutput(slotCandidateSets, slotBestAnswers, args(2), kbpQuery.entityType)
   }
 
@@ -62,7 +65,7 @@ object FindSlotFills {
     val unfilteredSlotCandidateSets = slots map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot, chooseBestTest(patternCandidates))  
+      (slot, SlotFillReranker.findAnswers(patternCandidates))  
     } toMap
 
     return (
