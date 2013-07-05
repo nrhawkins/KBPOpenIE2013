@@ -17,6 +17,8 @@ object KBPQueryExecutor {
     val bestAnswers = filteredCandidates map { case (slot, slotCandidates) => 
       (slot, SlotFillReranker.findAnswers(kbpQuery, slotCandidates)) 
     } toMap
+    
+    printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
   }
 
   def executeKbpQueries(kbpQueryList: List[KBPQuery], outputPath: String) {
@@ -43,5 +45,4 @@ object KBPQueryExecutor {
     val kbpQueryList = KBPQuery.parseKBPQueries(KBPQueryPath)
     executeKbpQueries(kbpQueryList, outputPath)
   }
-
 }

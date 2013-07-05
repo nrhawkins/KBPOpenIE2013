@@ -109,7 +109,7 @@ object KbpQueryOutput {
 
   def printFormattedOutputForKBPQuery(
     slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, List[Candidate]],
+    bestAnswers: Map[String, Seq[Candidate]],
     filePath: String, kbpQuery: KBPQuery) {
 
     val writer = new FileWriter(new File(filePath), true)
