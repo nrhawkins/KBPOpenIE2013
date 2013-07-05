@@ -12,14 +12,18 @@ import edu.knowitall.tac2013.prep.ParsedKbpSentence
 import edu.knowitall.tac2013.solr.KbpExtractionConverter
 import edu.knowitall.srlie.SrlExtraction
 
-case class WikiLink(val name: String, val fbid: String, val nodeId: Option[String]) {
-  def serialize = s"$name $fbid ${nodeId.getOrElse("-")}"
+case class WikiLink(val name: String, val fbid: String, val nodeId: Option[String], val score: Double = -1) {
+  def serialize = {
+    //if (score == -1) Seq(name, fbid, nodeId.getOrElse("-")).mkString(" ")
+    Seq(name, fbid, nodeId.getOrElse("-"), "%.03f".format(score)).mkString(" ")
+  }
 }
 object WikiLink {
-  val deserializeRegex = "(.+) ([^\\s]+) ([^\\s]+)".r
+  val deserializeRegex = "(.+) ([^\\s]+) ([^\\s]+)\\s?([0-9]+\\.[0-9]+)?".r
   def deserialize(str: String): WikiLink = {
     str match {
-      case deserializeRegex(name, fbid, nodeIdRaw) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw))
+      case deserializeRegex(name, fbid, nodeIdRaw, null) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw))
+      case deserializeRegex(name, fbid, nodeIdRaw, score) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw), score.toDouble)
       case _ => throw new RuntimeException(s"Unable to deserialize wikilink string: $str")
     }
   }

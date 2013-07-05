@@ -20,7 +20,7 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
     }
 
     def argKey(arg: KbpArgument) = arg.wikiLink match {
-      case Some(WikiLink(name, fbid, nodeIdOpt)) => fbid
+      case Some(wikiLink) => wikiLink.fbid
       case None => tokenKey(arg.tokens)
     }
 
