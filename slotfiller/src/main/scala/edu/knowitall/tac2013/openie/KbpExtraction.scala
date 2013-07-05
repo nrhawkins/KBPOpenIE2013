@@ -14,8 +14,8 @@ import edu.knowitall.srlie.SrlExtraction
 
 case class WikiLink(val name: String, val fbid: String, val nodeId: Option[String], val score: Double = -1) {
   def serialize = {
-    //if (score == -1) Seq(name, fbid, nodeId.getOrElse("-")).mkString(" ")
-    Seq(name, fbid, nodeId.getOrElse("-"), "%.03f".format(score)).mkString(" ")
+    if (score == -1) Seq(name, fbid, nodeId.getOrElse("-")).mkString(" ")
+    else Seq(name, fbid, nodeId.getOrElse("-"), "%.03f".format(score)).mkString(" ")
   }
 }
 object WikiLink {
