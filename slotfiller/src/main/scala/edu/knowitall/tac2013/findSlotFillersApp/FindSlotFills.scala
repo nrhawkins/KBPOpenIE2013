@@ -42,7 +42,9 @@ object FindSlotFills {
     
     writer.print(printUnformattedOutput(slotCandidateSets, kbpQuery.entityType))
     
-    printFormattedOutput(slotCandidateSets, slotBestAnswers, args(2), kbpQuery.entityType)
+    writer.print(printFormattedOutput(slotCandidateSets, slotBestAnswers, kbpQuery.entityType))
+    
+    writer.close()
   }
 
   def runForServerOutput(field1: String, field2: String, nodeId: Option[String] = None): String = {

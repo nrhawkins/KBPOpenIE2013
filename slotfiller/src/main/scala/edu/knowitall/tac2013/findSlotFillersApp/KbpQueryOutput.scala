@@ -59,72 +59,6 @@ object KbpQueryOutput {
     return sb.toString
   }
 
-  def printFormattedOutput(
-    slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, List[Candidate]],
-    filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
-
-    val writer = new PrintWriter(new File(filePath))
-
-    //iterate over every slot type
-    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) {
-
-      //if the kbp slot is contained in the results
-      if (slotCandidateSets.contains(kbpSlot)) {
-
-        //for each slot print one response for single-valued slot
-        //print k-slots for multi-valued slot
-        //or print NIL
-
-        val kbpSlotName = kbpSlot
-
-        val bestAnswerExtractions = bestAnswers(kbpSlot)
-
-        if (!bestAnswerExtractions.isEmpty) {
-          val bestAnswer = bestAnswerExtractions.head
-          val queryData = bestAnswer.pattern
-          val slotFiller = {
-            if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.originalText
-            } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.originalText
-            }
-          }
-
-          val fillerOffset = {
-            if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.tokenInterval
-            } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.tokenInterval
-            }
-          }
-
-          val entityOffset = {
-            if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.tokenInterval
-            } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.tokenInterval
-            }
-          }
-
-          writer.write(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
-            fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
-            bestAnswer.extr.confidence).mkString("\t") + "\n")
-
-        } else {
-          writer.write(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
-        }
-      } else {
-        // else if the results Map does not contain the slot
-        // print nothing since this slot is ignored
-
-      }
-
-    }
-
-    writer.close()
-  }
-
   /**
    * Overloaded to return a string for server usage
    */
@@ -141,9 +75,9 @@ object KbpQueryOutput {
       //if the kbp slot is contained in the results
       if (slotCandidateSets.contains(kbpSlot)) {
 
-        //for each slot print one response for single-valued slot
-        //print k-slots for multi-valued slot
-        //or print NIL
+        // for each slot print one response for single-valued slot
+        // print k-slots for multi-valued slot
+        // or print NIL
 
         val bestAnswerExtractions = bestAnswers(kbpSlot)
 
