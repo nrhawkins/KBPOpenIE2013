@@ -35,10 +35,6 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
     Seq(arg1Key, relKey, arg2Key).mkString(", ")
   }
   
-  def fillKey: String = {
-    fillField.originalText
-  }
-  
   val entityField = pattern.entityIn match {
     case Some("arg1") => extr.arg1
     case Some("arg2") => extr.arg2

@@ -18,7 +18,7 @@ object KBPQueryExecutor {
       (slot, SlotFillReranker.findAnswers(kbpQuery, slotCandidates)) 
     } toMap
     
-    printFormattedOutput(filteredCandidates, bestAnswers, kbpQuery)
+    printFormattedOutput(bestAnswers, kbpQuery)
   }
 
   def executeKbpQueries(kbpQueryList: List[KBPQuery], outputPath: String) {

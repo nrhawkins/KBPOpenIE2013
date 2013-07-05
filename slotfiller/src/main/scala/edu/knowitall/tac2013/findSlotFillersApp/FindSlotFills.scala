@@ -68,16 +68,13 @@ object FindSlotFills {
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
       (slot -> SlotFillReranker.findAnswers(kbpQuery, patternCandidates))  
     }
-
-    slotCandidateSets.iterator.toSeq.flatMap { case (slot, candidates) =>
     
     Seq(
       "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedSlotOutput(slot, unfilteredSlotCandidateSets(slot)),
+      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery),
       "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedSlotOutput(slot, candidates),
+      printUnformattedOutput(slotCandidateSets, kbpQuery),
       "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n",
-      printFormattedSlotOutput(slot, kbpQuery, slotBestAnswers(slot)))
-    }
+      printFormattedOutput(slotBestAnswers, kbpQuery))
   }
 }

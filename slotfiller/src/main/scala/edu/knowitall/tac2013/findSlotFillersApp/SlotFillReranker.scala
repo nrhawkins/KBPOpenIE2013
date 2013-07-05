@@ -24,7 +24,7 @@ object SlotFillReranker {
       require(slotCandidates.forall(_.pattern.maxValues == maxAnswers))
       
       // group results by their fill
-      val groups = slotCandidates.groupBy(_.fillKey)
+      val groups = slotCandidates.groupBy(_.trimmedFill.trimmedFillString)
       
       // rank best result from each group according to a confidence measure
       // in descending order

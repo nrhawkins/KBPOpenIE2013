@@ -10,9 +10,9 @@ object KbpQueryOutput {
 
   val runID = "UWashington-1"
 
-  def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQueryEntityType: KBPQueryEntityType): String = {
+  def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQuery: KBPQuery): String = {
 
-    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
+    val slotOutputs = for (kbpSlot <- kbpQuery.slotsToFill) yield {
       printUnformattedSlotOutput(kbpSlot, mapOfResults(kbpSlot))
     }
     slotOutputs.mkString
@@ -23,7 +23,7 @@ object KbpQueryOutput {
     require(slotCandidates.forall(_.pattern.slotName.equals(slot)))
 
     if (slotCandidates.isEmpty) {
-      s"KBP SLOT NAME: $slot\n\tNil\n"
+      s"KBP SLOT NAME: $slot\n\tNil\n\n"
     } else {
 
       val sb = new StringBuilder
@@ -58,23 +58,12 @@ object KbpQueryOutput {
    * Overloaded to return a string for server usage
    */
   def printFormattedOutput(
-    slotCandidateSets: Map[String, Seq[Candidate]],
     bestAnswers: Map[String, Seq[Candidate]],
     kbpQuery: KBPQuery): String = {
 
     //iterate over every slot type
-    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQuery.entityType)) yield {
-      if (slotCandidateSets.contains(kbpSlot)) {
-
-        // for each slot print one response for single-valued slot
-        // print k-slots for multi-valued slot
-        // or print NIL
-        printFormattedSlotOutput(kbpSlot, kbpQuery, bestAnswers(kbpSlot))
-      } else {
-        // else if the results Map does not contain the slot
-        // print nothing since this slot is ignored
-        ""
-      }
+    val slotOutputs = for (kbpSlot <- kbpQuery.slotsToFill) yield {
+      printFormattedSlotOutput(kbpSlot, kbpQuery, bestAnswers.getOrElse(kbpSlot, Nil))
     }
     slotOutputs.mkString
   }
