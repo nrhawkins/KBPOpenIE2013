@@ -6,7 +6,7 @@ import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 
 object KBPQueryExecutor {
 
-  def executeKbpQuery(kbpQuery: KBPQuery, outputPath: String) {
+  def executeKbpQuery(kbpQuery: KBPQuery, outputPath: String): String = {
     
     val qExec = SolrQueryExecutor.defaultInstance
 
@@ -18,11 +18,7 @@ object KBPQueryExecutor {
       (slot, SlotFillReranker.findAnswers(kbpQuery, slotCandidates)) 
     } toMap
     
-    val output = new PrintStream(outputPath)
-    
-    output.println(printFormattedOutput(bestAnswers, kbpQuery))
-    
-    output.close()
+    printFormattedOutput(bestAnswers, kbpQuery)
   }
 
   def executeKbpQueries(kbpQueryList: List[KBPQuery], outputPath: String) {
@@ -33,9 +29,12 @@ object KBPQueryExecutor {
       f.delete()
     }
 
+    val output = new PrintStream(outputPath)
+    
     for (kbpQuery <- kbpQueryList) {
-      executeKbpQuery(kbpQuery, outputPath)
+      output.print(executeKbpQuery(kbpQuery, outputPath))
     }
+    output.close()
   }
 
   def main(args: Array[String]) {
