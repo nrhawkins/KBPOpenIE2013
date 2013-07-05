@@ -7,7 +7,7 @@ import edu.knowitall.tac2013.openie.KbpExtraction
  */
 object SlotFillReranker {
 
-  /*
+  /**
    * Requires that all candidates (if any) are for the same slot.
    */
   def findAnswers(kbpQuery: KBPQuery, slotCandidates: Seq[Candidate]): Seq[Candidate] = {
@@ -23,8 +23,8 @@ object SlotFillReranker {
       require(slotCandidates.forall(_.pattern.slotName.equals(slot)))
       require(slotCandidates.forall(_.pattern.maxValues == maxAnswers))
       
-      // group results by their tuple key
-      val groups = slotCandidates.groupBy(_.extractionKey)
+      // group results by their fill
+      val groups = slotCandidates.groupBy(_.fillKey)
       
       // rank best result from each group according to a confidence measure
       // in descending order

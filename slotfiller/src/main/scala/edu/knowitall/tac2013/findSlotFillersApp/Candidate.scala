@@ -9,6 +9,8 @@ import edu.knowitall.tool.chunk.ChunkedToken
 
 class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: KbpExtraction) {
 
+  def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
+  
   /**
    * Concatenates tokens from (arg1, rel, arg2) which are nouns, pronouns, or verbs
    * If arg1 or arg2 is linked, uses fbid for that field instead.
@@ -29,6 +31,10 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
     val arg2Key = argKey(extr.arg2)
 
     Seq(arg1Key, relKey, arg2Key).mkString(", ")
+  }
+  
+  def fillKey: String = {
+    fillField.originalText
   }
   
   val entityField = pattern.entityIn match {

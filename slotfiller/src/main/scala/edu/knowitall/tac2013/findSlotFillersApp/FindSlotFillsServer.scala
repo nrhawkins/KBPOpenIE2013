@@ -40,12 +40,14 @@ object FindSlotFillsServer extends App {
         case req @ POST(Path(Seg(Nil))) =>
           println(req.parameterNames)
           handlePost(req.parameterValues("field1").head,
-            req.parameterValues("field2").head)
+            req.parameterValues("field2").head,
+            req.parameterValues("field3").head)
         case req @ GET(Path(Seg(Nil))) =>
           ResponseString("""<html><body>
             <form method="POST">
               <textarea cols="60" rows="20" name="field1"></textarea><br />
               <input type="text" name="field2"/>
+              <input type="text" name="field3"/>
               <input type="submit"/>
             </form>
             </body></html>""") ~> Ok
@@ -55,7 +57,7 @@ object FindSlotFillsServer extends App {
        * *
        * Handles the POST input to the server
        */
-      def handlePost(field1: String, field2: String) = {
+      def handlePost(field1: String, field2: String, field3: String) = {
 
         val field1Split = field1.split(" ")
         var entityString = field1
@@ -72,7 +74,9 @@ object FindSlotFillsServer extends App {
             entityString = field1.substring(0, field1.size - nodeId.size)
           }
         }
-        val slotOutputs = FindSlotFills.runForServerOutput(entityString, field2, if (nodeId.nonEmpty) Some(nodeId) else None)
+        val slots = field3.split(",").map(_.trim).filter(_.nonEmpty).toSet
+        
+        val slotOutputs = FindSlotFills.runForServerOutput(entityString, field2, slots)
         val allOutput = slotOutputs.mkString
         
         ResponseString(field1 + allOutput) ~> Ok

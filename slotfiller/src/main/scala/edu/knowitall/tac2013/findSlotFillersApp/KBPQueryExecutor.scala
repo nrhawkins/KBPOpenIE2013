@@ -1,6 +1,6 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import KbpQueryOutput.printFormattedOutputForKBPQuery
+import KbpQueryOutput.printFormattedOutput
 import java.io._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 
@@ -18,7 +18,7 @@ object KBPQueryExecutor {
       (slot, SlotFillReranker.findAnswers(kbpQuery, slotCandidates)) 
     } toMap
     
-    printFormattedOutputForKBPQuery(filteredCandidates, bestAnswers, outputPath, kbpQuery)
+    printFormattedOutput(filteredCandidates, bestAnswers, kbpQuery)
   }
 
   def executeKbpQueries(kbpQueryList: List[KBPQuery], outputPath: String) {

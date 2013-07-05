@@ -12,7 +12,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
   
   def this(url: String) = this(new SolrClient(url))
   
-  private def issueSolrQuery(kbpSolrQuery: SolrQuery): List[Candidate] = {
+  private def issueSolrQuery(kbpSolrQuery: SolrQuery): Seq[Candidate] = {
     
     println(kbpSolrQuery.queryString)
     
@@ -48,16 +48,22 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
   def executeUnfilteredQuery(kbpQuery: KBPQuery, slot: String): Seq[Candidate] = {
 
-    val patterns = SlotPattern.patternsForQuery(kbpQuery)(slot)
+    val patterns = SlotPattern.patternsForQuery(kbpQuery)(slot).iterator
 
     val solrQueries = patterns.flatMap { pattern => 
       val queryBuilder = new SolrQueryBuilder(pattern, kbpQuery)
       queryBuilder.getQueries 
     }
     
-    val allResults = solrQueries.flatMap { q => issueSolrQuery(q) }
+    val allResults = solrQueries.flatMap { q => issueSolrQuery(q) } toSeq
     
-    allResults
+    // deduplicate identical extractions
+    val deduplicated = allResults.groupBy(_.deduplicationKey).map { case (key, duplicates) =>
+      // duplicates should all be same, i.e. same confidence, etc... but explicitly take highest conf anyways.
+      duplicates.maxBy(_.extr.confidence)
+    } toSeq
+    
+    deduplicated
   }
 }
 

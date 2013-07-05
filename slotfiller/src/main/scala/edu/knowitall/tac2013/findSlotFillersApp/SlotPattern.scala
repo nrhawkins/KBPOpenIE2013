@@ -53,6 +53,10 @@ object SlotPattern {
 
   lazy val personPatterns = getPatternsAsMap(personPatternResource)
 
+  def patternsForSlot(slot: String) = {
+    Seq(organizationPatterns.get(slot), personPatterns.get(slot)).flatten.headOption.getOrElse(throw new RuntimeException("Invalid slot: %s".format(slot)))
+  }
+  
   def patternsForQuery(query: KBPQuery): Map[String, List[SlotPattern]] = {
     val entityPatterns = query.entityType match {
       case KBPQueryEntityType.ORG => organizationPatterns

@@ -7,10 +7,15 @@ import scala.xml.XML
 
 
 
-class KBPQuery (val id: String, val name: String, val doc: String,
+case class KBPQuery (val id: String, val name: String, val doc: String,
     val begOffset: Int, val endOffset: Int, val entityType: KBPQueryEntityType,
     val nodeId: Option[String], val slotsToFill: Set[String]){
 
+  /**
+   * Return a new KBPQuery with different slots to fill.
+   */
+  def withSlotsToFill(slots: Set[String]): KBPQuery = this.copy(slotsToFill = slots)
+  
 }
 
 object KBPQuery {

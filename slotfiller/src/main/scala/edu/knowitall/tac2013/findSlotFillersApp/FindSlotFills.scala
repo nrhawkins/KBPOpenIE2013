@@ -3,6 +3,8 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
+import KbpQueryOutput.printUnformattedSlotOutput
+import KbpQueryOutput.printFormattedSlotOutput
 import KBPQueryEntityType._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 import java.io.PrintStream
@@ -16,11 +18,13 @@ object FindSlotFills {
 
     var entityName = ""
     var entityType = ""
+    var slotStrings = ""
     var output = System.out
     
     val parser = new OptionParser() {
       arg("entity name", "The entity's name.", { name => entityName = name })
       arg("entity type", "either organization or person.", { typ => entityType = typ })
+      opt("slots", "Specific slots to fill, default = all, comma separated", { slotStrings = _ })
       opt("outputFile", "File name for output. (default stdout)", { file => output = new PrintStream(file) })
     }
     
@@ -29,14 +33,16 @@ object FindSlotFills {
     println(entityName)
     println(entityType)
 
-    val outputLines = runForServerOutput(entityName, args(1))   
+    val slots = slotStrings.split(",").map(_.trim).filter(_.nonEmpty).toSet
+    
+    val outputLines = runForServerOutput(entityName, entityType, slots)   
     
     outputLines foreach output.println
     
     if (output != System.out) output.close()
   }
 
-  def runForServerOutput(rawName: String, entityTypeString: String, nodeId: Option[String] = None): Seq[String] = {
+  def runForServerOutput(rawName: String, entityTypeString: String, overrideSlots: Set[String]): Seq[String] = {
 
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
@@ -45,13 +51,15 @@ object FindSlotFills {
       case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
     }
 
-    val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
+    val kbpQuery = if (overrideSlots.isEmpty) {
+      KBPQuery.forEntityName(entityName, entityType)
+    } else {
+      KBPQuery.forEntityName(entityName, entityType).withSlotsToFill(overrideSlots)
+    }
     
     val queryExecutor = SolrQueryExecutor.defaultInstance
     
-    val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
-    
-    val unfilteredSlotCandidateSets = slots.map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
+    val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
     
     val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
       (slot -> FilterSolrResults.filterResults(candidates, entityName)) 
@@ -61,12 +69,15 @@ object FindSlotFills {
       (slot -> SlotFillReranker.findAnswers(kbpQuery, patternCandidates))  
     }
 
+    slotCandidateSets.iterator.toSeq.flatMap { case (slot, candidates) =>
+    
     Seq(
       "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery.entityType),
+      printUnformattedSlotOutput(slot, unfilteredSlotCandidateSets(slot)),
       "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedOutput(slotCandidateSets, kbpQuery.entityType),
+      printUnformattedSlotOutput(slot, candidates),
       "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n",
-      printFormattedOutput(slotCandidateSets, slotBestAnswers, kbpQuery.entityType))
+      printFormattedSlotOutput(slot, kbpQuery, slotBestAnswers(slot)))
+    }
   }
 }
