@@ -37,7 +37,8 @@
 			<keyword>Improper turn at traffic light</keyword>
 			<keyword>Improper U-Turn</keyword>
 			<keyword>Insufficient Speed</keyword>
-			<keyword>Leaving Scene of Accident/Hit & Run</keyword>
+			<keyword>Leaving Scene of Accident</keyword>
+			<keyword>Hit and Run</keyword>
 			<keyword>Moving against traffic</keyword>
 			<keyword>No Helmet (Motorcycles)</keyword>
 			<keyword>Obstructing Traffic</keyword>
@@ -130,7 +131,8 @@
 			<keyword>Using a Weapon in a Threatening Manner</keyword>
 			<keyword>Abandonment an Animal</keyword>
 			<keyword>Abduction</keyword>
-			<keyword>Aiding & Abetting</keyword>
+			<keyword>Aiding</keyword>
+			<keyword>Abetting</keyword>
 			<keyword>Arson</keyword>
 			<keyword>Assault</keyword>
 			<keyword>Battery</keyword>
