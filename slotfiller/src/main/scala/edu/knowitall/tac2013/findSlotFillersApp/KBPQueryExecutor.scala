@@ -18,7 +18,11 @@ object KBPQueryExecutor {
       (slot, SlotFillReranker.findAnswers(kbpQuery, slotCandidates)) 
     } toMap
     
-    printFormattedOutput(bestAnswers, kbpQuery)
+    val output = new PrintStream(outputPath)
+    
+    output.println(printFormattedOutput(bestAnswers, kbpQuery))
+    
+    output.close()
   }
 
   def executeKbpQueries(kbpQueryList: List[KBPQuery], outputPath: String) {
