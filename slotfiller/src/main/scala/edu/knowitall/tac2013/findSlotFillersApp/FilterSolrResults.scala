@@ -200,7 +200,23 @@ object FilterSolrResults {
 
       return false
 
+    } else if (slotType == "ProperNoun"){
+      //need to figure out what to do for general ProperNoun semantic filter
+      
+      return true
+    }  else if ((slotType =="<integer>-year-old") || (slotType == "Integer")){
+      val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
+
+      for (t <- types) {
+        if (t.interval().intersects(slotLocation)) return true
+
+      }
+
+      return false
+      
     } else {
+    
+    
 
       return true
 

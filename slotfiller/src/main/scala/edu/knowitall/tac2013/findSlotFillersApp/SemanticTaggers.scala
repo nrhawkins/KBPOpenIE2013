@@ -59,6 +59,13 @@ object SemanticTaggers {
     require(url != null, "Could not find resource: " + resourcePath)
     TaggerCollection.fromPath(url.getPath())
   }
+  
+  private val IntegerTagger = {
+    val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/IntegerTaggers"
+    val url = getClass.getResource(resourcePath)
+    require(url != null, "Could not find resource: " + resourcePath)
+    TaggerCollection.fromPath(url.getPath())
+  }
 
   private val morpha = new MorphaStemmer();
 
@@ -137,5 +144,17 @@ object SemanticTaggers {
     val types = scala.collection.JavaConversions.asScalaIterable(CrimeTagger.tag(scala.collection.JavaConversions.asJavaList(tokens)))
     types.toList
   }
+  
+  def useIntegerTagger(chunkedSentence: Seq[ChunkedToken]): List[Type] = {
+
+    var tokens = List[Lemmatized[ChunkedToken]]()
+    for (token <- chunkedSentence) {
+      val lemma = morpha.lemmatizeToken(token);
+      tokens = tokens ::: List(lemma)
+    }
+    val types = scala.collection.JavaConversions.asScalaIterable(IntegerTagger.tag(scala.collection.JavaConversions.asJavaList(tokens)))
+    types.toList
+  }
+
 
 }
