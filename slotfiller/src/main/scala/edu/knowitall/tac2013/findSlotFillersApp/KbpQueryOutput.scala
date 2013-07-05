@@ -11,52 +11,43 @@ object KbpQueryOutput {
   val runID = "UWashington-1"
 
   def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQueryEntityType: KBPQueryEntityType): String = {
-
-    val sb = new StringBuilder()
-    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
-      
-      sb.append("KBP SLOT NAME: " + kbpSlot + "\n")
-      
-      if (mapOfResults.contains(kbpSlot) && !mapOfResults(kbpSlot).isEmpty) {
-        sb.append(printUnformattedSlotOutput(mapOfResults(kbpSlot)))
-      } else {
-        sb.append("Nil\n")
-      }
+    
+    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
+      printUnformattedSlotOutput(kbpSlot, mapOfResults(kbpSlot))
     }
-    sb.toString()
+    slotOutputs.mkString
   }
 
-  private def printUnformattedSlotOutput(slotCandidates: Seq[Candidate]): String = {
+  private def printUnformattedSlotOutput(slot: String, slotCandidates: Seq[Candidate]): String = {
 
-    require(slotCandidates.nonEmpty, "cant print output for empty slot candidates")
-    
-    val kbpSlotName = slotCandidates.head.pattern.slotName
-    
-    require(slotCandidates.forall(_.pattern.slotName == kbpSlotName), "All candidates must be for the same slot.")
-    
-    val sb = new StringBuilder
+    require(slotCandidates.forall(_.pattern.slotName.equals(slot)))
 
-    val patternCandidates = slotCandidates.groupBy(_.pattern)
-    
-    for ((pattern, candidates) <- patternCandidates) {
+    if (slotCandidates.isEmpty) {
+      s"KBP SLOT NAME: $slot\n\tNil"
+    } else {
 
-      val topCandidates = candidates.take(20)
+      val sb = new StringBuilder
+      sb.append(s"KBP SLOT NAME: $slot\n")
 
-      sb.append("Query pattern:\t" + pattern.debugString)
+      val patternCandidates = slotCandidates.groupBy(_.pattern)
+      for ((pattern, candidates) <- patternCandidates) {
+        val topCandidates = candidates.take(20)
 
-      sb.append("\tResults:\n")
-      if (topCandidates.length == 0) {
-        sb.append("\t\tNil" + "\n")
+        sb.append("Query pattern:\t" + pattern.debugString)
+
+        sb.append("\tResults:\n")
+        if (topCandidates.length == 0) {
+          sb.append("\t\tNil" + "\n")
+        } else {
+          for (candidate <- topCandidates) {
+            sb.append("\t\targ1: " + candidate.extr.arg1.originalText + "\t rel: " + candidate.extr.rel.originalText +
+              "\t arg2: " + candidate.extr.arg2.originalText + "\t docID: " + candidate.extr.sentence.docId +
+              "\t confidence: " + candidate.extr.confidence + "\t sentence: " + candidate.extr.sentence.dgraph.text + "\n\n")
+          }
+        }
       }
-
-      for (candidate <- topCandidates) {
-
-        sb.append("\t\targ1: " + candidate.extr.arg1.originalText + "\t rel: " + candidate.extr.rel.originalText +
-          "\t arg2: " + candidate.extr.arg2.originalText + "\t docID: " + candidate.extr.sentence.docId +
-          "\t confidence: " + candidate.extr.confidence + "\t sentence: " + candidate.extr.sentence.dgraph.text + "\n\n")
-      }
+      sb.toString
     }
-    return sb.toString
   }
 
   /**
@@ -67,63 +58,63 @@ object KbpQueryOutput {
     bestAnswers: Map[String, List[Candidate]],
     kbpQueryEntityType: KBPQueryEntityType): String = {
 
-    val sb = new StringBuilder()
-
     //iterate over every slot type
-    for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) {
-
-      //if the kbp slot is contained in the results
+    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
       if (slotCandidateSets.contains(kbpSlot)) {
 
         // for each slot print one response for single-valued slot
         // print k-slots for multi-valued slot
         // or print NIL
-
-        val bestAnswerExtractions = bestAnswers(kbpSlot)
-
-        if (!bestAnswerExtractions.isEmpty) {
-          val bestAnswer = bestAnswerExtractions.head
-          val queryData = bestAnswer.pattern
-          val slotFiller = {
-            if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.originalText
-            } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.originalText
-            }
-          }
-
-          val fillerOffset = {
-            if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.tokenInterval
-            } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.tokenInterval
-            }
-          }
-
-          val entityOffset = {
-            if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extr.arg1.tokenInterval
-            } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extr.arg2.tokenInterval
-            }
-          }
-
-          sb.append(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
-            fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
-            bestAnswer.extr.confidence).mkString("\t") + "\n")
-
-        } else {
-          sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
-        }
+        printFormattedSlotOutput(kbpSlot, bestAnswers(kbpSlot))
       } else {
         // else if the results Map does not contain the slot
         // print nothing since this slot is ignored
+        ""
+      }
+    }
+    slotOutputs.mkString
+  }
 
+  def printFormattedSlotOutput(kbpSlot: String, bestAnswers: List[Candidate]): String = {
+
+    val sb = new StringBuilder
+    
+    if (!bestAnswers.isEmpty) {
+      val bestAnswer = bestAnswers.head
+      val queryData = bestAnswer.pattern
+      val slotFiller = {
+        if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
+          bestAnswer.extr.arg1.originalText
+        } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
+          bestAnswer.extr.arg2.originalText
+        }
       }
 
-    }
+      val fillerOffset = {
+        if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
+          bestAnswer.extr.arg1.tokenInterval
+        } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
+          bestAnswer.extr.arg2.tokenInterval
+        }
+      }
 
-    sb.toString
+      val entityOffset = {
+        if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
+          bestAnswer.extr.arg1.tokenInterval
+        } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
+          bestAnswer.extr.arg2.tokenInterval
+        }
+      }
+
+      sb.append(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
+        fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
+        bestAnswer.extr.confidence).mkString("\t") + "\n")
+
+    } else {
+      sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
+    }
+    
+    sb.toString()
   }
 
   def printFormattedOutputForKBPQuery(
@@ -211,5 +202,4 @@ object KbpQueryOutput {
     }
     writer.close()
   }
-
 }
