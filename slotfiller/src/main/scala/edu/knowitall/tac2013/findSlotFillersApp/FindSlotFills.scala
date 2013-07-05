@@ -60,13 +60,15 @@ object FindSlotFills {
     
     val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
     
-    val slotCandidateSets = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
-
-    val unfilteredSlotCandidateSets = slots map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
+    val unfilteredSlotCandidateSets = slots.map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
+    
+    val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
+      (slot -> FilterSolrResults.filterResults(candidates, entityName)) 
+    }
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot, SlotFillReranker.findAnswers(patternCandidates))  
-    } toMap
+      (slot -> SlotFillReranker.findAnswers(patternCandidates))  
+    }
 
     return (
       "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n" +

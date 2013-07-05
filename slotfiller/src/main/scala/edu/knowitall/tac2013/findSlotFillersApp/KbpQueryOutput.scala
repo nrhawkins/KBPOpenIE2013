@@ -194,7 +194,7 @@ object KbpQueryOutput {
 
   def printFormattedOutputForKBPQuery(
     slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, List[Answer]],
+    bestAnswers: Map[String, List[Candidate]],
     filePath: String, kbpQuery: KBPQuery) {
 
     val writer = new FileWriter(new File(filePath), true)
@@ -221,19 +221,19 @@ object KbpQueryOutput {
           val queryData = bestAnswer.pattern
           val slotFiller = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.originalText
+              bestAnswer.extr.arg1.originalText
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.originalText
+              bestAnswer.extr.arg2.originalText
             }
           }
 
           val fillerOffsetInterval = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "relation") {
-              bestAnswer.extraction.rel.tokenInterval
+              bestAnswer.extr.rel.tokenInterval
             } else {
               throw new Exception("slotFillIn specification should only be arg1, arg2, or relation")
             }
@@ -241,15 +241,15 @@ object KbpQueryOutput {
 
           val entityOffsetInterval = {
             if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             } else {
               throw new Exception("entityIn specification should only be arg1 or arg2")
             }
           }
 
-          val startOffset = bestAnswer.extraction.sentence.startOffset
+          val startOffset = bestAnswer.extr.sentence.startOffset
 
           val fillerOffsetStart = startOffset + fillerOffsetInterval.start
           val fillerOffsetEnd = startOffset + fillerOffsetInterval.end
@@ -259,26 +259,22 @@ object KbpQueryOutput {
           val entityOffsetEnd = startOffset + entityOffsetInterval.end
           val entityOffsetString = entityOffsetStart.toString + "-" + entityOffsetEnd.toString()
 
-          val justificationOffsetStart = startOffset + bestAnswer.extraction.arg1.tokenInterval.start
-          val justificationOffsetEnd = startOffset + bestAnswer.extraction.arg2.tokenInterval.end
+          val justificationOffsetStart = startOffset + bestAnswer.extr.arg1.tokenInterval.start
+          val justificationOffsetEnd = startOffset + bestAnswer.extr.arg2.tokenInterval.end
           val justificationOffsetString = justificationOffsetStart.toString() + "-" + justificationOffsetEnd.toString()
 
-          writer.write(Iterator(kbpQuery.id, kbpSlot, runID, bestAnswer.extraction.sentence.docId, slotFiller,
-            fillerOffsetString, entityOffsetString, justificationOffsetString, bestAnswer.extraction.confidence).mkString("\t") + "\n")
+          writer.write(Iterator(kbpQuery.id, kbpSlot, runID, bestAnswer.extr.sentence.docId, slotFiller,
+            fillerOffsetString, entityOffsetString, justificationOffsetString, bestAnswer.extr.confidence).mkString("\t") + "\n")
 
         } else {
           //no answer found
           writer.write(Iterator(kbpQuery.id, kbpSlot, runID, "NIL").mkString("\t") + "\n")
         }
-
       } else {
         // else if the results Map does not contain the slot
         // print nothing since this slot is ignored
-
       }
-
     }
-
     writer.close()
   }
 
