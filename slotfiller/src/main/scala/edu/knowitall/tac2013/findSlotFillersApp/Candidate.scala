@@ -34,12 +34,14 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
   val entityField = pattern.entityIn match {
     case Some("arg1") => extr.arg1
     case Some("arg2") => extr.arg2
+    case Some("relation") => extr.rel
     case _ => throw new RuntimeException("Invalid entityIn for pattern: %s".format(pattern.debugString))
   }
   
   val fillField = pattern.slotFillIn match {
     case Some("arg1") => extr.arg1
     case Some("arg2") => extr.arg2
+    case Some("relation") => extr.rel
     case _ => throw new RuntimeException("Invalid slotFillIn for pattern: %s".format(pattern.debugString))
   }
   
