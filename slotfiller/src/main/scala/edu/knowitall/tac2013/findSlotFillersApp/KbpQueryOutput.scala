@@ -11,7 +11,7 @@ object KbpQueryOutput {
   val runID = "UWashington-1"
 
   def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQueryEntityType: KBPQueryEntityType): String = {
-    
+
     val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
       printUnformattedSlotOutput(kbpSlot, mapOfResults(kbpSlot))
     }
@@ -79,42 +79,62 @@ object KbpQueryOutput {
   def printFormattedSlotOutput(kbpSlot: String, bestAnswers: Seq[Candidate]): String = {
 
     val sb = new StringBuilder
-    
-    if (!bestAnswers.isEmpty) {
-      val bestAnswer = bestAnswers.head
-      val queryData = bestAnswer.pattern
-      val slotFiller = {
-        if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-          bestAnswer.extr.arg1.originalText
-        } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-          bestAnswer.extr.arg2.originalText
-        }
-      }
 
-      val fillerOffset = {
-        if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-          bestAnswer.extr.arg1.tokenInterval
-        } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-          bestAnswer.extr.arg2.tokenInterval
-        }
-      }
-
-      val entityOffset = {
-        if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-          bestAnswer.extr.arg1.tokenInterval
-        } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-          bestAnswer.extr.arg2.tokenInterval
-        }
-      }
-
-      sb.append(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
-        fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
-        bestAnswer.extr.confidence).mkString("\t") + "\n")
-
-    } else {
+    if (bestAnswers.isEmpty) {
       sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
+    } else {
+      for (bestAnswer <- bestAnswers) {
+        val queryData = bestAnswer.pattern
+        val bestExtr = bestAnswer.extr
+        val slotFillIn = queryData.slotFillIn.get.toLowerCase()
+        
+        require(slotFillIn == "arg1" || slotFillIn == "arg2")
+        
+        val slotFiller = {
+          if (slotFillIn == "arg1") {
+            bestExtr.arg1.originalText
+          } else {
+            bestAnswer.extr.arg2.originalText
+          }
+        }
+
+        val fillerInterval = {
+          if (slotFillIn == "arg1") {
+            bestExtr.arg1.tokenInterval
+          } else {
+            bestExtr.arg2.tokenInterval
+          }
+        }
+        
+        def formatInterval(interval: Interval): String = {
+          "%d-%d".format(
+            interval.start + bestExtr.sentence.startOffset,
+            interval.last + bestExtr.sentence.startOffset
+          )
+        }
+
+        val entityInterval = {
+          if (slotFillIn == "arg1") {
+            bestExtr.arg2.tokenInterval
+          } else {
+            bestExtr.arg1.tokenInterval
+          }
+        }
+
+        val fields = Iterator(
+          "queryID",
+          kbpSlot,
+          "runID",
+          bestAnswer.extr.sentence.docId,
+          slotFiller,
+          formatInterval(fillerInterval),
+          formatInterval(entityInterval),
+          formatInterval(bestAnswer.extr.rel.tokenInterval),
+          bestAnswer.extr.confidence)
+        
+        sb.append(fields.mkString("\t") + "\n")
+      }
     }
-    
     sb.toString()
   }
 
