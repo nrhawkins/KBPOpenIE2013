@@ -74,7 +74,7 @@ object KbpRelation {
   }
   
   def fromSrlRelation(rel: SrlExtraction.Relation, sentence: ParsedKbpSentence) = new KbpRelation() {
-    def tokenInterval = rel.span
+    def tokenInterval = Interval.span(rel.intervals)
     def originalText = rel.text
     def tokens = sentence.chunkedTokens.drop(tokenInterval.start).take(tokenInterval.length)
     val types = Seq.empty[String]

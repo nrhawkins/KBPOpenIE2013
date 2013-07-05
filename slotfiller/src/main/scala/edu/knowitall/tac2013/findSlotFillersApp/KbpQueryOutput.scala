@@ -90,46 +90,15 @@ object KbpQueryOutput {
         
         require(slotFillIn == "arg1" || slotFillIn == "arg2")
         
-        val slotFiller = {
-          if (slotFillIn == "arg1") {
-            bestExtr.arg1.originalText
-          } else {
-            bestAnswer.extr.arg2.originalText
-          }
-        }
-
-        val fillerInterval = {
-          if (slotFillIn == "arg1") {
-            bestExtr.arg1.tokenInterval
-          } else {
-            bestExtr.arg2.tokenInterval
-          }
-        }
-        
-        def formatInterval(interval: Interval): String = {
-          "%d-%d".format(
-            interval.start + bestExtr.sentence.startOffset,
-            interval.last + bestExtr.sentence.startOffset
-          )
-        }
-
-        val entityInterval = {
-          if (slotFillIn == "arg1") {
-            bestExtr.arg2.tokenInterval
-          } else {
-            bestExtr.arg1.tokenInterval
-          }
-        }
-
         val fields = Iterator(
           "queryID",
           kbpSlot,
           "runID",
           bestAnswer.extr.sentence.docId,
-          slotFiller,
-          formatInterval(fillerInterval),
-          formatInterval(entityInterval),
-          formatInterval(bestAnswer.extr.rel.tokenInterval),
+          bestAnswer.fillField.originalText,
+          bestAnswer.fillOffsetString,
+          bestAnswer.entityOffsetString,
+          bestAnswer.relOffsetString,
           bestAnswer.extr.confidence)
         
         sb.append(fields.mkString("\t") + "\n")
