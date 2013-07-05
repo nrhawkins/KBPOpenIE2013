@@ -64,7 +64,7 @@ object FilterSolrResults {
 
     val pattern = candidate.pattern
     
-    if (candidate == QueryType.REGULAR) {
+    if (candidate.queryType == QueryType.REGULAR) {
       if (pattern.isValid) {
 
         val entityIn = pattern.entityIn.get.trim()
