@@ -61,7 +61,7 @@ object KbpQueryOutput {
 
   def printFormattedOutput(
     slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, List[Answer]],
+    bestAnswers: Map[String, List[Candidate]],
     filePath: String, kbpQueryEntityType: KBPQueryEntityType) {
 
     val writer = new PrintWriter(new File(filePath))
@@ -85,31 +85,31 @@ object KbpQueryOutput {
           val queryData = bestAnswer.pattern
           val slotFiller = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.originalText
+              bestAnswer.extr.arg1.originalText
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.originalText
+              bestAnswer.extr.arg2.originalText
             }
           }
 
           val fillerOffset = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             }
           }
 
           val entityOffset = {
             if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             }
           }
 
-          writer.write(Iterator("queryID", kbpSlot, "runID", bestAnswer.extraction.sentence.docId, slotFiller,
-            fillerOffset, entityOffset, bestAnswer.extraction.rel.tokenInterval,
-            bestAnswer.extraction.confidence).mkString("\t") + "\n")
+          writer.write(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
+            fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
+            bestAnswer.extr.confidence).mkString("\t") + "\n")
 
         } else {
           writer.write(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
@@ -130,7 +130,7 @@ object KbpQueryOutput {
    */
   def printFormattedOutput(
     slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, List[Answer]],
+    bestAnswers: Map[String, List[Candidate]],
     kbpQueryEntityType: KBPQueryEntityType): String = {
 
     val sb = new StringBuilder()
@@ -152,31 +152,31 @@ object KbpQueryOutput {
           val queryData = bestAnswer.pattern
           val slotFiller = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.originalText
+              bestAnswer.extr.arg1.originalText
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.originalText
+              bestAnswer.extr.arg2.originalText
             }
           }
 
           val fillerOffset = {
             if (queryData.slotFillIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.slotFillIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             }
           }
 
           val entityOffset = {
             if (queryData.entityIn.get.toLowerCase().trim() == "arg1") {
-              bestAnswer.extraction.arg1.tokenInterval
+              bestAnswer.extr.arg1.tokenInterval
             } else if (queryData.entityIn.get.toLowerCase().trim() == "arg2") {
-              bestAnswer.extraction.arg2.tokenInterval
+              bestAnswer.extr.arg2.tokenInterval
             }
           }
 
-          sb.append(Iterator("queryID", kbpSlot, "runID", bestAnswer.extraction.sentence.docId, slotFiller,
-            fillerOffset, entityOffset, bestAnswer.extraction.rel.tokenInterval,
-            bestAnswer.extraction.confidence).mkString("\t") + "\n")
+          sb.append(Iterator("queryID", kbpSlot, "runID", bestAnswer.extr.sentence.docId, slotFiller,
+            fillerOffset, entityOffset, bestAnswer.extr.rel.tokenInterval,
+            bestAnswer.extr.confidence).mkString("\t") + "\n")
 
         } else {
           sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
