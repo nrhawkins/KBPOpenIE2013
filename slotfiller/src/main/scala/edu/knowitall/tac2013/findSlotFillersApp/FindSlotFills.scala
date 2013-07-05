@@ -5,52 +5,41 @@ import KbpQueryOutput.printUnformattedOutput
 import KbpQueryOutput.printFormattedOutput
 import KBPQueryEntityType._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
-import java.io.PrintWriter
+import java.io.PrintStream
+import scopt.OptionParser
 
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
 object FindSlotFills {
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
 
-    assert(args.length == 3,
-      "there should be three arguments: entity name, semantic type (organization or person), and file path for output")
-
-    val entityName = args(0).replace("_", " ")
-    val entityType = args(1) match {
-      case "organization" => ORG
-      case "person" => PER
-      case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
+    var entityName = ""
+    var entityType = ""
+    var output = System.out
+    
+    val parser = new OptionParser() {
+      arg("entity name", "The entity's name.", { name => entityName = name })
+      arg("entity type", "either organization or person.", { typ => entityType = typ })
+      opt("outputFile", "File name for output. (default stdout)", { file => output = new PrintStream(file) })
     }
+    
+    if (!parser.parse(args)) return
+      
     println(entityName)
-    println(args(1))
+    println(entityType)
 
-    val kbpQuery = KBPQuery.forEntityName(entityName, entityType)
-
-    val queryExecutor = SolrQueryExecutor.defaultInstance
+    val outputLines = runForServerOutput(entityName, args(1))   
     
-    val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+    outputLines foreach output.println
     
-    val slotCandidateSets = slots map { slot => (slot, queryExecutor.executeQuery(kbpQuery, slot)) } toMap
-
-    val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot, SlotFillReranker.findAnswers(patternCandidates))  
-    } toMap
-    
-
-    val writer = new PrintWriter(args(2))
-    
-    writer.print(printUnformattedOutput(slotCandidateSets, kbpQuery.entityType))
-    
-    writer.print(printFormattedOutput(slotCandidateSets, slotBestAnswers, kbpQuery.entityType))
-    
-    writer.close()
+    if (output != System.out) output.close()
   }
 
-  def runForServerOutput(field1: String, field2: String, nodeId: Option[String] = None): String = {
+  def runForServerOutput(rawName: String, entityTypeString: String, nodeId: Option[String] = None): Seq[String] = {
 
-    val entityName = field1.replace("_", " ").trim()
-    val entityType = field2.trim() match {
+    val entityName = rawName.replace("_", " ").trim()
+    val entityType = entityTypeString.trim() match {
       case "organization" => ORG
       case "person" => PER
       case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
@@ -69,15 +58,15 @@ object FindSlotFills {
     }
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot -> SlotFillReranker.findAnswers(patternCandidates))  
+      (slot -> SlotFillReranker.findAnswers(kbpQuery, patternCandidates))  
     }
 
-    return (
-      "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n" +
-      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery.entityType) +
-      "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n" +
-      printUnformattedOutput(slotCandidateSets, kbpQuery.entityType) +
-      "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n" +
+    Seq(
+      "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n",
+      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery.entityType),
+      "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n",
+      printUnformattedOutput(slotCandidateSets, kbpQuery.entityType),
+      "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n",
       printFormattedOutput(slotCandidateSets, slotBestAnswers, kbpQuery.entityType))
   }
 }
