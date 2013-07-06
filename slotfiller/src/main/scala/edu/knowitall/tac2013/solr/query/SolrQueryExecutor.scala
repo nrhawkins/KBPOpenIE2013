@@ -4,6 +4,7 @@ import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.findSlotFillersApp.FilterSolrResults.filterResults
 import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.Candidate
+import edu.knowitall.tac2013.findSlotFillersApp.Slot
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import edu.knowitall.taggers.Type
@@ -38,7 +39,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
   
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation
-  def executeQuery(kbpQuery: KBPQuery, slot: String): Seq[Candidate] = {
+  def executeQuery(kbpQuery: KBPQuery, slot: Slot): Seq[Candidate] = {
 
     val unfilteredCandidates = executeUnfilteredQuery(kbpQuery, slot)
 
@@ -49,9 +50,9 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
-  def executeUnfilteredQuery(kbpQuery: KBPQuery, slot: String): Seq[Candidate] = {
+  def executeUnfilteredQuery(kbpQuery: KBPQuery, slot: Slot): Seq[Candidate] = {
 
-    val patterns = SlotPattern.patternsForQuery(kbpQuery)(slot).iterator
+    val patterns = slot.patterns
 
     val solrQueries = patterns.flatMap { pattern => 
       val queryBuilder = new SolrQueryBuilder(pattern, kbpQuery)

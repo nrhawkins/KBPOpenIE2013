@@ -9,12 +9,12 @@ import scala.xml.XML
 
 case class KBPQuery (val id: String, val name: String, val doc: String,
     val begOffset: Int, val endOffset: Int, val entityType: KBPQueryEntityType,
-    val nodeId: Option[String], val slotsToFill: Set[String]){
+    val nodeId: Option[String], val slotsToFill: Set[Slot]){
 
   /**
    * Return a new KBPQuery with different slots to fill.
    */
-  def withSlotsToFill(slots: Set[String]): KBPQuery = this.copy(slotsToFill = slots)
+  def withOverrideSlots(slotNames: Set[String]): KBPQuery = this.copy(slotsToFill = slotNames map Slot.fromName)
   
 }
 
@@ -22,7 +22,7 @@ object KBPQuery {
 
   import KBPQueryEntityType._
 
-  // fabricate a KBPQuery for just an entity name (for testing)
+  // fabricate a KBPQuery for testing
   def forEntityName(name: String, entityType: KBPQueryEntityType, nodeId: Option[String] = None): KBPQuery = {
     new KBPQuery("TEST", name, "NULL", -1, -1, entityType, nodeId, Slot.getSlotTypesList(entityType).toSet)
   }
@@ -60,7 +60,7 @@ object KBPQuery {
     val nodeIDText = queryXML.\\("nodeid").text.trim()
     val nodeId = if (nodeIDText.isEmpty()) None else Some(nodeIDText)
     val ignoreText = queryXML.\\("ignore").text
-    val ignoreSlots = ignoreText.split(" ").toSet[String]
+    val ignoreSlots = ignoreText.split(" ") map Slot.fromName toSet
     
     
     //find slotsToFill by taking the difference between the global slots set
@@ -103,7 +103,7 @@ object KBPQuery {
     val nodeIDText = queryXML.\\("nodeid").text.trim()
     val nodeId = if (nodeIDText.isEmpty) None else Some(nodeIDText)
     val ignoreText = queryXML.\\("ignore").text
-    val ignoreSlots = ignoreText.split(" ").toSet[String]
+    val ignoreSlots = ignoreText.split(" ") map Slot.fromName toSet
     
     
     //find slotsToFill by taking the difference between the global slots set

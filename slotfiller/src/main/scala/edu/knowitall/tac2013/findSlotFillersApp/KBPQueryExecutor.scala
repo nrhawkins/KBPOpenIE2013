@@ -11,7 +11,7 @@ object KBPQueryExecutor {
     
     val qExec = SolrQueryExecutor.defaultInstance
 
-    val slots = SlotPattern.patternsForQuery(kbpQuery).keySet
+    val slots = kbpQuery.slotsToFill
 
     val filteredCandidates = slots map { slot => (slot, qExec.executeQuery(kbpQuery, slot)) } toMap
 

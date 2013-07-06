@@ -27,6 +27,11 @@ case class SlotPattern private (
 
   val entityType: KBPQueryEntityType = if (slotName.startsWith("per:")) PER else ORG
   
+  /**
+   * (Hack) don't call in pattern.<init> because of circular dependency between slot and pattern..
+   */
+  def slot = Slot.fromName(slotName)
+  
   def isValid(): Boolean = {
     if (openIERelationString.nonEmpty && maxValues.nonEmpty &&
       entityIn.nonEmpty && slotFillIn.nonEmpty) {
@@ -53,19 +58,8 @@ object SlotPattern {
 
   lazy val personPatterns = getPatternsAsMap(personPatternResource)
 
-  def patternsForSlot(slot: String) = {
-    Seq(organizationPatterns.get(slot), personPatterns.get(slot)).flatten.headOption.getOrElse(throw new RuntimeException("Invalid slot: %s".format(slot)))
-  }
-  
-  def patternsForQuery(query: KBPQuery): Map[String, List[SlotPattern]] = {
-    val entityPatterns = query.entityType match {
-      case KBPQueryEntityType.ORG => organizationPatterns
-      case KBPQueryEntityType.PER => personPatterns
-    }
-    entityPatterns.filter {
-      case (slotname, patterns) =>
-        query.slotsToFill.contains(slotname)
-    }
+  def patternsForSlotName(slotName: String) = {
+    Seq(organizationPatterns.get(slotName), personPatterns.get(slotName)).flatten.headOption.getOrElse(throw new RuntimeException("Invalid slot: %s".format(slotName)))
   }
 
   private def getPatternsAsMap(patternResource: String): Map[String, List[SlotPattern]] = {

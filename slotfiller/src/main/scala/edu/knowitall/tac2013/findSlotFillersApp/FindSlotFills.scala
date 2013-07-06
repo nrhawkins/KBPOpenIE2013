@@ -42,7 +42,7 @@ object FindSlotFills {
     if (output != System.out) output.close()
   }
 
-  def runForServerOutput(rawName: String, entityTypeString: String, overrideSlots: Set[String]): Seq[String] = {
+  def runForServerOutput(rawName: String, entityTypeString: String, overrideSlotNames: Set[String]): Seq[String] = {
 
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
@@ -51,10 +51,10 @@ object FindSlotFills {
       case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
     }
 
-    val kbpQuery = if (overrideSlots.isEmpty) {
+    val kbpQuery = if (overrideSlotNames.isEmpty) {
       KBPQuery.forEntityName(entityName, entityType)
     } else {
-      KBPQuery.forEntityName(entityName, entityType).withSlotsToFill(overrideSlots)
+      KBPQuery.forEntityName(entityName, entityType).withOverrideSlots(overrideSlotNames)
     }
     
     val queryExecutor = SolrQueryExecutor.defaultInstance

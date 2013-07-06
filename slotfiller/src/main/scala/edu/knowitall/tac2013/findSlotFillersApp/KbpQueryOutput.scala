@@ -11,7 +11,7 @@ object KbpQueryOutput {
 
   val runID = "UWashington-1"
 
-  def printUnformattedOutput(mapOfResults: Map[String, Seq[Candidate]], kbpQuery: KBPQuery): String = {
+  def printUnformattedOutput(mapOfResults: Map[Slot, Seq[Candidate]], kbpQuery: KBPQuery): String = {
 
     val slotOutputs = for (kbpSlot <- kbpQuery.slotsToFill) yield {
       printUnformattedSlotOutput(kbpSlot, mapOfResults(kbpSlot))
@@ -19,19 +19,19 @@ object KbpQueryOutput {
     slotOutputs.mkString
   }
 
-  def printUnformattedSlotOutput(slot: String, slotCandidates: Seq[Candidate]): String = {
+  def printUnformattedSlotOutput(slot: Slot, slotCandidates: Seq[Candidate]): String = {
 
-    require(slotCandidates.forall(_.pattern.slotName.equals(slot)))
+    require(slotCandidates.forall(_.pattern.slot.equals(slot)))
 
     if (slotCandidates.isEmpty) {
-      s"KBP SLOT NAME: $slot\n\tNil\n\n"
+      s"KBP SLOT NAME: ${slot.name}\n\tNil\n\n"
     } else {
 
       val sb = new StringBuilder
-      sb.append(s"KBP SLOT NAME: $slot\n")
+      sb.append(s"KBP SLOT NAME: ${slot.name}\n")
 
       val patternCandidates = slotCandidates.groupBy(_.pattern)
-      for (pattern <- SlotPattern.patternsForSlot(slot);
+      for (pattern <- slot.patterns;
           candidates = patternCandidates.getOrElse(pattern, Nil)) {
         val topCandidates = candidates.take(20)
 
@@ -59,7 +59,7 @@ object KbpQueryOutput {
    * Overloaded to return a string for server usage
    */
   def printFormattedOutput(
-    bestAnswers: Map[String, Seq[Candidate]],
+    bestAnswers: Map[Slot, Seq[Candidate]],
     kbpQuery: KBPQuery): String = {
 
     //iterate over every slot type
@@ -70,8 +70,8 @@ object KbpQueryOutput {
   }
   
     def printFormattedOutputWithExtraInfo(
-    slotCandidateSets: Map[String, Seq[Candidate]],
-    bestAnswers: Map[String, Seq[Candidate]],
+    slotCandidateSets: Map[Slot, Seq[Candidate]],
+    bestAnswers: Map[Slot, Seq[Candidate]],
     kbpQueryEntityType: KBPQueryEntityType): String = {
 
     //iterate over every slot type
@@ -91,12 +91,12 @@ object KbpQueryOutput {
     slotOutputs.mkString
   }
 
-  def printFormattedSlotOutput(kbpSlot: String, kbpQuery: KBPQuery, bestAnswers: Seq[Candidate]): String = {
+  def printFormattedSlotOutput(slot: Slot, kbpQuery: KBPQuery, bestAnswers: Seq[Candidate]): String = {
 
     val sb = new StringBuilder
 
     if (bestAnswers.isEmpty) {
-      sb.append(Iterator(kbpQuery.id, kbpSlot, runID, "NIL").mkString("\t") + "\n")
+      sb.append(Iterator(kbpQuery.id, slot.name, runID, "NIL").mkString("\t") + "\n")
     } else {
       for (bestAnswer <- bestAnswers) {
         val queryData = bestAnswer.pattern
@@ -107,7 +107,7 @@ object KbpQueryOutput {
         
         val fields = Iterator(
           kbpQuery.id,
-          kbpSlot,
+          slot.name,
           runID,
           bestAnswer.extr.sentence.docId,
           bestAnswer.trimmedFill.trimmedFillString,
@@ -122,12 +122,12 @@ object KbpQueryOutput {
     sb.toString()
   }
   
-  def printFormattedSlotOutputWithExtraInfo(kbpSlot: String, bestAnswers: Seq[Candidate]): String = {
+  def printFormattedSlotOutputWithExtraInfo(slot: Slot, bestAnswers: Seq[Candidate]): String = {
 
     val sb = new StringBuilder
 
     if (bestAnswers.isEmpty) {
-      sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
+      sb.append(Iterator("queryID", slot, "runID", "NIL").mkString("\t") + "\n")
     } else {
       for (bestAnswer <- bestAnswers) {
         val queryData = bestAnswer.pattern
@@ -138,7 +138,7 @@ object KbpQueryOutput {
         
         val fields = Iterator(
           "queryID",
-          kbpSlot,
+          slot.name,
           "runID",
           bestAnswer.extr.sentence.docId,
           bestAnswer.trimmedFill.trimmedFillString,

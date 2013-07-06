@@ -18,16 +18,25 @@ object Slot {
   }
   
   private val personResource = "/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"
-  
   private val organizationResource = "/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"
 
-  private def loadSlots(urlString: String, slotPrefix: String): Set[String] = {
+  private def loadSlots(urlString: String, slotPrefix: String): Set[Slot] = {
     val url = requireResource(urlString)
     Resource.using(Source.fromURL(url)) { personSource =>
       val filterPrefix = personSource.getLines.filter(_.contains(slotPrefix))
-      filterPrefix.map(_.trim).toList.toSet // how better to force non-lazy?
+      val lazySlots = filterPrefix map(_.trim) map fromName
+      lazySlots.toList.toSet // how better to force non-lazy?
     }
   }
+  
+  def fromName(slotString: String): Slot = {
+    
+    val patterns = SlotPattern.patternsForSlotName(slotString)
+    require(patterns.map(_.maxValues).distinct.size <= 1, s"Patterns for slot $slotString must have equal maxValues")
+    val maxValues = patterns.headOption.flatMap(_.maxValues).getOrElse(0)
+    Slot(slotString, maxValues, patterns)
+  }
+  
   
   val personSlots = loadSlots(personResource, "per:")
 
