@@ -60,7 +60,9 @@ object FindSlotFills {
     
     val queryExecutor = SolrQueryExecutor.defaultInstance
     
-    val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) } toMap
+    val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => 
+      (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) 
+    } toMap
     
     val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
       (slot -> FilterSolrResults.filterResults(candidates, entityName)) 

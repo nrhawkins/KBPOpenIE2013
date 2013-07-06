@@ -1,16 +1,20 @@
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import QueryType._
+import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.openie.KbpArgument
 import edu.knowitall.tac2013.openie.KbpExtractionField
 import edu.knowitall.tac2013.openie.WikiLink
+import edu.knowitall.tac2013.solr.query.SolrQuery
 import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.taggers.Type
 import edu.knowitall.collection.immutable.Interval
 
-class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: KbpExtraction, val types: List[Type]) {
+class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: List[Type]) {
 
+  def pattern = solrQuery.pattern 
+  def queryType = solrQuery.queryType
+  
   def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
   
   /**

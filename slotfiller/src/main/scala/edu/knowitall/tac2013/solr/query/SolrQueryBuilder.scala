@@ -1,12 +1,11 @@
 package edu.knowitall.tac2013.solr.query
 
-import edu.knowitall.tac2013.findSlotFillersApp.QueryType._
-import edu.knowitall.tac2013.findSlotFillersApp.QueryType
+import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQuery
 import edu.knowitall.tac2013.findSlotFillersApp.SlotPattern
 import scala.Option.option2Iterable
 
-case class SolrQuery(val queryString: String, val resultType: QueryType, val pattern: SlotPattern)
+case class SolrQuery(val queryString: String, val queryType: SolrQueryType, val pattern: SlotPattern)
 
 class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
 
@@ -71,7 +70,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
       None
     } else {
       val queryFields = Seq(arg1TextConstraint, arg2TextConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = SolrQuery(getQueryString(queryFields), QueryType.REGULAR, pattern)
+      val query = SolrQuery(getQueryString(queryFields), SolrQueryType.REGULAR, pattern)
       Some(query)
     }
   }
@@ -82,7 +81,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
       None
     } else {
       val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
-      val query = SolrQuery(getQueryString(queryFields), QueryType.LINKED, pattern)
+      val query = SolrQuery(getQueryString(queryFields), SolrQueryType.LINKED, pattern)
       Some(query)
     }
   }

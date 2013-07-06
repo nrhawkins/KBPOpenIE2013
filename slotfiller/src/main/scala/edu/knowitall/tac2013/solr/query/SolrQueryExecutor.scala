@@ -32,7 +32,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
     
     // wrap with Candidate
     kbpExtrs.map { extr =>
-      new Candidate(kbpSolrQuery.pattern, kbpSolrQuery.resultType, extr, 
+      new Candidate(kbpSolrQuery, extr, 
           getTagTypes(extr,kbpSolrQuery.pattern))
     }
   }
