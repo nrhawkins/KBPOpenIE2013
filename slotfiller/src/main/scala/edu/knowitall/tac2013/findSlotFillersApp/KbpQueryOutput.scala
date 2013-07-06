@@ -5,6 +5,7 @@ import java.io._
 import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 import edu.knowitall.collection.immutable.Interval
+import SlotFillReranker.findAnswers
 
 object KbpQueryOutput {
 
@@ -67,6 +68,28 @@ object KbpQueryOutput {
     }
     slotOutputs.mkString
   }
+  
+    def printFormattedOutputWithExtraInfo(
+    slotCandidateSets: Map[String, Seq[Candidate]],
+    bestAnswers: Map[String, Seq[Candidate]],
+    kbpQueryEntityType: KBPQueryEntityType): String = {
+
+    //iterate over every slot type
+    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
+      if (slotCandidateSets.contains(kbpSlot)) {
+
+        // for each slot print one response for single-valued slot
+        // print k-slots for multi-valued slot
+        // or print NIL
+        printFormattedSlotOutputWithExtraInfo(kbpSlot, bestAnswers(kbpSlot))
+      } else {
+        // else if the results Map does not contain the slot
+        // print nothing since this slot is ignored
+        ""
+      }
+    }
+    slotOutputs.mkString
+  }
 
   def printFormattedSlotOutput(kbpSlot: String, kbpQuery: KBPQuery, bestAnswers: Seq[Candidate]): String = {
 
@@ -80,7 +103,7 @@ object KbpQueryOutput {
         val bestExtr = bestAnswer.extr
         val slotFillIn = queryData.slotFillIn.get.toLowerCase()
         
-        require(slotFillIn == "arg1" || slotFillIn == "arg2")
+        require(slotFillIn == "arg1" || slotFillIn == "arg2" || slotFillIn =="relation")
         
         val fields = Iterator(
           kbpQuery.id,
@@ -91,6 +114,37 @@ object KbpQueryOutput {
           bestAnswer.fillOffsetString,
           bestAnswer.entityOffsetString,
           bestAnswer.relOffsetString,
+          bestAnswer.extr.confidence)
+        
+        sb.append(fields.mkString("\t") + "\n")
+      }
+    }
+    sb.toString()
+  }
+  
+  def printFormattedSlotOutputWithExtraInfo(kbpSlot: String, bestAnswers: Seq[Candidate]): String = {
+
+    val sb = new StringBuilder
+
+    if (bestAnswers.isEmpty) {
+      sb.append(Iterator("queryID", kbpSlot, "runID", "NIL").mkString("\t") + "\n")
+    } else {
+      for (bestAnswer <- bestAnswers) {
+        val queryData = bestAnswer.pattern
+        val bestExtr = bestAnswer.extr
+        val slotFillIn = queryData.slotFillIn.get.toLowerCase()
+        
+        require(slotFillIn == "arg1" || slotFillIn == "arg2" || slotFillIn =="relation")
+        
+        val fields = Iterator(
+          "queryID",
+          kbpSlot,
+          "runID",
+          bestAnswer.extr.sentence.docId,
+          bestAnswer.trimmedFill.trimmedFillString,
+          "SlotFill: " + bestAnswer.fillField.originalText + " " +bestAnswer.fillOffsetString,
+          "Entity: " + bestAnswer.entityField.originalText + " " + bestAnswer.entityOffsetString,
+          "Justification: " + bestAnswer.extr.sentence.dgraph.text + " " +bestAnswer.justificationOffsetString,
           bestAnswer.extr.confidence)
         
         sb.append(fields.mkString("\t") + "\n")
