@@ -24,7 +24,7 @@ object KBPQuery {
 
   // fabricate a KBPQuery for just an entity name (for testing)
   def forEntityName(name: String, entityType: KBPQueryEntityType, nodeId: Option[String] = None): KBPQuery = {
-    new KBPQuery("TEST", name, "NULL", -1, -1, entityType, nodeId, SlotTypes.getSlotTypesList(entityType).toSet)
+    new KBPQuery("TEST", name, "NULL", -1, -1, entityType, nodeId, Slot.getSlotTypesList(entityType).toSet)
   }
   
   //parses a single query from an XML file, will not work if there are more than one query in the XML file
@@ -67,10 +67,10 @@ object KBPQuery {
     // and the set specified in the xml doc
     val slotsToFill = entityType match{
       case ORG => {
-        SlotTypes.getOrganizationSlotTypesSet &~ ignoreSlots
+        Slot.getOrganizationSlotTypesSet &~ ignoreSlots
       }
       case PER => {
-        SlotTypes.getPersonSlotTypesSet &~ ignoreSlots
+        Slot.getPersonSlotTypesSet &~ ignoreSlots
       }
     }
     
@@ -110,10 +110,10 @@ object KBPQuery {
     // and the set specified in the xml doc
     val slotsToFill = entityType match{
       case ORG => {
-        SlotTypes.getOrganizationSlotTypesSet &~ ignoreSlots
+        Slot.getOrganizationSlotTypesSet &~ ignoreSlots
       }
       case PER => {
-        SlotTypes.getPersonSlotTypesSet &~ ignoreSlots
+        Slot.getPersonSlotTypesSet &~ ignoreSlots
       }
     }
     new KBPQuery(idText,nameText,docIDText,begInt,endInt,entityType,nodeId,slotsToFill)

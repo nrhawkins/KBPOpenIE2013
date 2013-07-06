@@ -3,7 +3,9 @@ package edu.knowitall.tac2013.findSlotFillersApp
 import scala.io.Source
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 
-object SlotTypes {
+case class Slot(name: String, maxResults: Int, patterns: Seq[SlotPattern])
+
+object Slot {
   private var personSlotTypesSet = Set[String]()
   private var organizationSlotTypesSet = Set[String]()
   private var personSlotTypesList = List[String]()

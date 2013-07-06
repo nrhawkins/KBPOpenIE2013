@@ -75,7 +75,7 @@ object KbpQueryOutput {
     kbpQueryEntityType: KBPQueryEntityType): String = {
 
     //iterate over every slot type
-    val slotOutputs = for (kbpSlot <- SlotTypes.getSlotTypesList(kbpQueryEntityType)) yield {
+    val slotOutputs = for (kbpSlot <- Slot.getSlotTypesList(kbpQueryEntityType)) yield {
       if (slotCandidateSets.contains(kbpSlot)) {
 
         // for each slot print one response for single-valued slot
