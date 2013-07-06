@@ -2,50 +2,41 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 import scala.io.Source
 import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
+import java.net.URL
+import edu.knowitall.common.Resource
 
-case class Slot(name: String, maxResults: Int, patterns: Seq[SlotPattern])
+case class Slot(name: String, maxResults: Int, patterns: Seq[SlotPattern]) {
+  require(name == name.trim)
+}
 
 object Slot {
-  private var personSlotTypesSet = Set[String]()
-  private var organizationSlotTypesSet = Set[String]()
-  private var personSlotTypesList = List[String]()
-  private var organizationSlotTypesList = List[String]()
-
-  //private val personSource = Source.fromURL(getClass.getResource("/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"))
-  val personSource = {
-    val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"
-    val url = getClass.getResource(resourcePath)
-    require(url != null, "Could not find resource: " + resourcePath)
-    Source.fromURL(url)
+  
+  private def requireResource(urlString: String): URL = {
+    val url = urlString.getClass.getResource(urlString)
+    require(url != null, "Could not find resource: " + url)
+    url
   }
-  val organizationSource = {
-    val resourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"
-    val url = getClass.getResource(resourcePath)
-    require(url != null, "Could not find resource: " + resourcePath)
-    Source.fromURL(url)
-  }
-  personSource.getLines.foreach(l => {
-    if (l.trim().contains("per:")) {
-      personSlotTypesSet = personSlotTypesSet + l.trim()
-      personSlotTypesList = personSlotTypesList ::: List(l.trim())
-    }
-  })
-  organizationSource.getLines.foreach(l => {
-    if (l.trim().contains("org:")) {
-      organizationSlotTypesSet = organizationSlotTypesSet + l.trim()
-      organizationSlotTypesList = organizationSlotTypesList ::: List(l.trim())
-    }
-  })
+  
+  private val personResource = "/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"
+  
+  private val organizationResource = "/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"
 
-  def getPersonSlotTypesSet = personSlotTypesSet
-  def getPersonSlotTypesList = personSlotTypesList
-  def getOrganizationSlotTypesSet = organizationSlotTypesSet
-  def getOrganizationSlotTypesList = organizationSlotTypesList
+  private def loadSlots(urlString: String, slotPrefix: String): Set[String] = {
+    val url = requireResource(urlString)
+    Resource.using(Source.fromURL(url)) { personSource =>
+      val filterPrefix = personSource.getLines.filter(_.contains(slotPrefix))
+      filterPrefix.map(_.trim).toList.toSet // how better to force non-lazy?
+    }
+  }
+  
+  val personSlots = loadSlots(personResource, "per:")
+
+  val orgSlots = loadSlots(organizationResource, "org:")
 
   def getSlotTypesList(kbpQueryEntityType: KBPQueryEntityType) = {
     kbpQueryEntityType match {
-      case ORG => organizationSlotTypesList
-      case PER => personSlotTypesList
+      case ORG => personSlots
+      case PER => orgSlots
     }
   }
 }

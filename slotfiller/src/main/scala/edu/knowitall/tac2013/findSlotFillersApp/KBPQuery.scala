@@ -67,10 +67,10 @@ object KBPQuery {
     // and the set specified in the xml doc
     val slotsToFill = entityType match{
       case ORG => {
-        Slot.getOrganizationSlotTypesSet &~ ignoreSlots
+        Slot.orgSlots &~ ignoreSlots
       }
       case PER => {
-        Slot.getPersonSlotTypesSet &~ ignoreSlots
+        Slot.personSlots &~ ignoreSlots
       }
     }
     
@@ -110,10 +110,10 @@ object KBPQuery {
     // and the set specified in the xml doc
     val slotsToFill = entityType match{
       case ORG => {
-        Slot.getOrganizationSlotTypesSet &~ ignoreSlots
+        Slot.orgSlots &~ ignoreSlots
       }
       case PER => {
-        Slot.getPersonSlotTypesSet &~ ignoreSlots
+        Slot.personSlots &~ ignoreSlots
       }
     }
     new KBPQuery(idText,nameText,docIDText,begInt,endInt,entityType,nodeId,slotsToFill)
