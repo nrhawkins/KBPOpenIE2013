@@ -54,6 +54,14 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
     "%d-%d".format(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
   }
   
+  def getOffset(field: KbpExtractionField): Interval = {
+    val startOffset = extr.sentence.startOffset
+    val firstToken = field.tokens.minBy(_.offset)
+    val lastToken = field.tokens.maxBy(t => t.offset + t.string.length - 1)
+    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
+  }
+  
+  
   
   private def basicTrim(str: String, interval: Interval): TrimmedFill = {    
     val noChangeTrimmedFill = new TrimmedFill(str,interval)
@@ -106,12 +114,23 @@ class Candidate(val pattern: SlotPattern, val queryType: QueryType, val extr: Kb
   
   class TrimmedFill(val trimmedFillString: String, val trimmedFillInterval: Interval)
   
+  val entityOffsetInterval = getOffset(entityField)
+  
+  val fillOffsetInterval = getOffset(fillField)
+  
+  val relOffsetInterval = getOffset(extr.rel)
+  
+  val justificationInterval =  {
+     Interval.span(Iterable(entityOffsetInterval, fillOffsetInterval, relOffsetInterval)) 
+  }
   
   val entityOffsetString = offsetString(entityField)
   
   val fillOffsetString = offsetString(fillField)
   
   val relOffsetString = offsetString(extr.rel)
+  
+  val justificationOffsetString = justificationInterval.toString().dropRight(1).drop(1).replace(",", "-")
   
   val trimmedFill = getTrimmedFill()
 }
