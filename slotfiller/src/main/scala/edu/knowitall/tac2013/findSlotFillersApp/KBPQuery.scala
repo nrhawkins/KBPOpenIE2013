@@ -14,8 +14,7 @@ case class KBPQuery (val id: String, val name: String, val doc: String,
   /**
    * Return a new KBPQuery with different slots to fill.
    */
-  def withOverrideSlots(slotNames: Set[String]): KBPQuery = this.copy(slotsToFill = slotNames map Slot.fromName)
-  
+  def withOverrideSlots(slots: Set[Slot]): KBPQuery = this.copy(slotsToFill = slots)
 }
 
 object KBPQuery {
@@ -60,8 +59,10 @@ object KBPQuery {
     val nodeIDText = queryXML.\\("nodeid").text.trim()
     val nodeId = if (nodeIDText.isEmpty()) None else Some(nodeIDText)
     val ignoreText = queryXML.\\("ignore").text
-    val ignoreSlots = ignoreText.split(" ") map Slot.fromName toSet
-    
+    val ignoreSlots = {
+      val ignoreNames = ignoreText.split(" ").toSet
+      Slot.getSlotTypesList(entityType).filter(slot => ignoreNames.contains(slot.name))
+    }
     
     //find slotsToFill by taking the difference between the global slots set
     // and the set specified in the xml doc
@@ -95,7 +96,7 @@ object KBPQuery {
     val endText = queryXML.\\("end").text
     val endInt = endText.toInt
     val entityTypeText = queryXML.\\("enttype").text
-    val entityType = entityTypeText match{
+    val entityType = entityTypeText match {
       case "ORG" => ORG
       case "PER" => PER
       case _ => throw new IllegalArgumentException("improper 'enttype' value in xml doc")
@@ -103,7 +104,10 @@ object KBPQuery {
     val nodeIDText = queryXML.\\("nodeid").text.trim()
     val nodeId = if (nodeIDText.isEmpty) None else Some(nodeIDText)
     val ignoreText = queryXML.\\("ignore").text
-    val ignoreSlots = ignoreText.split(" ") map Slot.fromName toSet
+    val ignoreSlots = {
+      val ignoreNames = ignoreText.split(" ").toSet
+      Slot.getSlotTypesList(entityType).filter(slot => ignoreNames.contains(slot.name))
+    }
     
     
     //find slotsToFill by taking the difference between the global slots set

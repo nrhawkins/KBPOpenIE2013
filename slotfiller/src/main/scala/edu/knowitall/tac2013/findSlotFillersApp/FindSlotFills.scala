@@ -50,11 +50,12 @@ object FindSlotFills {
       case "person" => PER
       case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
     }
+    val overrideSlots = overrideSlotNames map Slot.fromName
 
     val kbpQuery = if (overrideSlotNames.isEmpty) {
       KBPQuery.forEntityName(entityName, entityType)
     } else {
-      KBPQuery.forEntityName(entityName, entityType).withOverrideSlots(overrideSlotNames)
+      KBPQuery.forEntityName(entityName, entityType).withOverrideSlots(overrideSlots)
     }
     
     val queryExecutor = SolrQueryExecutor.defaultInstance

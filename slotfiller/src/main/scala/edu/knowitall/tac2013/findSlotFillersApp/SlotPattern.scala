@@ -16,21 +16,13 @@ case class SlotPattern private (
 
   import SlotPattern.requireTrimmed
 
-  requireTrimmed(slotName)
   openIERelationString foreach requireTrimmed
   arg2Begins foreach requireTrimmed
   entityIn foreach requireTrimmed
   slotFillIn foreach requireTrimmed
   slotType foreach requireTrimmed
-  
-  require(slotName.startsWith("per:") || slotName.startsWith("org:"))
 
   val entityType: KBPQueryEntityType = if (slotName.startsWith("per:")) PER else ORG
-  
-  /**
-   * (Hack) don't call in pattern.<init> because of circular dependency between slot and pattern..
-   */
-  def slot = Slot.fromName(slotName)
   
   def isValid(): Boolean = {
     if (openIERelationString.nonEmpty && maxValues.nonEmpty &&
@@ -51,31 +43,11 @@ object SlotPattern {
 
   private def requireTrimmed(s: String) = require(s.equals(s.trim()), "String must be trimmed: \"$s\"".format(s))
 
-  private val personPatternResource = "/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Person.csv"
-  private val organizationPatternResource = "/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Organization.csv"
-
-  lazy val organizationPatterns = getPatternsAsMap(organizationPatternResource)
-
-  lazy val personPatterns = getPatternsAsMap(personPatternResource)
-
-  def patternsForSlotName(slotName: String) = {
-    Seq(organizationPatterns.get(slotName), personPatterns.get(slotName)).flatten.headOption.getOrElse(throw new RuntimeException("Invalid slot: %s".format(slotName)))
-  }
-
-  private def getPatternsAsMap(patternResource: String): Map[String, List[SlotPattern]] = {
-
-    Resource.using(Source.fromURL(getClass.getResource(patternResource))) { source =>
-      val patternLines = source.getLines.drop(1).filterNot(_.trim().startsWith(","))
-      val patterns = patternLines flatMap SlotPattern.read
-      val patternsMap = patterns.toSeq.groupBy(_.slotName)
-      // turn Seq values into Lists
-      patternsMap.map { case (key, value) => (key, value.toList) }
-    }
-  }
-
-  private def read(str: String): Option[SlotPattern] = {
-
-    val csvDataArray = str.replace(",", " ,").split(",").map(_.trim)
+  val personPatternResource = "/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Person.csv"
+  val organizationPatternResource = "/edu/knowitall/tac2013/findSlotFillersApp/KBP-OpenIE-Organization.csv"
+    
+  def read(csvDataArray: Array[String]): Option[SlotPattern] = {
+    
     csvDataArray match {
       case Array(slotName, maxValues, relString, arg2Begins, entityIn, slotFillIn, slotType, _*) => {
         val pattern = getSlotPattern(slotName, maxValues, relString, arg2Begins, entityIn, slotFillIn, slotType)
@@ -86,7 +58,7 @@ object SlotPattern {
         Some(pattern)
       }
       case _ => {
-        System.err.println("Couldn't parse pattern (%d fields): %s".format(csvDataArray.length, str))
+        System.err.println("Couldn't parse pattern fields(%d): %s".format(csvDataArray.length, csvDataArray.mkString(", ")))
         None
       }
     }
@@ -96,23 +68,20 @@ object SlotPattern {
   // is empty
   // requires that input strings are trimmed.
   private def getSlotPattern(
-    KbpSlotNameArgString: String,
+    slot: String,
     MaxValuesArgString: String,
     OpenIERelationArgString: String,
     Arg2BeginsArgString: String,
     EntityInArgString: String,
     SlotFillInArgString: String,
     SlotTypeArgString: String): SlotPattern = {
-
-    requireTrimmed(KbpSlotNameArgString)
+    
     requireTrimmed(MaxValuesArgString)
     requireTrimmed(OpenIERelationArgString)
     requireTrimmed(Arg2BeginsArgString)
     requireTrimmed(EntityInArgString)
     requireTrimmed(SlotFillInArgString)
     requireTrimmed(SlotTypeArgString)
-
-    val arg1 = KbpSlotNameArgString
 
     //determine if this is a valid integer
     val arg2 = {
@@ -148,6 +117,6 @@ object SlotPattern {
       case _ => Some(SlotTypeArgString)
     }
 
-    new SlotPattern(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+    new SlotPattern(slot, arg2, arg3, arg4, arg5, arg6, arg7)
   }
 }

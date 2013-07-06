@@ -18,30 +18,49 @@ object Slot {
   }
   
   private val personResource = "/edu/knowitall/tac2013/findSlotFillersApp/PersonSlotTypes.txt"
+  private val personUrl = requireResource(personResource) 
+  private val personPatternUrl = requireResource(SlotPattern.personPatternResource)
   private val organizationResource = "/edu/knowitall/tac2013/findSlotFillersApp/OrganizationSlotTypes.txt"
+  private val organizationUrl = requireResource(organizationResource)
+  private val organizationPatternUrl = requireResource(SlotPattern.organizationPatternResource)
 
-  private def loadSlots(urlString: String, slotPrefix: String): Set[Slot] = {
-    val url = requireResource(urlString)
-    Resource.using(Source.fromURL(url)) { personSource =>
-      val filterPrefix = personSource.getLines.filter(_.contains(slotPrefix))
-      val lazySlots = filterPrefix map(_.trim) map fromName
-      lazySlots.toList.toSet // how better to force non-lazy?
+  private def loadSlots(slotUrl: URL, patternUrl: URL, slotPrefix: String): Set[Slot] = {
+    
+    Resource.using(Source.fromURL(slotUrl)) { slotSource =>
+      Resource.using(Source.fromURL(patternUrl)) { patternSource =>
+        // filter and split pattern lines
+        val validPatternLines = 
+          patternSource.getLines.drop(1).map(_.trim).filter(_.contains(slotPrefix)).filterNot(_.startsWith(","))
+          
+        val patternFields = validPatternLines.map(_.replace(",", " ,").split(",").map(_.trim)).toStream
+        // group by slot name
+        val slotPatterns = patternFields.groupBy(_(0))
+        slotSource.getLines.filter(_.nonEmpty).map(_.trim).map { slotName =>
+          fromNameAndPatterns(slotName, slotPatterns.getOrElse(slotName, Seq.empty))  
+        } toSet
+      }
     }
   }
   
-  def fromName(slotString: String): Slot = {
+  private def fromNameAndPatterns(slotString: String, patternFields: Seq[Array[String]]): Slot = {
     
-    val patterns = SlotPattern.patternsForSlotName(slotString)
-    require(patterns.map(_.maxValues).distinct.size <= 1, s"Patterns for slot $slotString must have equal maxValues")
-    val maxValues = patterns.headOption.flatMap(_.maxValues).getOrElse(0)
+    val maxValues = patternFields.head(1).toInt
+    
+    val patterns = patternFields.flatMap(fields => SlotPattern.read(fields))
+    
     Slot(slotString, maxValues, patterns)
   }
   
   
-  val personSlots = loadSlots(personResource, "per:")
+  val personSlots = loadSlots(personUrl, personPatternUrl, "per:")
 
-  val orgSlots = loadSlots(organizationResource, "org:")
+  val orgSlots = loadSlots(organizationUrl, organizationPatternUrl, "org:")
 
+  val allSlots = personSlots ++ orgSlots
+  
+  def fromName(name: String) = 
+    allSlots.find(_.name == name).getOrElse { throw new RuntimeException("Invalid slot name: " + name) }
+  
   def getSlotTypesList(kbpQueryEntityType: KBPQueryEntityType) = {
     kbpQueryEntityType match {
       case ORG => personSlots

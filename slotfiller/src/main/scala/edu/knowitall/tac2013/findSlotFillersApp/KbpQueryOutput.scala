@@ -21,7 +21,7 @@ object KbpQueryOutput {
 
   def printUnformattedSlotOutput(slot: Slot, slotCandidates: Seq[Candidate]): String = {
 
-    require(slotCandidates.forall(_.pattern.slot.equals(slot)))
+    require(slotCandidates.forall(_.pattern.slotName.equals(slot.name)))
 
     if (slotCandidates.isEmpty) {
       s"KBP SLOT NAME: ${slot.name}\n\tNil\n\n"
