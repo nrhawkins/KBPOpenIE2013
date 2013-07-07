@@ -56,27 +56,23 @@ object FindSlotFills {
     
     val queryExecutor = SolrQueryExecutor.defaultInstance
     
-    output.println("\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n")
-    
     val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => 
       (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) 
     } toMap
     
     
-    fmt.printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery)
+    fmt.printUnfilteredResults(unfilteredSlotCandidateSets, kbpQuery)
     
     val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
       (slot -> FilterSolrResults.filterResults(candidates, entityName)) 
     }
     
-    output.println("\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n")
-    fmt.printUnformattedOutput(slotCandidateSets, kbpQuery)
+    fmt.printFilteredResults(slotCandidateSets, kbpQuery)
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot -> SlotFillReranker.findAnswers(kbpQuery, patternCandidates))  
+      (slot -> new SlotFillReranker(fmt).findAnswers(kbpQuery, patternCandidates))  
     }
     
-    output.println("\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n")
-    fmt.printFormattedOutput(slotBestAnswers, kbpQuery)
+    fmt.printAnswers(slotBestAnswers, kbpQuery)
   }
 }

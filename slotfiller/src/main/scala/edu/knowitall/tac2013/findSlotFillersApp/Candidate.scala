@@ -15,6 +15,11 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
   def pattern = solrQuery.pattern 
   def queryType = solrQuery.queryType
   
+  def debugString = "arg1: " + extr.arg1.originalText + "\t rel: " + extr.rel.originalText +
+          "\t arg2: " + extr.arg2.originalText + "\t docID: " + extr.sentence.docId +
+          "\t confidence: " + extr.confidence + "\t sentence: " + extr.sentence.dgraph.text +
+          "\t trimFill: " + trimmedFill.trimmedFillString
+  
   def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
   
   /**
@@ -55,7 +60,7 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
   
   def offsetString(field: KbpExtractionField): String = {
     val interval = getOffset(field: KbpExtractionField)
-    "%d-%d".format(interval.start, interval.last)
+    "[%d-%d]".format(interval.start, interval.last)
   }
   
   def getOffset(field: KbpExtractionField): Interval = {

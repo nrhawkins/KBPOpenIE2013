@@ -82,7 +82,15 @@ object FindSlotFillsServer extends App {
         new ResponseStreamer {
           def stream(os: OutputStream) = {
             val printStream = new PrintStream(os)
-            FindSlotFills.runForServerOutput(entityString, field2, slots, printStream)
+            try {
+              FindSlotFills.runForServerOutput(entityString, field2, slots, printStream)
+            } catch {
+              case e: Throwable => {
+                e.printStackTrace(printStream)
+                e.printStackTrace
+                throw e
+              }
+            }
           }
         }
       }

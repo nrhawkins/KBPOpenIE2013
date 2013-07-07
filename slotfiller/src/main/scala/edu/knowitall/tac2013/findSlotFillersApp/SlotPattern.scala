@@ -33,10 +33,24 @@ case class SlotPattern private (
     }
   }
   
-  def debugString = "rel: " + relString.getOrElse({ "" }) +
-        "\t Arg2Begins: " + arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
-        entityIn.getOrElse({ "" }) + "\t SlotFill In: " + slotFillIn.getOrElse({ "" }) +
-        "\t Slot type: " + slotType.getOrElse({ "" })
+  def debugString = {
+    val arg2 = (entityIn, slotFillIn) match {
+      case (Some("arg2"), _) => "<entity>"
+      case (_, Some("arg2")) => "<fill>"
+      case (_, _) => "*"
+    }
+    val arg1 = (entityIn, slotFillIn) match {
+      case (Some("arg1"), _) => "<entity>"
+      case (_, Some("arg1")) => "<fill>"
+      case (_, _) => "*"
+    }
+    val rel = (entityIn, slotFillIn) match {
+      case (Some("relation"), _) => relString.getOrElse("") + " <entity>"
+      case (_, Some("relation")) => relString.getOrElse("") + " <fill>"
+      case (_, _) => relString.getOrElse("*")
+    }
+    slotType.getOrElse("UKN") ++ Seq(arg1, rel, arg2Begins.map(_ + " ").getOrElse("") + arg2).mkString("(", ", ", ")")
+  }
 }
 
 object SlotPattern {

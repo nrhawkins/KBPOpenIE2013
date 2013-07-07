@@ -5,7 +5,7 @@ import edu.knowitall.tac2013.openie.KbpExtraction
 /**
  * Finds fills given candidates for a particular slot.
  */
-object SlotFillReranker {
+class SlotFillReranker(fmt: OutputFormatter) {
 
   /**
    * Requires that all candidates (if any) are for the same slot.

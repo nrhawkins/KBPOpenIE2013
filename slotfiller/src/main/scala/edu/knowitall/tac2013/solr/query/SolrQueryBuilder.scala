@@ -17,7 +17,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
   }
 
   val relTextConstraint: Option[String] = {
-    pattern.openIERelationString match {
+    pattern.relString match {
       case Some(relString) => {
         val noJobTitle = relString.replace("<JobTitle>", "")
         if (noJobTitle != "") {
@@ -69,7 +69,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
     if (!pattern.isValid) {
       None
     } else {
-      val queryFields = Seq(arg1TextConstraint, arg2TextConstraint, relTextConstraint, arg2StartConstraint).flatten
+      val queryFields = Seq(arg1TextConstraint, relTextConstraint, arg2TextConstraint, arg2StartConstraint).flatten
       val query = SolrQuery(getQueryString(queryFields), SolrQueryType.REGULAR, pattern)
       Some(query)
     }
@@ -80,7 +80,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery) {
     if (!pattern.isValid || kbpQuery.nodeId.isEmpty) {
       None
     } else {
-      val queryFields = Seq(arg1LinkConstraint, arg2LinkConstraint, relTextConstraint, arg2StartConstraint).flatten
+      val queryFields = Seq(arg1LinkConstraint, relTextConstraint, arg2LinkConstraint, arg2StartConstraint).flatten
       val query = SolrQuery(getQueryString(queryFields), SolrQueryType.LINKED, pattern)
       Some(query)
     }
