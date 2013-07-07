@@ -7,6 +7,8 @@ import edu.knowitall.tac2013.openie.KbpExtraction
  */
 class SlotFillReranker(fmt: OutputFormatter) {
 
+  import SlotFillReranker.orgAbbreviations
+  
   /**
    * Requires that all candidates (if any) are for the same slot.
    */
@@ -26,7 +28,15 @@ class SlotFillReranker(fmt: OutputFormatter) {
       // rank extractions my trimFill frequency * trimFill length
       val rankedAnswers = groups.iterator.toSeq.sortBy(-_._2.size).map { case (key, candidates) =>
         val trimGroups = candidates.groupBy(_.trimmedFill.string)
-        val sortedTrimGroups = trimGroups.toSeq.sortBy { case (trim, candidates) => -trim.length * candidates.size }
+        val sortedTrimGroups = trimGroups.toSeq.sortBy { case (trim, candidates) => 
+           slot.slotType match {
+             case Some("Organization") => {
+               val endsWithCorp = orgAbbreviations.exists(abbr => trim.toLowerCase.endsWith(abbr))
+               if (endsWithCorp) Int.MinValue else (-trim.length * candidates.size) 
+             }
+             case _ => -trim.length * candidates.size 
+           } 
+        }
         val sortedCandidates = sortedTrimGroups.flatMap { case (trim, candidates) => candidates }
         (sortedCandidates.head.trimmedFill.string, sortedCandidates)
       }
@@ -45,11 +55,16 @@ class SlotFillReranker(fmt: OutputFormatter) {
    */
   def groupByFillTokens(cands: Seq[Candidate]): Map[String, Seq[Candidate]] = {
 
-    val tokens = cands.flatMap { candidate =>
-      val tokens = candidate.trimmedFill.string.split(" ")
-      tokens.tails.toSeq.dropRight(1).map(tail => (tail.mkString(" "), candidate))
+    val tokenGroups = cands.flatMap { candidate =>
+      val tokenKeys = candidate.trimmedFill.string.split(" ")
+      val keys = candidate.pattern.slotType match {
+        case Some("Person") => tokenKeys.tails.toSeq.dropRight(1).map(_.mkString(" "))
+        case Some("Organization") => tokenKeys.reverse.tails.toSeq.dropRight(1).map(_.reverse.mkString(" "))
+        case _ => tokenKeys.tails.toSeq.dropRight(1).map(_.mkString(" "))
+      }
+      keys map { k => (k, candidate) }
     }
-    val groupedByTokens = tokens.groupBy(_._1).map(p => (p._1, p._2.map(_._2)))
+    val groupedByTokens = tokenGroups.groupBy(_._1).map(p => (p._1, p._2.map(_._2)))
     groupedByTokens
   }
   
@@ -95,5 +110,6 @@ class SlotFillReranker(fmt: OutputFormatter) {
 
 object SlotFillReranker {
   
+  val orgAbbreviations = Set("corp .", "inc .", "co .", "corporation", "incorporated")
   
 }

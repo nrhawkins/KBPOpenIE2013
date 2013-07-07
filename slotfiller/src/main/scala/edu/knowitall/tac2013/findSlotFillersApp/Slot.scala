@@ -5,7 +5,7 @@ import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 import java.net.URL
 import edu.knowitall.common.Resource
 
-case class Slot(name: String, maxResults: Int, patterns: Seq[SlotPattern]) {
+case class Slot(name: String, slotType: Option[String], maxResults: Int, patterns: Seq[SlotPattern]) {
   require(name == name.trim)
 }
 
@@ -44,11 +44,18 @@ object Slot {
   
   private def fromNameAndPatterns(slotString: String, patternFields: Seq[Array[String]]): Slot = {
     
-    val maxValues = patternFields.head(1).toInt
+    val headPattern = patternFields.head
+    
+    val maxValues = headPattern(1).toInt
+    // Array(slotName, maxValues, relString, arg2Begins, entityIn, slotFillIn, slotType, _*)
+    val slotType = {
+      val field = if (headPattern.length >= 7) headPattern(6).trim else ""
+      if (field.isEmpty()) None else Some(field)
+    }
     
     val patterns = patternFields.flatMap(fields => SlotPattern.read(fields))
     
-    Slot(slotString, maxValues, patterns)
+    Slot(slotString, slotType, maxValues, patterns)
   }
   
   

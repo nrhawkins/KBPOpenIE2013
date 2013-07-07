@@ -62,7 +62,16 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   def offsetString(interval: Interval): String = "[%d-%d]".format(interval.start, interval.last)
   
+  def offsetString(fill: TrimmedFill): String = offsetString(getOffset(trimmedFill))
+  
   def offsetString(field: KbpExtractionField): String = offsetString(getOffset(field))
+  
+  def getOffset(fill: TrimmedFill): Interval = {
+    val startOffset = extr.sentence.startOffset
+    val firstToken = extr.sentence.chunkedTokens(fill.interval).minBy(_.offset)
+    val lastToken = extr.sentence.chunkedTokens(fill.interval).maxBy(t => t.offset + t.string.length)
+    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset)
+  }
   
   def getOffset(field: KbpExtractionField): Interval = {
     val startOffset = extr.sentence.startOffset
@@ -134,7 +143,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   lazy val entityOffsetString = offsetString(entityField)
   
-  lazy val fillOffsetString = offsetString(fillField)
+  lazy val fillOffsetString = offsetString(trimmedFill)
   
   lazy val relOffsetString = offsetString(extr.rel)
   

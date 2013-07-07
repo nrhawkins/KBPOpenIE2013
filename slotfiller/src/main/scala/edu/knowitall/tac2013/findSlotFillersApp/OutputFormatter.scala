@@ -25,7 +25,7 @@ class OutputFormatter(out: PrintStream) {
   val printUnfiltered = false
   val printFiltered = true
   
-  val maxGroups = 20
+  val maxGroups = 15
   val printGroups = true
   val detailedGroups = true
   
@@ -158,8 +158,7 @@ class OutputFormatter(out: PrintStream) {
           slot.name,
           runID,
           bestAnswer.extr.sentence.docId,
-          bestAnswer.trimmedFill.string,
-          "Fill: " + bestAnswer.fillField.originalText + " " +bestAnswer.fillOffsetString,
+          "Fill: " + bestAnswer.trimmedFill.string + " " +bestAnswer.fillOffsetString,
           "Entity: " + bestAnswer.entityField.originalText + " " + bestAnswer.entityOffsetString,
           "Just: " + bestAnswer.extr.sentence.dgraph.text + " " +bestAnswer.justificationOffsetString,
           bestAnswer.extr.confidence)
@@ -175,16 +174,16 @@ class OutputFormatter(out: PrintStream) {
     println(0, s"------------------- GROUPS: ${slot.name} $header -------------------")
     println(0, "")
     
-    val maxKeyLength = groups.keys.maxBy(_.length).length
+    val sortedGroups = groups.iterator.toSeq.sortBy(-_._2.size)
+    val truncatedGroups = sortedGroups.take(maxGroups)
+    val numTruncated = groups.keys.size - maxGroups
+    
+    val maxKeyLength = truncatedGroups.map(_._1.length).max
     val pad: String = Seq.fill(maxKeyLength + 1)(' ').mkString
     def padStr(str: String): String = str + Seq.fill(maxKeyLength - str.length + 1)(' ').mkString
-    
-    val groupsTruncated = groups.keys.size - maxGroups
-    
-    val sortedGroups = groups.iterator.toSeq.sortBy(-_._2.size)
 
     if (detailedGroups) {
-      sortedGroups.take(maxGroups).foreach {
+      truncatedGroups.foreach {
         case (key, candidates) =>
           println(0, padStr(key) + candidates.head.debugString)
           candidates.tail.foreach { candidate =>
@@ -194,11 +193,11 @@ class OutputFormatter(out: PrintStream) {
       }
       
     } else {
-      sortedGroups.take(maxGroups).foreach { case (key, candidates) =>
+      truncatedGroups.foreach { case (key, candidates) =>
         println(0, "%s (%d)".format(padStr(key), candidates.size))
       }
     }
-    if (groupsTruncated > 0) println(0, s"($groupsTruncated groups truncated)")
+    if (numTruncated > 0) println(0, s"($numTruncated groups truncated)")
   }
 }
 
