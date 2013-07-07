@@ -1,10 +1,10 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import KbpQueryOutput.printUnformattedOutput
-import KbpQueryOutput.printFormattedOutput
-import KbpQueryOutput.printUnformattedSlotOutput
-import KbpQueryOutput.printFormattedSlotOutput
+import OutputFormatter.printUnformattedOutput
+import OutputFormatter.printFormattedOutput
+import OutputFormatter.printUnformattedSlotOutput
+import OutputFormatter.printFormattedSlotOutput
 import KBPQueryEntityType._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 import java.io.PrintStream

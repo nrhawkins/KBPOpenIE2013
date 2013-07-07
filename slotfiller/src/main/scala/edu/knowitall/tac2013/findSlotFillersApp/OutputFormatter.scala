@@ -7,7 +7,7 @@ import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 import edu.knowitall.collection.immutable.Interval
 import SlotFillReranker.findAnswers
 
-object KbpQueryOutput {
+object OutputFormatter {
 
   val runID = "UWashington-1"
 
