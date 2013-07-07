@@ -22,8 +22,8 @@ object WikiLink {
   val deserializeRegex = "(.+) ([^\\s]+) ([^\\s]+)\\s?([0-9]+\\.[0-9]+)?".r
   def deserialize(str: String): WikiLink = {
     str match {
-      case deserializeRegex(name, fbid, nodeIdRaw, null) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw))
-      case deserializeRegex(name, fbid, nodeIdRaw, score) => WikiLink(name, fbid, if (nodeIdRaw.equals('-')) None else Some(nodeIdRaw), score.toDouble)
+      case deserializeRegex(name, fbid, nodeIdRaw, null) => WikiLink(name, fbid, if (nodeIdRaw == "-") None else Some(nodeIdRaw))
+      case deserializeRegex(name, fbid, nodeIdRaw, score) => WikiLink(name, fbid, if (nodeIdRaw == "-") None else Some(nodeIdRaw), score.toDouble)
       case _ => throw new RuntimeException(s"Unable to deserialize wikilink string: $str")
     }
   }
@@ -34,9 +34,14 @@ abstract class KbpExtractionField {
   def originalText: String
   def tokens: Seq[ChunkedToken]
   def types: Seq[String]
+  
+  def debugString: String
+  def tokenString = tokens.map(_.string).mkString(" ")
 }
 
-abstract class KbpRelation extends KbpExtractionField
+abstract class KbpRelation extends KbpExtractionField {
+  def debugString = originalText + types.mkString(", ")
+}
 
 object KbpRelation {
   
@@ -104,6 +109,11 @@ abstract class KbpArgument extends KbpExtractionField {
       val wikiLink = Some(wlink)
       def types = unlinked.types
     }
+  }
+  
+  def debugString = {
+    if (!wikiLink.isDefined) originalText + types.mkString(", ")
+    else originalText + "[" + wikiLink.get.nodeId.getOrElse(wikiLink.get.fbid) + "]" + types.mkString(", ") 
   }
 }
 

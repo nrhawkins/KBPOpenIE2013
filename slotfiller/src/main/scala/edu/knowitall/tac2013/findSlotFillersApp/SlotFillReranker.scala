@@ -10,21 +10,20 @@ class SlotFillReranker(fmt: OutputFormatter) {
   /**
    * Requires that all candidates (if any) are for the same slot.
    */
-  def findAnswers(kbpQuery: KBPQuery, slotCandidates: Seq[Candidate]): Seq[Candidate] = {
+  def findSlotAnswers(slot: Slot, kbpQuery: KBPQuery, slotCandidates: Seq[Candidate]): Seq[Candidate] = {
     
     if (slotCandidates.isEmpty) List.empty
     
     else {
       
-      val slot = slotCandidates.head.pattern.slotName
-      val maxAnswers = slotCandidates.head.pattern.maxValues
+      val maxAnswers = slot.maxResults
       
-      require(maxAnswers.isDefined)
-      require(slotCandidates.forall(_.pattern.slotName.equals(slot)))
-      require(slotCandidates.forall(_.pattern.maxValues == maxAnswers))
+      require(slotCandidates.forall(_.pattern.slotName.equals(slot.name)))
       
       // group results by their fill
       val groups = slotCandidates.groupBy(_.trimmedFill.trimmedFillString)
+      
+      fmt.printFillGroups(slot, groups)
       
       // rank best result from each group according to a confidence measure
       // in descending order
@@ -34,7 +33,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
         }
       }).toSeq.sortBy(-_._2)
       
-      bestResults.map(_._1).take(maxAnswers.get)
+      bestResults.map(_._1).take(maxAnswers)
     }
   }
 }

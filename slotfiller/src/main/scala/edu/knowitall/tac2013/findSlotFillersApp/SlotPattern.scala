@@ -7,7 +7,7 @@ import KBPQueryEntityType._
 // many of these variables can be empty like ""
 case class SlotPattern private (
   val slotName: String,
-  val maxValues: Option[Int],
+  private val maxValues: Option[Int], // use slot.maxValues
   val relString: Option[String],
   val arg2Begins: Option[String],
   val entityIn: Option[String],

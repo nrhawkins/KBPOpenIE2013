@@ -37,17 +37,6 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
     }
   }
   
-//  //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
-//  //to our solr instance for every type of OpenIERelation
-//  def executeQuery(kbpQuery: KBPQuery, slot: Slot): Seq[Candidate] = {
-//
-//    val unfilteredCandidates = executeUnfilteredQuery(kbpQuery, slot)
-//
-//    val filteredCandidateSets = filterResults(unfilteredCandidates, kbpQuery.name)
-//
-//    filteredCandidateSets
-//  }
-
   //takes entity string and map from KBP slot strings to Open IE relation strings and runs queries
   //to our solr instance for every type of OpenIERelation, this method uses no filters, this is for debugging purposes
   def executeUnfilteredQuery(kbpQuery: KBPQuery, slot: Slot): Seq[Candidate] = {

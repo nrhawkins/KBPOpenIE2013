@@ -70,7 +70,7 @@ object FindSlotFills {
     fmt.printFilteredResults(slotCandidateSets, kbpQuery)
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
-      (slot -> new SlotFillReranker(fmt).findAnswers(kbpQuery, patternCandidates))  
+      (slot -> new SlotFillReranker(fmt).findSlotAnswers(slot, kbpQuery, patternCandidates))  
     }
     
     fmt.printAnswers(slotBestAnswers, kbpQuery)

@@ -15,8 +15,8 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
   def pattern = solrQuery.pattern 
   def queryType = solrQuery.queryType
   
-  def debugString = "arg1: " + extr.arg1.originalText + "\t rel: " + extr.rel.originalText +
-          "\t arg2: " + extr.arg2.originalText + "\t docID: " + extr.sentence.docId +
+  def debugString = "arg1: " + extr.arg1.debugString + "\t rel: " + extr.rel.debugString +
+          "\t arg2: " + extr.arg2.debugString + "\t docID: " + extr.sentence.docId +
           "\t confidence: " + extr.confidence + "\t sentence: " + extr.sentence.dgraph.text +
           "\t trimFill: " + trimmedFill.trimmedFillString
   
@@ -38,7 +38,7 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
     }
 
     val arg1Key = argKey(extr.arg1)
-    val relKey = tokenKey(extr.rel.tokens)
+    val relKey = extr.rel.originalText
     val arg2Key = argKey(extr.arg2)
 
     Seq(arg1Key, relKey, arg2Key).mkString(", ")

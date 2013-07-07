@@ -17,7 +17,7 @@ object KBPQueryExecutor {
     val filteredCandidates = slots map { slot => (slot, filterResults(unfiltered(slot), kbpQuery.name)) } toMap
 
     val bestAnswers = slots map { slot => 
-      (slot, new SlotFillReranker(outFmt).findAnswers(kbpQuery, filteredCandidates(slot))) 
+      (slot, new SlotFillReranker(outFmt).findSlotAnswers(slot, kbpQuery, filteredCandidates(slot))) 
     } toMap
     
     outFmt.printAnswers(bestAnswers, kbpQuery)
