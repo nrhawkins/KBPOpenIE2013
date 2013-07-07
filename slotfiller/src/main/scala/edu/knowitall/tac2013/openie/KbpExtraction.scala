@@ -34,12 +34,14 @@ abstract class KbpExtractionField {
   def originalText: String
   def tokens: Seq[ChunkedToken]
   def types: Seq[String]
+  def wikiLink: Option[WikiLink]
   
   def debugString: String
   def tokenString = tokens.map(_.string).mkString(" ")
 }
 
 abstract class KbpRelation extends KbpExtractionField {
+  def wikiLink = None
   def debugString = originalText + types.mkString(", ")
 }
 

@@ -23,62 +23,73 @@ class SlotFillReranker(fmt: OutputFormatter) {
       // expand groups to 
       val groups = getMergedGroups(slot, slotCandidates)
       
-      // rank best result from each group according to a confidence measure
-      // in descending order
-      val bestResults = groups.values.flatMap({ extractions =>
-        extractions.headOption map { headExtr =>
-          (headExtr, headExtr.extr.confidence + (extractions.size  * 0.1))
-        }
-      }).toSeq.sortBy(-_._2)
+      // rank extractions my trimFill frequency * trimFill length
+      val rankedAnswers = groups.iterator.toSeq.sortBy(-_._2.size).map { case (key, candidates) =>
+        val trimGroups = candidates.groupBy(_.trimmedFill.string)
+        val sortedTrimGroups = trimGroups.toSeq.sortBy { case (trim, candidates) => -trim.length * candidates.size }
+        val sortedCandidates = sortedTrimGroups.flatMap { case (trim, candidates) => candidates }
+        (sortedCandidates.head.trimmedFill.string, sortedCandidates)
+      }
       
-      bestResults.map(_._1).take(maxAnswers)
+      fmt.printFillGroups("Ranked answer groups (descending)", slot, rankedAnswers.toMap)
+      
+      val bestAnswers = rankedAnswers.map(_._2.head)
+      
+      bestAnswers.take(maxAnswers)
     }
+  }
+
+  /**
+   * Expand to non-disjoint mapping from (token suffix) => candidates with that fill suffix.
+   * Filter out stop tokens like "Inc., Corp., Mr.", etc.
+   */
+  def groupByFillTokens(cands: Seq[Candidate]): Map[String, Seq[Candidate]] = {
+
+    val tokens = cands.flatMap { candidate =>
+      val tokens = candidate.trimmedFill.string.split(" ")
+      tokens.tails.toSeq.dropRight(1).map(tail => (tail.mkString(" "), candidate))
+    }
+    val groupedByTokens = tokens.groupBy(_._1).map(p => (p._1, p._2.map(_._2)))
+    groupedByTokens
   }
   
   def getMergedGroups(slot: Slot, candidates: Seq[Candidate]): Map[String, Seq[Candidate]] = {
-    val candidateEnum = candidates.toIndexedSeq
-    def idsToCandidates(ids: Iterable[Int]) = ids.map(candidateEnum(_)).toSeq
+
+    val groups = groupByFillTokens(candidates)
     
+    var disjointIds = Set.empty[Int]
+    var disjointGroups = Map.empty[String, Seq[Candidate]]
     
-    // expand to fill token => candidate (making duplicates temporarily, tracking them by index)
-    val tokens = candidates.zipWithIndex.flatMap { case (candidate, index) =>
-      val tokens = candidate.trimmedFill.string.split(" ")
-      tokens.tails.toSeq.dropRight(1).map(tail => (tail.mkString(" "), index))
+    fmt.printFillGroups("Trim suffix groups, non-disjoint", slot, groups)
+    
+    // Iterate over groups in descending order of size, choosing a greedily minimal disjoint subset of the original groups
+    var biggestGroups = groups.toSeq.sortBy(-_._2.size)
+    
+    while (!biggestGroups.isEmpty) {
+      val (key, candidates) = biggestGroups.head      
+      // insert all candidates
+      disjointIds ++= candidates.map(_.id)
+      disjointGroups += (key -> candidates)
+      // filter these candidates from all remaining groups and re-sort.
+      val remainingGroups = biggestGroups.tail
+      val filtered = remainingGroups.map { case (key, candidates) => 
+        (key, candidates.filter(c => !disjointIds.contains(c.id))) 
+      } filter(_._2.nonEmpty)
+      biggestGroups = filtered.sortBy(-_._2.size)
     }
-    val groups = tokens.groupBy(_._1).map(p => (p._1, p._2.map(_._2).toSet)).toSeq.sortBy(-_._2.size)
-    var disjointGroups = List.empty[(String, Set[Int])]
     
-    fmt.printFillGroups(slot, groups.map { case (token, newIds) => (token, idsToCandidates(newIds)) })
-    
-    for ((token, newIds) <- groups) {
-      val isDisjoint = disjointGroups.forall { case (tok, presentIds) => presentIds.forall(id => !newIds.contains(id)) }
-      if (isDisjoint) disjointGroups = (token, newIds) :: disjointGroups 
+    for ((token, newCandidates) <- groups.toSeq.sortBy(-_._2.size)) {
+      val newIds = newCandidates.map(_.id)
+      val isDisjoint = disjointIds.forall { id => !newIds.contains(id) }
+      if (isDisjoint) {
+        disjointIds ++= newIds
+        disjointGroups += (token -> newCandidates) 
+      }
     }
     
-    val disjointCandidates =  disjointGroups.map { case (token, newIds) => 
-      val candidates = idsToCandidates(newIds)
-      val bestString = getBestFill(candidates).string
-      (bestString, candidates) 
-    }
-    fmt.printFillGroups(slot, disjointCandidates)
+    fmt.printFillGroups("Trim suffix groups, disjoint", slot, disjointGroups)
     
-    disjointCandidates.toMap
-  }
-  
-  def getBestFill(candidates: Seq[Candidate]): TrimmedFill = {
-    // get the most common 2-token name if one exists,
-    // else the most common one-common name,
-    // else the most common <any name>
-    val twoTokens = candidates.filter(_.trimmedFill.string.split(" ").length == 2)
-    lazy val oneTokens = candidates.filter(_.trimmedFill.string.split(" ").length == 1)
-    if (twoTokens.nonEmpty) {
-      twoTokens.groupBy(_.trimmedFill.string).maxBy(_._2.size)._2.head.trimmedFill
-    }
-    else if (oneTokens.nonEmpty) {
-      oneTokens.groupBy(_.trimmedFill.string).maxBy(_._2.size)._2.head.trimmedFill
-    } else {
-      candidates.groupBy(_.trimmedFill.string).maxBy(_._2.size)._2.head.trimmedFill
-    }
+    disjointGroups
   }
 }
 

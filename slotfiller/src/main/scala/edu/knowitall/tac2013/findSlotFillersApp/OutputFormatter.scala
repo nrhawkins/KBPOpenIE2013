@@ -24,7 +24,10 @@ class OutputFormatter(out: PrintStream) {
   
   val printUnfiltered = false
   val printFiltered = true
+  
+  val maxGroups = 20
   val printGroups = true
+  val detailedGroups = true
   
   val indentStr: String = Seq.fill(indentSize)(' ').mkString
   
@@ -166,23 +169,36 @@ class OutputFormatter(out: PrintStream) {
     }
   }
   
-  def printFillGroups(slot: Slot, groups: Seq[(String, Seq[Candidate])]): Unit = if (printGroups) {
+  def printFillGroups(header: String, slot: Slot, groups: Map[String, Seq[Candidate]]): Unit = if (printGroups) {
     
     println(0, "")
-    println(0, "GROUPS FOR " + slot.name)
+    println(0, s"------------------- GROUPS: ${slot.name} $header -------------------")
     println(0, "")
     
-    val maxKeyLength = groups.map(_._1.length).max
+    val maxKeyLength = groups.keys.maxBy(_.length).length
     val pad: String = Seq.fill(maxKeyLength + 1)(' ').mkString
     def padStr(str: String): String = str + Seq.fill(maxKeyLength - str.length + 1)(' ').mkString
     
-    groups.iterator.toSeq.sortBy(-_._2.size).foreach { case (key, candidates) =>
-      println(0, padStr(key) + candidates.head.debugString)
-      candidates.tail.foreach { candidate =>
-        println(0, pad + candidate.debugString)
+    val groupsTruncated = groups.keys.size - maxGroups
+    
+    val sortedGroups = groups.iterator.toSeq.sortBy(-_._2.size)
+
+    if (detailedGroups) {
+      sortedGroups.take(maxGroups).foreach {
+        case (key, candidates) =>
+          println(0, padStr(key) + candidates.head.debugString)
+          candidates.tail.foreach { candidate =>
+            println(0, pad + candidate.debugString)
+          }
+          println(0, "")
       }
-      println(0, "")
+      
+    } else {
+      sortedGroups.take(maxGroups).foreach { case (key, candidates) =>
+        println(0, "%s (%d)".format(padStr(key), candidates.size))
+      }
     }
+    if (groupsTruncated > 0) println(0, s"($groupsTruncated groups truncated)")
   }
 }
 
