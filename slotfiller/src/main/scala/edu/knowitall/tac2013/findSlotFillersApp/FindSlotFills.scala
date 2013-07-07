@@ -9,8 +9,6 @@ import scopt.OptionParser
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
 object FindSlotFills {
-
-  val fmt = OutputFormatter.default
   
   def main(args: Array[String]): Unit = {
 
@@ -33,14 +31,12 @@ object FindSlotFills {
 
     val slots = slotStrings.split(",").map(_.trim).filter(_.nonEmpty).toSet
     
-    val outputLines = runForServerOutput(entityName, entityType, slots)   
-    
-    outputLines foreach output.println
+    runForServerOutput(entityName, entityType, slots, System.out)
     
     if (output != System.out) output.close()
   }
 
-  def runForServerOutput(rawName: String, entityTypeString: String, overrideSlotNames: Set[String]): Seq[String] = {
+  def runForServerOutput(rawName: String, entityTypeString: String, overrideSlotNames: Set[String], output: PrintStream): Unit = {
 
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
@@ -56,26 +52,31 @@ object FindSlotFills {
       KBPQuery.forEntityName(entityName, entityType).withOverrideSlots(overrideSlots)
     }
     
+    val fmt = new OutputFormatter(output)
+    
     val queryExecutor = SolrQueryExecutor.defaultInstance
+    
+    output.println("\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n")
     
     val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => 
       (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) 
     } toMap
     
+    
+    fmt.printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery)
+    
     val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
       (slot -> FilterSolrResults.filterResults(candidates, entityName)) 
     }
+    
+    output.println("\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n")
+    fmt.printUnformattedOutput(slotCandidateSets, kbpQuery)
     
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
       (slot -> SlotFillReranker.findAnswers(kbpQuery, patternCandidates))  
     }
     
-    Seq(
-      "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n",
-      fmt.printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery),
-      "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n",
-      fmt.printUnformattedOutput(slotCandidateSets, kbpQuery),
-      "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n",
-      fmt.printFormattedOutput(slotBestAnswers, kbpQuery))
+    output.println("\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n")
+    fmt.printFormattedOutput(slotBestAnswers, kbpQuery)
   }
 }

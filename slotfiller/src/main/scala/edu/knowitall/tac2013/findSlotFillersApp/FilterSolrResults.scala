@@ -24,9 +24,9 @@ object FilterSolrResults {
     
     if (pattern.isValid) {
 
-      if (!pattern.openIERelationString.get.contains("<JobTitle>")) {
+      if (!pattern.relString.get.contains("<JobTitle>")) {
 
-        val relationTerms = pattern.openIERelationString.get.trim().split(" ")
+        val relationTerms = pattern.relString.get.trim().split(" ")
 
         val relationTermsReversed = relationTerms.reverse
 

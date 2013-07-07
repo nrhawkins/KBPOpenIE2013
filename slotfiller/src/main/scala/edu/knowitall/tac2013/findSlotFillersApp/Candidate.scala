@@ -54,17 +54,15 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
   }
   
   def offsetString(field: KbpExtractionField): String = {
-    val startOffset = extr.sentence.startOffset
-    val firstToken = field.tokens.minBy(_.offset)
-    val lastToken = field.tokens.maxBy(t => t.offset + t.string.length - 1)
-    "%d-%d".format(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
+    val interval = getOffset(field: KbpExtractionField)
+    "%d-%d".format(interval.start, interval.last)
   }
   
   def getOffset(field: KbpExtractionField): Interval = {
     val startOffset = extr.sentence.startOffset
     val firstToken = field.tokens.minBy(_.offset)
-    val lastToken = field.tokens.maxBy(t => t.offset + t.string.length - 1)
-    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
+    val lastToken = field.tokens.maxBy(t => t.offset + t.string.length)
+    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset)
   }
   
   
@@ -120,23 +118,23 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
   
   class TrimmedFill(val trimmedFillString: String, val trimmedFillInterval: Interval)
   
-  val entityOffsetInterval = getOffset(entityField)
+  lazy val entityOffsetInterval = getOffset(entityField)
   
-  val fillOffsetInterval = getOffset(fillField)
+  lazy val fillOffsetInterval = getOffset(fillField)
   
-  val relOffsetInterval = getOffset(extr.rel)
+  lazy val relOffsetInterval = getOffset(extr.rel)
   
-  val justificationInterval =  {
+  lazy val justificationInterval =  {
      Interval.span(Iterable(entityOffsetInterval, fillOffsetInterval, relOffsetInterval)) 
   }
   
-  val entityOffsetString = offsetString(entityField)
+  lazy val entityOffsetString = offsetString(entityField)
   
-  val fillOffsetString = offsetString(fillField)
+  lazy val fillOffsetString = offsetString(fillField)
   
-  val relOffsetString = offsetString(extr.rel)
+  lazy val relOffsetString = offsetString(extr.rel)
   
-  val justificationOffsetString = justificationInterval.toString().dropRight(1).drop(1).replace(",", "-")
+  lazy val justificationOffsetString = justificationInterval.toString().dropRight(1).drop(1).replace(",", "-")
   
-  val trimmedFill = getTrimmedFill()
+  lazy val trimmedFill = getTrimmedFill()
 }

@@ -63,8 +63,8 @@ object Slot {
   
   def getSlotTypesList(kbpQueryEntityType: KBPQueryEntityType) = {
     kbpQueryEntityType match {
-      case ORG => personSlots
-      case PER => orgSlots
+      case ORG => orgSlots
+      case PER => personSlots
     }
   }
 }

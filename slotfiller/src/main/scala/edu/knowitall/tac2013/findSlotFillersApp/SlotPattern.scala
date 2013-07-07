@@ -8,7 +8,7 @@ import KBPQueryEntityType._
 case class SlotPattern private (
   val slotName: String,
   val maxValues: Option[Int],
-  val openIERelationString: Option[String],
+  val relString: Option[String],
   val arg2Begins: Option[String],
   val entityIn: Option[String],
   val slotFillIn: Option[String],
@@ -16,7 +16,7 @@ case class SlotPattern private (
 
   import SlotPattern.requireTrimmed
 
-  openIERelationString foreach requireTrimmed
+  relString foreach requireTrimmed
   arg2Begins foreach requireTrimmed
   entityIn foreach requireTrimmed
   slotFillIn foreach requireTrimmed
@@ -25,7 +25,7 @@ case class SlotPattern private (
   val entityType: KBPQueryEntityType = if (slotName.startsWith("per:")) PER else ORG
   
   def isValid(): Boolean = {
-    if (openIERelationString.nonEmpty && maxValues.nonEmpty &&
+    if (relString.nonEmpty && maxValues.nonEmpty &&
       entityIn.nonEmpty && slotFillIn.nonEmpty) {
       true
     } else {
@@ -33,10 +33,10 @@ case class SlotPattern private (
     }
   }
   
-  def debugString = "RelationTerms: " + openIERelationString.getOrElse({ "" }) +
+  def debugString = "rel: " + relString.getOrElse({ "" }) +
         "\t Arg2Begins: " + arg2Begins.getOrElse({ "" }) + "\t Entity In: " +
         entityIn.getOrElse({ "" }) + "\t SlotFill In: " + slotFillIn.getOrElse({ "" }) +
-        "\t Slot type: " + slotType.getOrElse({ "" }) + "\n"
+        "\t Slot type: " + slotType.getOrElse({ "" })
 }
 
 object SlotPattern {

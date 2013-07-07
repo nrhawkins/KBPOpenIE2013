@@ -6,7 +6,7 @@ import edu.knowitall.tac2013.findSlotFillersApp.FilterSolrResults.filterResults
 
 object KBPQueryExecutor {
 
-  def executeKbpQuery(kbpQuery: KBPQuery, outFmt: OutputFormatter): String = {
+  def executeKbpQuery(kbpQuery: KBPQuery, outFmt: OutputFormatter): Unit = {
     
     val qExec = SolrQueryExecutor.defaultInstance
 

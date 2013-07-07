@@ -16,6 +16,8 @@ import org.slf4j.LoggerFactory
 import unfiltered.filter.Planify
 import unfiltered.response.ResponseStreamer
 import unfiltered.response.ResponseWriter
+import java.io.OutputStream
+import java.io.PrintStream
 
 object FindSlotFillsServer extends App {
   val logger = LoggerFactory.getLogger(this.getClass)
@@ -38,7 +40,7 @@ object FindSlotFillsServer extends App {
     object Plan extends unfiltered.filter.Plan {
       def intent = Intent {
         case req @ POST(Path(Seg(Nil))) =>
-          println(req.parameterNames)
+          println(req.parameterNames.mkString(" "))
           handlePost(req.parameterValues("field1").head,
             req.parameterValues("field2").head,
             req.parameterValues("field3").head)
@@ -77,10 +79,12 @@ object FindSlotFillsServer extends App {
         }
         val slots = field3.split(",").map(_.trim).filter(_.nonEmpty).toSet
         
-        val slotOutputs = FindSlotFills.runForServerOutput(entityString, field2, slots)
-        val allOutput = slotOutputs.mkString
-        
-        ResponseString(field1 + allOutput) ~> Ok
+        new ResponseStreamer {
+          def stream(os: OutputStream) = {
+            val printStream = new PrintStream(os)
+            FindSlotFills.runForServerOutput(entityString, field2, slots, printStream)
+          }
+        }
       }
     }
 
