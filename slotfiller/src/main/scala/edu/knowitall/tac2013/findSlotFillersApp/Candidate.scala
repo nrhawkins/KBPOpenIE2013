@@ -10,15 +10,17 @@ import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.taggers.Type
 import edu.knowitall.collection.immutable.Interval
 
+class TrimmedFill(val string: String, val interval: Interval)
+
 class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, val types: List[Type]) {
 
   def pattern = solrQuery.pattern 
   def queryType = solrQuery.queryType
   
-  def debugString = "fill: " + fillField.debugString + "\tentity: " + entityField.debugString +
+  def debugString = "fill: " + trimmedFill.string + "\tentity: " + entityField.debugString +
           "\trel: " + extr.rel.debugString + "\t docID: " + extr.sentence.docId +
           "\tconf: " + extr.confidence + "\t sent: " + extr.sentence.dgraph.text +
-          "\t trimFill: " + trimmedFill.trimmedFillString
+          "\t trimFill: " + trimmedFill.string
   
   def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
   
@@ -58,10 +60,9 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     case _ => throw new RuntimeException("Invalid slotFillIn for pattern: %s".format(pattern.debugString))
   }
   
-  def offsetString(field: KbpExtractionField): String = {
-    val interval = getOffset(field: KbpExtractionField)
-    "[%d-%d]".format(interval.start, interval.last)
-  }
+  def offsetString(interval: Interval): String = "[%d-%d]".format(interval.start, interval.last)
+  
+  def offsetString(field: KbpExtractionField): String = offsetString(getOffset(field))
   
   def getOffset(field: KbpExtractionField): Interval = {
     val startOffset = extr.sentence.startOffset
@@ -69,8 +70,6 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     val lastToken = field.tokens.maxBy(t => t.offset + t.string.length)
     Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset)
   }
-  
-  
   
   private def basicTrim(str: String, interval: Interval): TrimmedFill = {    
     val noChangeTrimmedFill = new TrimmedFill(str,interval)
@@ -121,7 +120,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     }
   }
   
-  class TrimmedFill(val trimmedFillString: String, val trimmedFillInterval: Interval)
+  
   
   lazy val entityOffsetInterval = getOffset(entityField)
   
@@ -139,7 +138,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   lazy val relOffsetString = offsetString(extr.rel)
   
-  lazy val justificationOffsetString = justificationInterval.toString().dropRight(1).drop(1).replace(",", "-")
+  lazy val justificationOffsetString = offsetString(justificationInterval)
   
   lazy val trimmedFill = getTrimmedFill()
 }

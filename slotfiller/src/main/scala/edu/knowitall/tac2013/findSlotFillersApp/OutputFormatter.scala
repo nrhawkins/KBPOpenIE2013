@@ -127,7 +127,7 @@ class OutputFormatter(out: PrintStream) {
           slot.name,
           runID,
           bestAnswer.extr.sentence.docId,
-          bestAnswer.trimmedFill.trimmedFillString,
+          bestAnswer.trimmedFill.string,
           bestAnswer.fillOffsetString,
           bestAnswer.entityOffsetString,
           bestAnswer.relOffsetString,
@@ -155,7 +155,7 @@ class OutputFormatter(out: PrintStream) {
           slot.name,
           runID,
           bestAnswer.extr.sentence.docId,
-          bestAnswer.trimmedFill.trimmedFillString,
+          bestAnswer.trimmedFill.string,
           "Fill: " + bestAnswer.fillField.originalText + " " +bestAnswer.fillOffsetString,
           "Entity: " + bestAnswer.entityField.originalText + " " + bestAnswer.entityOffsetString,
           "Just: " + bestAnswer.extr.sentence.dgraph.text + " " +bestAnswer.justificationOffsetString,
@@ -166,18 +166,17 @@ class OutputFormatter(out: PrintStream) {
     }
   }
   
-  def printFillGroups(slot: Slot, candidates: Seq[Candidate], groups: Map[String, Seq[Candidate]]): Unit = if (printGroups) {
+  def printFillGroups(slot: Slot, groups: Seq[(String, Seq[Candidate])]): Unit = if (printGroups) {
     
     println(0, "")
     println(0, "GROUPS FOR " + slot.name)
     println(0, "")
-
-    require(candidates.size == groups.values.flatten.size)
     
-    val maxKeyLength = groups.keys.map(_.length).max
+    val maxKeyLength = groups.map(_._1.length).max
     val pad: String = Seq.fill(maxKeyLength + 1)(' ').mkString
     def padStr(str: String): String = str + Seq.fill(maxKeyLength - str.length + 1)(' ').mkString
-    groups.foreach { case (key, candidates) =>
+    
+    groups.iterator.toSeq.sortBy(-_._2.size).foreach { case (key, candidates) =>
       println(0, padStr(key) + candidates.head.debugString)
       candidates.tail.foreach { candidate =>
         println(0, pad + candidate.debugString)

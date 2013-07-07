@@ -34,7 +34,7 @@ object SemanticTaggers {
     TaggerCollection.fromPath(url.getPath())
   }
 
-  private val morpha = new MorphaStemmer();
+  private val morpha = new MorphaStemmer()
 
   def useStandfordNERTagger(chunkedSentence: Seq[ChunkedToken]): List[Type] = {
     var tokens = List[Lemmatized[ChunkedToken]]()
