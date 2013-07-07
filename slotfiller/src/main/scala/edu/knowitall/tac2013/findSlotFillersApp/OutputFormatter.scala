@@ -7,7 +7,7 @@ import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
 import edu.knowitall.collection.immutable.Interval
 import SlotFillReranker.findAnswers
 
-object OutputFormatter {
+class OutputFormatter private {
 
   val runID = "UWashington-1"
 
@@ -152,4 +152,8 @@ object OutputFormatter {
     }
     sb.toString()
   }
+}
+
+object OutputFormatter {
+  val default = new OutputFormatter 
 }

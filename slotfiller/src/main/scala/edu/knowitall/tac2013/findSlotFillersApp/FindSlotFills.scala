@@ -1,10 +1,6 @@
 
 package edu.knowitall.tac2013.findSlotFillersApp
 
-import OutputFormatter.printUnformattedOutput
-import OutputFormatter.printFormattedOutput
-import OutputFormatter.printUnformattedSlotOutput
-import OutputFormatter.printFormattedSlotOutput
 import KBPQueryEntityType._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 import java.io.PrintStream
@@ -14,6 +10,8 @@ import scopt.OptionParser
 //of a given entity and semantic type
 object FindSlotFills {
 
+  val fmt = OutputFormatter.default
+  
   def main(args: Array[String]): Unit = {
 
     var entityName = ""
@@ -74,10 +72,10 @@ object FindSlotFills {
     
     Seq(
       "\n-----------------------------------------\nUNFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery),
+      fmt.printUnformattedOutput(unfilteredSlotCandidateSets, kbpQuery),
       "\n-----------------------------------------\nFILTERED RESULTS\n--------------------------------------\n\n",
-      printUnformattedOutput(slotCandidateSets, kbpQuery),
+      fmt.printUnformattedOutput(slotCandidateSets, kbpQuery),
       "\n-----------------------------------------\nFORMATTED RESULTS\n--------------------------------------\n\n",
-      printFormattedOutput(slotBestAnswers, kbpQuery))
+      fmt.printFormattedOutput(slotBestAnswers, kbpQuery))
   }
 }
