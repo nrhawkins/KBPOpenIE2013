@@ -23,7 +23,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
       // group results by their fill
       val groups = slotCandidates.groupBy(_.trimmedFill.trimmedFillString)
       
-      fmt.printFillGroups(slot, groups)
+      fmt.printFillGroups(slot, slotCandidates, groups)
       
       // rank best result from each group according to a confidence measure
       // in descending order

@@ -23,7 +23,7 @@ class OutputFormatter(out: PrintStream) {
   
   
   val printUnfiltered = false
-  val printFiltered = false
+  val printFiltered = true
   val printGroups = true
   
   val indentStr: String = Seq.fill(indentSize)(' ').mkString
@@ -166,11 +166,13 @@ class OutputFormatter(out: PrintStream) {
     }
   }
   
-  def printFillGroups(slot: Slot, groups: Map[String, Seq[Candidate]]): Unit = if (printGroups) {
+  def printFillGroups(slot: Slot, candidates: Seq[Candidate], groups: Map[String, Seq[Candidate]]): Unit = if (printGroups) {
     
     println(0, "")
     println(0, "GROUPS FOR " + slot.name)
     println(0, "")
+
+    require(candidates.size == groups.values.flatten.size)
     
     val maxKeyLength = groups.keys.map(_.length).max
     val pad: String = Seq.fill(maxKeyLength + 1)(' ').mkString
@@ -178,7 +180,7 @@ class OutputFormatter(out: PrintStream) {
     groups.foreach { case (key, candidates) =>
       println(0, padStr(key) + candidates.head.debugString)
       candidates.tail.foreach { candidate =>
-        println(0, pad + candidates.head.debugString)
+        println(0, pad + candidate.debugString)
       }
       println(0, "")
     }

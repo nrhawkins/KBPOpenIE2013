@@ -113,7 +113,7 @@ abstract class KbpArgument extends KbpExtractionField {
   
   def debugString = {
     if (!wikiLink.isDefined) originalText + types.mkString(", ")
-    else originalText + "[" + wikiLink.get.nodeId.getOrElse(wikiLink.get.fbid) + "]" + types.mkString(", ") 
+    else originalText + " [" + wikiLink.get.nodeId.getOrElse(wikiLink.get.fbid) + "]" + types.mkString(", ") 
   }
 }
 

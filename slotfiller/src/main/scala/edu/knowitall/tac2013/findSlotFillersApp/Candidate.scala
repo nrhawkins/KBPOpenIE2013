@@ -10,14 +10,14 @@ import edu.knowitall.tool.chunk.ChunkedToken
 import edu.knowitall.taggers.Type
 import edu.knowitall.collection.immutable.Interval
 
-class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: List[Type]) {
+class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, val types: List[Type]) {
 
   def pattern = solrQuery.pattern 
   def queryType = solrQuery.queryType
   
-  def debugString = "arg1: " + extr.arg1.debugString + "\t rel: " + extr.rel.debugString +
-          "\t arg2: " + extr.arg2.debugString + "\t docID: " + extr.sentence.docId +
-          "\t confidence: " + extr.confidence + "\t sentence: " + extr.sentence.dgraph.text +
+  def debugString = "fill: " + fillField.debugString + "\tentity: " + entityField.debugString +
+          "\trel: " + extr.rel.debugString + "\t docID: " + extr.sentence.docId +
+          "\tconf: " + extr.confidence + "\t sent: " + extr.sentence.dgraph.text +
           "\t trimFill: " + trimmedFill.trimmedFillString
   
   def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
@@ -37,9 +37,9 @@ class Candidate(val solrQuery: SolrQuery, val extr: KbpExtraction, val types: Li
       case None => tokenKey(arg.tokens)
     }
 
-    val arg1Key = argKey(extr.arg1)
+    val arg1Key = extr.arg1.originalText // argKey(extr.arg1)
     val relKey = extr.rel.originalText
-    val arg2Key = argKey(extr.arg2)
+    val arg2Key = extr.arg2.originalText // argKey(extr.arg2)
 
     Seq(arg1Key, relKey, arg2Key).mkString(", ")
   }

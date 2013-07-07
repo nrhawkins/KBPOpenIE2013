@@ -13,6 +13,8 @@ import edu.knowitall.tac2013.findSlotFillersApp.SemanticTaggers.getTagTypes
 
 class SolrQueryExecutor(val solrClient: SolrClient) {
   
+  val queryCounter = new java.util.concurrent.atomic.AtomicInteger
+  
   def this(url: String) = this(new SolrClient(url))
   
   private def issueSolrQuery(kbpSolrQuery: SolrQuery): Seq[Candidate] = {
@@ -32,7 +34,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
     
     // wrap with Candidate
     kbpExtrs.map { extr =>
-      new Candidate(kbpSolrQuery, extr, 
+      new Candidate(queryCounter.getAndIncrement, kbpSolrQuery, extr, 
           getTagTypes(extr,kbpSolrQuery.pattern))
     }
   }
