@@ -131,7 +131,7 @@ object KbpExtractionConverter {
     val arg1WikiLinkName = arg1.wikiLink.map(_.name).getOrElse("")
     val arg1WikiLinkFbid = arg1.wikiLink.map(_.fbid).getOrElse("")
     val arg1WikiLinkNodeId = arg1.wikiLink.flatMap(_.nodeId).getOrElse("")
-    val arg1WikiLinkScore = arg1.wikiLink.map(_.score).getOrElse(-1)
+    val arg1WikiLinkScore = arg1.wikiLink.map(_.score).filter(_ > 0).map("%.03f".format(_)).getOrElse("")
     val arg1Types = arg1.types.mkString(" ")
     
     val relText = extr.rel.originalText
@@ -143,7 +143,7 @@ object KbpExtractionConverter {
     val arg2WikiLinkName = arg2.wikiLink.map(_.name).getOrElse("")
     val arg2WikiLinkFbid = arg2.wikiLink.map(_.fbid).getOrElse("")
     val arg2WikiLinkNodeId = arg2.wikiLink.flatMap(_.nodeId).getOrElse("")
-    val arg2WikiLinkScore = arg1.wikiLink.map(_.score).getOrElse(-1)
+    val arg2WikiLinkScore = arg2.wikiLink.map(_.score).filter(_ > 0).map("%.03f".format(_)).getOrElse("")
     val arg2Types = arg2.types.mkString(" ")
     
     val confidence = extr.confidence
@@ -187,7 +187,7 @@ object KbpExtractionConverter {
     doc.addField("chunks", chunks)
     doc.addField("dgraph", dgraph)
     
-    assert(kbpExtractionFields.equals(doc.getFieldNames().asScala.toSet))
+    assert(kbpExtractionFields.subsetOf(doc.getFieldNames().asScala.toSet))
     
     doc
   }
