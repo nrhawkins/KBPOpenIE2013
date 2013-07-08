@@ -59,7 +59,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
   def mergeByLinks(candidates: Seq[Candidate]): Map[String, Seq[Candidate]] = {
     def key(cand: Candidate) = cand.fillField.wikiLink match {
       case Some(wikiLink) => "%%" + wikiLink.fbid // use %% later so we know which ones were linked
-      case None => cand.trimmedFill.string
+      case None => removeStopTokens(cand.trimmedFill.string)
     }
     // group by key...
     val groups = candidates.groupBy(key)
@@ -68,9 +68,10 @@ class SlotFillReranker(fmt: OutputFormatter) {
     val convertedGroups = groups.iterator.toSeq.map { case (key, candidates) =>
       if (!key.startsWith("%%")) (key, candidates)
       else {
-        // get most common trimmed fill 
+        // since linked, probably all are good, long ones better
+        // get longest trim and filter out stop words
         val bestTrim = candidates.groupBy(_.trimmedFill.string).maxBy(_._2.size)._2.head.trimmedFill.string
-        (bestTrim, candidates)
+        (removeStopTokens(bestTrim), candidates)
       }
     }
     // regroup and flatten in case of key collision
@@ -89,18 +90,19 @@ class SlotFillReranker(fmt: OutputFormatter) {
     mergePairwise(trimGroups, isPrefixOf)
   }
   
-  def mergePairwise(trimGroups: Map[String, Seq[Candidate]], pairEqTest: (String, String) => Boolean): Map[String, Seq[Candidate]] = {
+  def mergePairwise(groups: Map[String, Seq[Candidate]], pairEqTest: (String, String) => Boolean): Map[String, Seq[Candidate]] = {
     
-    var mergedGroups = trimGroups
+    var groupKeysDescSize = groups.toSeq.sortBy(-_._2.size).map(_._1)
+    var mergedGroups = groups
     
     // for each key in trimGroups, see if it is a substring of another.
     var changed = true
     while (changed) {
-      val allKeyPairs = mergedGroups.keys.flatMap { key1 =>
-        mergedGroups.keys.map(key2 => (removeStopTokens(key1), removeStopTokens(key2))) 
+      val allKeyPairs = groupKeysDescSize.flatMap { key1 =>
+        groupKeysDescSize.map(key2 => (key1, key2)) 
       }
       allKeyPairs find pairEqTest.tupled match {
-        case Some((key1, key2)) => {
+        case Some((key1, key2)) => { // it will always be the largest groups
           val fullGroup = mergedGroups(key1) ++ mergedGroups(key2)
           // remove both prefix and string and add the new merged group under key string
           mergedGroups --= Seq(key1, key2) 
