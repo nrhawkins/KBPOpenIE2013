@@ -21,8 +21,14 @@ case class WikiLink(val name: String, val fbid: String, val nodeId: Option[Strin
 
 object WikiLink {
   
-  // horrible but I need something that works right now.
-  def parseDouble(s: String) = try { Some(s.toDouble) } catch { case _ => None }
+  private val doubleRegex = "([-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?)".r
+  
+  def parseDouble(s: String) = {
+    s match {
+      case doubleRegex(num, _) => Some(num.toDouble)
+      case _ => None
+    }
+  }
   
   def deserialize(str: String): WikiLink = {
     val split = str.split(" ")
