@@ -25,7 +25,7 @@ class OutputFormatter(out: PrintStream) {
   val printUnfiltered = false
   val printFiltered = true
   
-  val maxGroups = 100
+  val maxGroups = 15
   val printGroups = true
   val detailedGroups = true
   

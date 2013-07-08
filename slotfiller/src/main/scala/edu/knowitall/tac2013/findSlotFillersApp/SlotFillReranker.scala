@@ -24,17 +24,17 @@ class SlotFillReranker(fmt: OutputFormatter) {
       
       val trimGroups = mergeByLinks(slotCandidates)
       
-      fmt.printFillGroups("Grouped by link then trim:", slot, trimGroups)
+      //fmt.printFillGroups("Grouped by link then trim:", slot, trimGroups)
       
       val prefixesMerged = mergePrefixes(trimGroups)
       
-      fmt.printFillGroups("Prefix trim groups merged:", slot, prefixesMerged)
+      //fmt.printFillGroups("Prefix trim groups merged:", slot, prefixesMerged)
       
       //val groups = getSuffixGroups(slot, prefixesMerged)
       val lastKeys = prefixesMerged.iterator.toSeq.flatMap { case (key, candidates) => candidates.map(c => (key.split(" ").last, c)) }
       val groups = lastKeys.groupBy(_._1).map { case (key, keysNcandidates) => (key, keysNcandidates.map(_._2)) }
       
-      fmt.printFillGroups("Grouped by last token:", slot, groups)
+      //fmt.printFillGroups("Merged and grouped:", slot, groups)
       
       // rank extractions my trimFill frequency * trimFill length
       val rankedAnswers = groups.iterator.toSeq.sortBy(-_._2.size).map { case (key, candidates) =>
@@ -44,7 +44,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
         (sortedCandidates.head.trimmedFill.string, sortedCandidates)
       }
       
-      fmt.printFillGroups("Ranked answer groups (descending)", slot, rankedAnswers.toMap)
+      fmt.printFillGroups("Merged and grouped with best answers first", slot, rankedAnswers.toMap)
       
       val bestAnswers = rankedAnswers.map(_._2.head)
       
