@@ -16,11 +16,20 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
 
   def pattern = solrQuery.pattern 
   def queryType = solrQuery.queryType
-  
-  def debugString = "fill: " + trimmedFill.string + "\tentity: " + entityField.debugString +
-          "\trel: " + extr.rel.debugString + "\t docID: " + extr.sentence.docId +
-          "\tconf: " + extr.confidence + "\t sent: " + extr.sentence.dgraph.text +
-          "\t trimFill: " + trimmedFill.string
+
+  def debugString = {
+    
+    val trimLinkString = fillField.wikiLink match {
+      case Some(wikiLink) => " [" + wikiLink.nodeId.getOrElse(wikiLink.fbid) + "]"
+      case None => ""
+    }
+    
+    val trimString = trimmedFill.string + trimLinkString
+    
+    "fill: " + trimString + "\tentity: " + entityField.debugString +
+    "\trel: " + extr.rel.debugString + "\t docID: " + extr.sentence.docId +
+      "\tconf: " + extr.confidence + "\t sent: " + extr.sentence.dgraph.text
+  }
   
   def deduplicationKey: String = Seq(extractionKey, extr.sentence.dgraph.text).mkString(" ")
   

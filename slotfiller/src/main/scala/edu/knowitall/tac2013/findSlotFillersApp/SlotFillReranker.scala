@@ -22,17 +22,19 @@ class SlotFillReranker(fmt: OutputFormatter) {
       
       require(slotCandidates.forall(_.pattern.slotName.equals(slot.name)))
       
-      val trimGroups = slotCandidates.groupBy(_.trimmedFill.string)
+      val trimGroups = mergeByLinks(slotCandidates)
       
-      fmt.printFillGroups("Raw trim groups:", slot, trimGroups)
+      fmt.printFillGroups("Grouped by link then trim:", slot, trimGroups)
       
       val prefixesMerged = mergePrefixes(trimGroups)
       
       fmt.printFillGroups("Prefix trim groups merged:", slot, prefixesMerged)
       
-      val groups = getSuffixGroups(slot, prefixesMerged)
+      //val groups = getSuffixGroups(slot, prefixesMerged)
+      val lastKeys = prefixesMerged.iterator.toSeq.flatMap { case (key, candidates) => candidates.map(c => (key.split(" ").last, c)) }
+      val groups = lastKeys.groupBy(_._1).map { case (key, keysNcandidates) => (key, keysNcandidates.map(_._2)) }
       
-      fmt.printFillGroups("Largest disjoint suffix groups:", slot, groups)
+      fmt.printFillGroups("Grouped by last token:", slot, groups)
       
       // rank extractions my trimFill frequency * trimFill length
       val rankedAnswers = groups.iterator.toSeq.sortBy(-_._2.size).map { case (key, candidates) =>
@@ -49,6 +51,36 @@ class SlotFillReranker(fmt: OutputFormatter) {
       bestAnswers.take(maxAnswers)
     }
   }
+  
+  /**
+   * Merge by link id, if present, else by trimmed fill string. Convert 
+   * link group keys to most common trimmed fill.
+   */
+  def mergeByLinks(candidates: Seq[Candidate]): Map[String, Seq[Candidate]] = {
+    def key(cand: Candidate) = cand.fillField.wikiLink match {
+      case Some(wikiLink) => "%%" + wikiLink.fbid // use %% later so we know which ones were linked
+      case None => cand.trimmedFill.string
+    }
+    // group by key...
+    val groups = candidates.groupBy(key)
+    // convert fbid keys to most common trim fill, which might make them collide with other keys,
+    // so next step is to regroup and flatten...
+    val convertedGroups = groups.iterator.toSeq.map { case (key, candidates) =>
+      if (!key.startsWith("%%")) (key, candidates)
+      else {
+        // get most common trimmed fill 
+        val bestTrim = candidates.groupBy(_.trimmedFill.string).maxBy(_._2.size)._2.head.trimmedFill.string
+        (bestTrim, candidates)
+      }
+    }
+    // regroup and flatten in case of key collision
+    val result = convertedGroups.groupBy(_._1).map { case (key, candidateSeqs) => 
+      val flatCandidates = candidateSeqs.flatMap { case (key, candidates) => candidates }
+      (key, flatCandidates)
+    }
+    result
+  }
+  
 
   def isPrefixOf(key1: String, key2: String) = key1 != key2 && key2.startsWith(key1)
   def isSuffixOf(key1: String, key2: String) = key1 != key2 && key2.endsWith(key1)
@@ -79,60 +111,6 @@ class SlotFillReranker(fmt: OutputFormatter) {
       }
     }
     mergedGroups.toMap
-  }
-  
-  /**
-   * Expand to non-disjoint mapping from (token suffix) => candidates with that fill suffix.
-   * Filter out stop tokens like "Inc., Corp., Mr.", etc.
-   */
-  def groupByFillSuffixes(trimGroups: Map[String, Seq[Candidate]]): Map[String, Seq[Candidate]] = {
-
-    val tokenGroups = trimGroups.toSeq.flatMap { case (trim, candidates) =>
-      val tokens = removeStopTokens(trim).split(" ")
-      val tails = tokens.tails.toSeq.dropRight(1)
-      val keys = tails.map(_.mkString(" "))
-      keys map { k => (k, candidates) }
-    } 
-    tokenGroups.groupBy(_._1).map { case (key, group) =>
-      (key, group.flatMap { case (_, candidates) => candidates })
-    }
-  }
-  
-  def getSuffixGroups(slot: Slot, trimGroups: Map[String, Seq[Candidate]]): Map[String, Seq[Candidate]] = {
-
-    val suffixGroups = groupByFillSuffixes(trimGroups)
-    
-    var disjointIds = Set.empty[Int]
-    var disjointGroups = Map.empty[String, Seq[Candidate]]
-    
-    fmt.printFillGroups("Trim suffix groups, non-disjoint", slot, suffixGroups)
-    
-    // Iterate over groups in descending order of size, choosing a greedily minimal disjoint subset of the original groups
-    var biggestGroups = suffixGroups.toSeq.sortBy(-_._2.size)
-    
-    while (!biggestGroups.isEmpty) {
-      val (key, candidates) = biggestGroups.head      
-      // insert all candidates
-      disjointIds ++= candidates.map(_.id)
-      disjointGroups += (key -> candidates)
-      // filter these candidates from all remaining groups and re-sort.
-      val remainingGroups = biggestGroups.tail
-      val filtered = remainingGroups.map { case (key, candidates) => 
-        (key, candidates.filter(c => !disjointIds.contains(c.id))) 
-      } filter(_._2.nonEmpty)
-      biggestGroups = filtered.sortBy(-_._2.size)
-    }
-    
-    for ((token, newCandidates) <- suffixGroups.toSeq.sortBy(-_._2.size)) {
-      val newIds = newCandidates.map(_.id)
-      val isDisjoint = disjointIds.forall { id => !newIds.contains(id) }
-      if (isDisjoint) {
-        disjointIds ++= newIds
-        disjointGroups += (token -> newCandidates) 
-      }
-    }
-    
-    disjointGroups
   }
 }
 
