@@ -7,7 +7,7 @@ import edu.knowitall.tac2013.openie.KbpExtraction
  */
 class SlotFillReranker(fmt: OutputFormatter) {
 
-  import SlotFillReranker.orgAbbreviations
+  import SlotFillReranker._
   
   /**
    * Requires that all candidates (if any) are for the same slot.
@@ -22,21 +22,22 @@ class SlotFillReranker(fmt: OutputFormatter) {
       
       require(slotCandidates.forall(_.pattern.slotName.equals(slot.name)))
       
-      // expand groups to 
-      val groups = getMergedGroups(slot, slotCandidates)
+      val trimGroups = slotCandidates.groupBy(_.trimmedFill.string)
+      
+      fmt.printFillGroups("Raw trim groups:", slot, trimGroups)
+      
+      val prefixesMerged = mergePrefixes(trimGroups)
+      
+      fmt.printFillGroups("Prefix trim groups merged:", slot, prefixesMerged)
+      
+      val groups = getSuffixGroups(slot, prefixesMerged)
+      
+      fmt.printFillGroups("Largest disjoint suffix groups:", slot, groups)
       
       // rank extractions my trimFill frequency * trimFill length
       val rankedAnswers = groups.iterator.toSeq.sortBy(-_._2.size).map { case (key, candidates) =>
         val trimGroups = candidates.groupBy(_.trimmedFill.string)
-        val sortedTrimGroups = trimGroups.toSeq.sortBy { case (trim, candidates) => 
-           slot.slotType match {
-             case Some("Organization") => {
-               val endsWithCorp = orgAbbreviations.exists(abbr => trim.toLowerCase.endsWith(abbr))
-               if (endsWithCorp) Int.MinValue else (-trim.length * candidates.size) 
-             }
-             case _ => -trim.length * candidates.size 
-           } 
-        }
+        val sortedTrimGroups = trimGroups.toSeq.sortBy { case (trim, candidates) => -trim.length * candidates.size } 
         val sortedCandidates = sortedTrimGroups.flatMap { case (trim, candidates) => candidates }
         (sortedCandidates.head.trimmedFill.string, sortedCandidates)
       }
@@ -49,36 +50,65 @@ class SlotFillReranker(fmt: OutputFormatter) {
     }
   }
 
+  def isPrefixOf(key1: String, key2: String) = key1 != key2 && key2.startsWith(key1)
+  def isSuffixOf(key1: String, key2: String) = key1 != key2 && key2.endsWith(key1)
+
+  def mergePrefixes(trimGroups: Map[String, Seq[Candidate]]): Map[String, Seq[Candidate]] = {
+    mergePairwise(trimGroups, isPrefixOf)
+  }
+  
+  def mergePairwise(trimGroups: Map[String, Seq[Candidate]], pairEqTest: (String, String) => Boolean): Map[String, Seq[Candidate]] = {
+    
+    var mergedGroups = trimGroups
+    
+    // for each key in trimGroups, see if it is a substring of another.
+    var changed = true
+    while (changed) {
+      val allKeyPairs = mergedGroups.keys.flatMap { key1 =>
+        mergedGroups.keys.map(key2 => (removeStopTokens(key1), removeStopTokens(key2))) 
+      }
+      allKeyPairs find pairEqTest.tupled match {
+        case Some((key1, key2)) => {
+          val fullGroup = mergedGroups(key1) ++ mergedGroups(key2)
+          // remove both prefix and string and add the new merged group under key string
+          mergedGroups --= Seq(key1, key2) 
+          mergedGroups += (key2 -> fullGroup)
+          changed = true
+        }
+        case None => changed = false
+      }
+    }
+    mergedGroups.toMap
+  }
+  
   /**
    * Expand to non-disjoint mapping from (token suffix) => candidates with that fill suffix.
    * Filter out stop tokens like "Inc., Corp., Mr.", etc.
    */
-  def groupByFillTokens(cands: Seq[Candidate]): Map[String, Seq[Candidate]] = {
+  def groupByFillSuffixes(trimGroups: Map[String, Seq[Candidate]]): Map[String, Seq[Candidate]] = {
 
-    val tokenGroups = cands.flatMap { candidate =>
-      val tokenKeys = candidate.trimmedFill.string.split(" ")
-      val keys = candidate.pattern.slotType match {
-        case Some("Person") => tokenKeys.tails.toSeq.dropRight(1).map(_.mkString(" "))
-        case Some("Organization") => tokenKeys.reverse.tails.toSeq.dropRight(1).map(_.reverse.mkString(" "))
-        case _ => tokenKeys.tails.toSeq.dropRight(1).map(_.mkString(" "))
-      }
-      keys map { k => (k, candidate) }
+    val tokenGroups = trimGroups.toSeq.flatMap { case (trim, candidates) =>
+      val tokens = removeStopTokens(trim).split(" ")
+      val tails = tokens.tails.toSeq.dropRight(1)
+      val keys = tails.map(_.mkString(" "))
+      keys map { k => (k, candidates) }
+    } 
+    tokenGroups.groupBy(_._1).map { case (key, group) =>
+      (key, group.flatMap { case (_, candidates) => candidates })
     }
-    val groupedByTokens = tokenGroups.groupBy(_._1).map(p => (p._1, p._2.map(_._2)))
-    groupedByTokens
   }
   
-  def getMergedGroups(slot: Slot, candidates: Seq[Candidate]): Map[String, Seq[Candidate]] = {
+  def getSuffixGroups(slot: Slot, trimGroups: Map[String, Seq[Candidate]]): Map[String, Seq[Candidate]] = {
 
-    val groups = groupByFillTokens(candidates)
+    val suffixGroups = groupByFillSuffixes(trimGroups)
     
     var disjointIds = Set.empty[Int]
     var disjointGroups = Map.empty[String, Seq[Candidate]]
     
-    fmt.printFillGroups("Trim suffix groups, non-disjoint", slot, groups)
+    fmt.printFillGroups("Trim suffix groups, non-disjoint", slot, suffixGroups)
     
     // Iterate over groups in descending order of size, choosing a greedily minimal disjoint subset of the original groups
-    var biggestGroups = groups.toSeq.sortBy(-_._2.size)
+    var biggestGroups = suffixGroups.toSeq.sortBy(-_._2.size)
     
     while (!biggestGroups.isEmpty) {
       val (key, candidates) = biggestGroups.head      
@@ -93,7 +123,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
       biggestGroups = filtered.sortBy(-_._2.size)
     }
     
-    for ((token, newCandidates) <- groups.toSeq.sortBy(-_._2.size)) {
+    for ((token, newCandidates) <- suffixGroups.toSeq.sortBy(-_._2.size)) {
       val newIds = newCandidates.map(_.id)
       val isDisjoint = disjointIds.forall { id => !newIds.contains(id) }
       if (isDisjoint) {
@@ -102,14 +132,19 @@ class SlotFillReranker(fmt: OutputFormatter) {
       }
     }
     
-    fmt.printFillGroups("Trim suffix groups, disjoint", slot, disjointGroups)
-    
     disjointGroups
   }
 }
 
 object SlotFillReranker {
   
-  val orgAbbreviations = Set("corp .", "inc .", "co .", "corporation", "incorporated")
+  def removeStopTokens(str: String): String = {
+    var result = str
+    for (stop <- stopTokens) result.replaceAll(stop, "")
+    result.trim
+  }
+  
+  val orgAbbreviations = Set("corp", "inc", "co", "corporation", "incorporated")
+  val stopTokens = orgAbbreviations ++ Set("mr", "mrs", "ms", "\\.")
   
 }

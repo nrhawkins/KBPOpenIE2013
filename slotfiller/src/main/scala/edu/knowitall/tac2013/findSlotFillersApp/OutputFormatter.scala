@@ -25,7 +25,7 @@ class OutputFormatter(out: PrintStream) {
   val printUnfiltered = false
   val printFiltered = true
   
-  val maxGroups = 15
+  val maxGroups = 100
   val printGroups = true
   val detailedGroups = true
   
@@ -101,8 +101,10 @@ class OutputFormatter(out: PrintStream) {
    */
   def printAnswers(bestAnswers: Map[Slot, Seq[Candidate]], kbpQuery: KBPQuery): Unit = {
 
+    val detailed = if (detailedAnswers) "DEBUG " else ""
+    
     println(0, "")
-    println(0, s"------------------- FORMATTED SLOT FILLS -------------------")
+    println(0, s"------------------- $detailed FORMATTED SLOT FILLS -------------------")
     println(0, "")
     
     //iterate over every slot type
