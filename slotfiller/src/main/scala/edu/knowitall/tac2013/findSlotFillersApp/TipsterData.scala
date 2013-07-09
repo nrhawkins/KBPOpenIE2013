@@ -21,16 +21,13 @@ object TipsterData {
 	        val name = nameAndLocationType(0).trim().toLowerCase()
 	        val locationType = nameAndLocationType(1).split(" ")(0).trim()	        
 	        locationType match {
-	          case "CITY" => { if(!citySet.contains(name)){
+	          case "CITY" => { if(!citySet.contains(name)) {
 	        	  					citySet.add(name)
-	        	  					if(name == "redmond"){
-	        	  					  println("Redmond added!")
-	        	  					}
-	          }
+	          				}
 	          }
 	          case "COUNTRY" => { if(!countrySet.contains(name)) {
 	        	  					countrySet.add(name)
-	        	  					}
+	        	  				}
 	          }
 	          case "PROVINCE" => { if(!stateOrProvinceSet.contains(name)){
 	        	  				stateOrProvinceSet.add(name)

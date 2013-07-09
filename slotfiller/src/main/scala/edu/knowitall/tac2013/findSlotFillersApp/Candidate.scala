@@ -151,7 +151,6 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
         //city
         else{
           // iterate forwards through the list looking for first mention of a city
-          println(extr.sentenceText)
           for(t <- intersectingTypes){
             if(t.descriptor()=="StanfordLOCATION"){
 	              return t
