@@ -2,14 +2,18 @@ package edu.knowitall.tac2013.findSlotFillersApp
 
 object TipsterData {
   
-  private val tipsterPath = "/homes/gws/jgilme1/docs/Tac2013/TipsterGazetteer.txt"
+  private val tipsterResourcePath = "/edu/knowitall/tac2013/findSlotFillersApp/TipsterGazetteer.txt"
+  
+  private val tipsterURL = getClass().getResource(tipsterResourcePath)
+  require(tipsterURL != null, "Could not find resource: " + tipsterResourcePath)
+
     
   val citySet =  scala.collection.mutable.Set[String]()
   val stateOrProvinceSet = scala.collection.mutable.Set[String]()
   val countrySet = scala.collection.mutable.Set[String]()
 
-  
-  scala.io.Source.fromFile(tipsterPath)(scala.io.Codec.ISO8859).getLines.foreach(line => {
+  // read in tipster lines with latin encoding so as not to get errors.
+  scala.io.Source.fromFile(tipsterURL.getPath())(scala.io.Codec.ISO8859).getLines.foreach(line => {
       val pairs = line.split("\\)")
       val pairSplits = { for(p <- pairs) yield p.split("\\(")}
       for(nameAndLocationType <- pairSplits){
