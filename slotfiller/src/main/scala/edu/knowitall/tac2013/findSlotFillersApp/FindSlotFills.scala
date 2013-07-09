@@ -37,10 +37,6 @@ object FindSlotFills {
   }
 
   def runForServerOutput(rawName: String, entityTypeString: String, overrideSlotNames: Set[String], output: PrintStream): Unit = {
-
-    if(TipsterData.cities.contains("redmond")){
-    println("Contains Redmond!")
-    }
     
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
@@ -77,6 +73,8 @@ object FindSlotFills {
       (slot -> new SlotFillReranker(fmt).findSlotAnswers(slot, kbpQuery, patternCandidates))  
     }
     
-    fmt.printAnswers(slotBestAnswers, kbpQuery)
+    val smoothedSlotBestAnswers = SlotFillConsistency.makeConsistent(slotBestAnswers)
+    
+    fmt.printAnswers(smoothedSlotBestAnswers, kbpQuery)
   }
 }
