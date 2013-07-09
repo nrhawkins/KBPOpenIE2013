@@ -38,6 +38,10 @@ object FindSlotFills {
 
   def runForServerOutput(rawName: String, entityTypeString: String, overrideSlotNames: Set[String], output: PrintStream): Unit = {
 
+    if(TipsterData.cities.contains("redmond")){
+    println("Contains Redmond!")
+    }
+    
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
       case "organization" => ORG

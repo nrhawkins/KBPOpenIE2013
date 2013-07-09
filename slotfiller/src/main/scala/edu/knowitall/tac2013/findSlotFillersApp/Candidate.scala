@@ -119,6 +119,55 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     
      
   }
+  
+  // intersectingTypes can't be empty when called
+  private def chooseBestInterval (intersectingTypes: List[Type]): Type ={
+    val slotType = pattern.slotType.getOrElse("")
+    if(slotType == "Country" || slotType == "Stateorprovince" ||
+      slotType == "City"){
+      
+        if(slotType == "Country"){
+          // iterate backwards through the list looking for first mention of a country..
+          for(t <- intersectingTypes.reverse){
+            if(t.descriptor()=="StanfordLOCATION"){
+	            if(TipsterData.countries.contains(t.text().toLowerCase())){
+	              return t
+	            }
+            }
+          }
+        }
+        
+        else if(slotType == "Stateorprovince"){
+          // iterate backwards through the list looking for first mention of a state or province
+          for(t <- intersectingTypes.reverse){
+            if(t.descriptor()=="StanfordLOCATION"){
+	            if(TipsterData.stateOrProvinces.contains(t.text().toLowerCase())){
+	              return t
+	            }
+            }
+          }
+        }
+        
+        //city
+        else{
+          // iterate forwards through the list looking for first mention of a city
+          println(extr.sentenceText)
+          for(t <- intersectingTypes){
+            if(t.descriptor()=="StanfordLOCATION"){
+	              return t
+            }
+          }
+        }
+      
+      //if the program makes it this far just return the head
+      intersectingTypes.head
+    }
+    else{
+      // return first type in list
+      intersectingTypes.head
+    }
+  }
+  
   private def getTrimmedFill(): TrimmedFill = {
     var trimmedFillString: Option[String] = None
     
@@ -129,12 +178,19 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     //there are types from the tagger that was ran on
     //the appropriate slot fill type
     else{
+      var intersectingTypes = List[Type]()
       for(t <- types){
         if(t.interval().intersects(fillField.tokenInterval)){
-          return basicTrim(t.text(),t.interval())
+          intersectingTypes = intersectingTypes ::: List(t)
         }
       }
-      return basicTrim(fillField.originalText,fillField.tokenInterval)
+      if(!intersectingTypes.isEmpty){
+        val bestInterval = chooseBestInterval(intersectingTypes)
+        return basicTrim(bestInterval.text(),bestInterval.interval())
+      }
+      else{
+        return basicTrim(fillField.originalText,fillField.tokenInterval)
+      }
     }
   }
   
