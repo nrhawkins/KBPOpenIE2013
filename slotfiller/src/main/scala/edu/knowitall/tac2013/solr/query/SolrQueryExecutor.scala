@@ -64,7 +64,7 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
 object SolrQueryExecutor {
   
-  val defaultSolrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
+  val defaultSolrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
     
   lazy val defaultInstance = new SolrQueryExecutor(defaultSolrUrl) 
 }
