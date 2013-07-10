@@ -246,3 +246,16 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   lazy val trimmedFill = getTrimmedFill()
 }
+
+object Candidate {
+  
+  type Candidates = Seq[Candidate]
+  
+  def groupScore(candidates: Candidates): Double = {
+    
+    require(candidates.nonEmpty, "Invalid argument, empty candidates.")
+    
+    1 - candidates.map(c => 1 - c.extr.confidence).reduce(_ * _)
+  }
+  
+}

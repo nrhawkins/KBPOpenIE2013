@@ -26,8 +26,8 @@ class OutputFormatter(out: PrintStream) {
   val printFiltered = false
   
   val maxGroups = 15
-  val printGroups = false
-  val detailedGroups = false
+  val printGroups = true
+  val detailedGroups = true
   
   val indentStr: String = Seq.fill(indentSize)(' ').mkString
   
@@ -136,7 +136,7 @@ class OutputFormatter(out: PrintStream) {
           bestAnswer.trimmedFill.string,
           bestAnswer.fillOffsetString,
           bestAnswer.entityOffsetString,
-          bestAnswer.relOffsetString,
+          bestAnswer.justificationOffsetString,
           bestAnswer.extr.confidence)
         
         out.println(fields.mkString("\t"))
@@ -180,15 +180,19 @@ class OutputFormatter(out: PrintStream) {
     val sortedGroups = groups.iterator.toSeq.sortBy(-_._2.size)
     val truncatedGroups = sortedGroups.take(maxGroups)
     val numTruncated = groups.keys.size - maxGroups
+    val groupScore = groups map { case (key, candidates) => (key, "%.02f".format(Candidate.groupScore(candidates))) }
+    // the keys we actually display with size info
+    val displayKeys = groups map { case (key, candidates) => (key, s"$key(${groupScore(key)},${candidates.size})") }
     
-    val maxKeyLength = truncatedGroups.map(_._1.length).max
+    val maxKeyLength = displayKeys.values.map(_.length).max  
     val pad: String = Seq.fill(maxKeyLength + 1)(' ').mkString
     def padStr(str: String): String = str + Seq.fill(maxKeyLength - str.length + 1)(' ').mkString
 
     if (detailedGroups) {
       truncatedGroups.foreach {
         case (key, candidates) =>
-          println(0, padStr(key) + candidates.head.debugString)
+          val displayKey = displayKeys(key)
+          println(0, padStr(displayKey) + candidates.head.debugString)
           candidates.tail.foreach { candidate =>
             println(0, pad + candidate.debugString)
           }
@@ -197,7 +201,8 @@ class OutputFormatter(out: PrintStream) {
       
     } else {
       truncatedGroups.foreach { case (key, candidates) =>
-        println(0, "%s (%d)".format(padStr(key), candidates.size))
+        val displayKey = displayKeys(key)
+        println(0, "%s (%d)".format(padStr(displayKey), candidates.size))
       }
     }
     if (numTruncated > 0) println(0, s"($numTruncated groups truncated)")
