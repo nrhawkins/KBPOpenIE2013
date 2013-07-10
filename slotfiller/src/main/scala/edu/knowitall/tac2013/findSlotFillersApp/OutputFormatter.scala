@@ -27,7 +27,7 @@ class OutputFormatter(out: PrintStream) {
   
   val maxGroups = 15
   val printGroups = false
-  val detailedGroups = true
+  val detailedGroups = false
   
   val indentStr: String = Seq.fill(indentSize)(' ').mkString
   
@@ -130,7 +130,6 @@ class OutputFormatter(out: PrintStream) {
         
         val fields = Iterator(
           kbpQuery.id,
-          kbpQuery.name,
           slot.name,
           runID,
           bestAnswer.extr.sentence.docId,

@@ -69,7 +69,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     case _ => throw new RuntimeException("Invalid slotFillIn for pattern: %s".format(pattern.debugString))
   }
   
-  def offsetString(interval: Interval): String = "[%d-%d]".format(interval.start, interval.last)
+  def offsetString(interval: Interval): String = "%d-%d".format(interval.start, interval.last)
   
   def offsetString(fill: TrimmedFill): String = offsetString(getOffset(trimmedFill))
   
