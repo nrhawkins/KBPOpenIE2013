@@ -56,15 +56,15 @@ object LocationHelper {
    * Uses multiple databases to return a boolean if the string appears in any of these databases
    */
   def isCity(str: String): Boolean = {
-    if (TipsterData.cities.contains(str.toLowerCase())) true else false
+    if (TipsterData.cities.contains(str.toLowerCase()) || (NellData.cityNameSet.contains(str.toLowerCase()))) true else false
   }
   
   def isStateOrProvince(str: String): Boolean = {
-    if (TipsterData.stateOrProvinces.contains(str.toLowerCase())) true else false
+    if (TipsterData.stateOrProvinces.contains(str.toLowerCase()) || (NellData.stateOrProvinceNameSet.contains(str.toLowerCase()))) true else false
   }
   
   def isCountry(str: String): Boolean = {
-    if (TipsterData.countries.contains(str.toLowerCase())) true else false
+    if (TipsterData.countries.contains(str.toLowerCase()) || (NellData.countryNameSet.contains(str.toLowerCase()))) true else false
   }
 
 }
