@@ -63,5 +63,4 @@ object KnowledgeBaseReader {
     
     new KnowledgeBaseReader(new File(path)) foreach println
   }
-  
 }

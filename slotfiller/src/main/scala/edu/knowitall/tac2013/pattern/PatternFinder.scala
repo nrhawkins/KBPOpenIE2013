@@ -43,8 +43,6 @@ object Pattern {
     def sampleFills = if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText)
     def sampleEntities = if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText)
     
-    
-    
     Pattern(freq, relStemmed, query, StringCounter.fromStrings(sampleFills), StringCounter.fromStrings(sampleEntities))
   }
   
@@ -73,7 +71,10 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     Seq(sendQuery(q1), sendQuery(q2))
   }
   
-  def getPatterns: Seq[Pattern] = {
+  /**
+   * Return patterns grouped by fill type
+   */
+  def getPatterns: Map[String, Seq[Pattern]] = {
     
     System.err.println("Issuing Queries...")
     
@@ -87,16 +88,17 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
       }
     }
     
-    System.err.println("Grouping patterns...")
+    System.err.println("Combining patterns...")
     
     // group patterns by key and combine
     def combine(p1: Pattern, p2: Pattern) = p1.combineWith(p2)
     val combinedPatterns = rawPatterns.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     
-    System.err.println("Sorting patterns...")
+    System.err.println("Grouping patterns...")
+    val groupedPatterns = combinedPatterns.groupBy(_.query.element.slotname)
     
     // sort patterns in descending order by frequency
-    val sortedPatterns = combinedPatterns.toSeq.sortBy(-_.freq)
+    val sortedPatterns = groupedPatterns.map { case (slotname, patterns) => (slotname, patterns.toSeq.sortBy(-_.freq)) }
     
     sortedPatterns
   }
@@ -125,9 +127,13 @@ object PatternFinder extends App {
     
     val elements = new AnswerKeyReader(answerFile, queriesFile)
     
-    val patternFinder = new PatternFinder(solrUrl, elements)
+    val patternFinder = new PatternFinder(solrUrl, elements.take(elementLimit))
     
-    patternFinder.getPatterns.take(elementLimit) foreach output.println
+    patternFinder.getPatterns.iterator.toSeq.sortBy(-_._2.size) foreach { case (slotname, patterns) =>
+      output.println("PATTERNS FOR: " + slotname)
+      patterns foreach output.println
+      output.println
+    }
   }
 
   if (output != System.out) output.close()
