@@ -1,10 +1,10 @@
-package edu.knowitall.tac2013.findSlotFillersApp
+package edu.knowitall.tac2013.app
 
 import scala.io._
 import java.io._
 import edu.knowitall.tac2013.solr.query.SolrQuery
 import edu.knowitall.tac2013.openie.KbpExtraction
-import edu.knowitall.tac2013.findSlotFillersApp.KBPQueryEntityType._
+import edu.knowitall.tac2013.app.KBPQueryEntityType._
 import edu.knowitall.collection.immutable.Interval
 
 
