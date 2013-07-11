@@ -1,0 +1,99 @@
+2013-07-10 17:53:48,207 - [INFO] - from play in main 
+Listening for HTTP on /0:0:0:0:0:0:0:0:8081
+
+2013-07-10 17:53:54,512 - [INFO] - from play in New I/O  worker #1 
+Application started (Dev)
+
+2013-07-10 17:53:54,758 - [INFO] - from akka.event.slf4j.Slf4jEventHandler in play-akka.actor.default-dispatcher-3 
+Slf4jEventHandler started
+
+2013-07-10 17:54:01,772 - [INFO] - from application in play-akka.actor.default-dispatcher-2 
+query for: Query(PartQuery(Vector(Bernanke),Vector(),Argument1),PartQuery(List(),List(),Argument1),PartQuery(List(),List(),Argument1),None,Some(2010),Argument1)
+
+2013-07-10 17:54:01,773 - [INFO] - from application in play-akka.actor.default-dispatcher-2 
+SOLR Url: http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr
+
+2013-07-10 17:54:01,786 - [INFO] - from org.apache.solr.client.solrj.impl.HttpClientUtil in play-akka.actor.default-dispatcher-2 
+Creating new http client, config:maxConnections=128&maxConnectionsPerHost=32&followRedirects=false
+
+2013-07-10 17:54:01,893 - [DEBUG] - from application in play-akka.actor.default-dispatcher-2 
+Lucene query: +arg1Text:%arg1Text_0% 
+
+2013-07-10 17:54:01,894 - [DEBUG] - from application in play-akka.actor.default-dispatcher-2 
+Lucene variables: Map(arg1Text_0 -> Bernanke)
+
+2013-07-10 17:54:24,074 - [INFO] - from application in play-akka.actor.default-dispatcher-2 
+results received: 10000
+
+2013-07-10 17:54:40,162 - [INFO] - from application in play-akka.actor.default-dispatcher-5 
+sentenes for: List(Bernanke, told, Shortly after the Fed in March took the unprecedented step of helping to bankroll JPMorgan Chase's takeover of investment house Bear Stearns)
+
+2013-07-10 17:54:40,162 - [INFO] - from application in play-akka.actor.default-dispatcher-5 
+SOLR Url: http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr
+
+2013-07-10 17:54:40,162 - [INFO] - from org.apache.solr.client.solrj.impl.HttpClientUtil in play-akka.actor.default-dispatcher-5 
+Creating new http client, config:maxConnections=128&maxConnectionsPerHost=32&followRedirects=false
+
+2013-07-10 17:54:40,167 - [DEBUG] - from application in play-akka.actor.default-dispatcher-5 
+Lucene query: +arg1Text:%arg1Text% +relText:%relText% +arg2Text:%arg2Text%
+
+2013-07-10 17:54:40,168 - [DEBUG] - from application in play-akka.actor.default-dispatcher-5 
+Lucene variables: List((arg1Text,Bernanke), (relText,told), (arg2Text,Shortly after the Fed in March took the unprecedented step of helping to bankroll JPMorgan Chase's takeover of investment house Bear Stearns))
+
+2013-07-10 17:54:42,231 - [INFO] - from application in play-akka.actor.default-dispatcher-5 
+sentence extractions received: 1
+
+2013-07-10 17:55:33,510 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+query for: Query(PartQuery(Vector(Bernanke),Vector(),Argument1),PartQuery(List(),List(),Argument1),PartQuery(List(),List(),Argument1),None,None,Argument1)
+
+2013-07-10 17:55:33,510 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+SOLR Url: http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr
+
+2013-07-10 17:55:33,510 - [INFO] - from org.apache.solr.client.solrj.impl.HttpClientUtil in play-akka.actor.default-dispatcher-8 
+Creating new http client, config:maxConnections=128&maxConnectionsPerHost=32&followRedirects=false
+
+2013-07-10 17:55:33,513 - [DEBUG] - from application in play-akka.actor.default-dispatcher-8 
+Lucene query: +arg1Text:%arg1Text_0% 
+
+2013-07-10 17:55:33,513 - [DEBUG] - from application in play-akka.actor.default-dispatcher-8 
+Lucene variables: Map(arg1Text_0 -> Bernanke)
+
+2013-07-10 17:55:34,184 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+results received: 10000
+
+2013-07-10 17:55:44,594 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+query for: Query(PartQuery(Vector(Bernanke),Vector(),Argument1),PartQuery(List(),List(),Argument1),PartQuery(List(),List(),Argument1),None,Some(2010),Argument1)
+
+2013-07-10 17:55:44,594 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+SOLR Url: http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr
+
+2013-07-10 17:55:44,594 - [INFO] - from org.apache.solr.client.solrj.impl.HttpClientUtil in play-akka.actor.default-dispatcher-8 
+Creating new http client, config:maxConnections=128&maxConnectionsPerHost=32&followRedirects=false
+
+2013-07-10 17:55:44,598 - [DEBUG] - from application in play-akka.actor.default-dispatcher-8 
+Lucene query: +arg1Text:%arg1Text_0% 
+
+2013-07-10 17:55:44,598 - [DEBUG] - from application in play-akka.actor.default-dispatcher-8 
+Lucene variables: Map(arg1Text_0 -> Bernanke)
+
+2013-07-10 17:55:45,328 - [INFO] - from application in play-akka.actor.default-dispatcher-8 
+results received: 10000
+
+2013-07-10 17:56:06,177 - [INFO] - from application in play-akka.actor.default-dispatcher-13 
+sentenes for: List(Bernanke, told, Shortly after the Fed in March took the unprecedented step of helping to bankroll JPMorgan Chase's takeover of investment house Bear Stearns)
+
+2013-07-10 17:56:06,177 - [INFO] - from application in play-akka.actor.default-dispatcher-13 
+SOLR Url: http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr
+
+2013-07-10 17:56:06,177 - [INFO] - from org.apache.solr.client.solrj.impl.HttpClientUtil in play-akka.actor.default-dispatcher-13 
+Creating new http client, config:maxConnections=128&maxConnectionsPerHost=32&followRedirects=false
+
+2013-07-10 17:56:06,182 - [DEBUG] - from application in play-akka.actor.default-dispatcher-13 
+Lucene query: +arg1Text:%arg1Text% +relText:%relText% +arg2Text:%arg2Text%
+
+2013-07-10 17:56:06,183 - [DEBUG] - from application in play-akka.actor.default-dispatcher-13 
+Lucene variables: List((arg1Text,Bernanke), (relText,told), (arg2Text,Shortly after the Fed in March took the unprecedented step of helping to bankroll JPMorgan Chase's takeover of investment house Bear Stearns))
+
+2013-07-10 17:56:06,190 - [INFO] - from application in play-akka.actor.default-dispatcher-13 
+sentence extractions received: 1
+
