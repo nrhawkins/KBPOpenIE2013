@@ -41,15 +41,26 @@ object FindSlotFillsServer extends App {
       def intent = Intent {
         case req @ POST(Path(Seg(Nil))) =>
           println(req.parameterNames.mkString(" "))
-          handlePost(req.parameterValues("field1").head,
-            req.parameterValues("field2").head,
-            req.parameterValues("field3").head)
+          handlePost(
+            req.parameterValues("name").head,
+            req.parameterValues("nodeId").head,
+            req.parameterValues("type").head,
+            req.parameterValues("slots").head,
+            req.parameterValues("corpusUrl").head)
         case req @ GET(Path(Seg(Nil))) =>
-          ResponseString("""<html><body>
+          ResponseString("""<html>
+              <h1>KnowItAll Slot Fill Test Server</h1>
+              <body>
             <form method="POST">
-              <textarea cols="60" rows="20" name="field1"></textarea><br />
-              <input type="text" name="field2"/>
-              <input type="text" name="field3"/>
+              Entity Name: <input type="text" name="name"/><br/>
+              Entity Node Id: (optional) <input type="text" name="nodeId"/><br/>
+              Entity Type:<br/>
+              <input type="radio" name="type" value="person" checked>person<br/>
+        	  <input type="radio" name="type" value="organization">organization<br/>
+              Slots: (optional) <input type="text" name="slots"/> (comma sep. default: all slots) <br/>
+              Corpus:<br/>
+              <input type="radio" name="corpusUrl" value="http://knowitall:knowit!@rv-n16:8123/solr" checked>2013 Corpus<br/>
+        	  <input type="radio" name="corpusUrl" value="http://knowitall:knowit!@rv-n16:9321/solr">2010 Corpus<br/>
               <input type="submit"/>
             </form>
             </body></html>""") ~> Ok
@@ -59,31 +70,17 @@ object FindSlotFillsServer extends App {
        * *
        * Handles the POST input to the server
        */
-      def handlePost(field1: String, field2: String, field3: String) = {
+      def handlePost(entityString: String, nodeIdStr: String, typ: String, slots: String, corpusUrl: String) = {
 
-        val field1Split = field1.split(" ")
-        var entityString = field1
-        var nodeId = ""
-
-        if(field1Split.length > 1){
-          var  isNodeId = false
-          for( c <- field1Split(field1Split.length-1)){
-            if(c.isDigit){
-              isNodeId = true
-            }
-          }
-          if (isNodeId) {
-            nodeId = field1Split(field1Split.length - 1)
-            entityString = field1.substring(0, field1.size - nodeId.size)
-          }
-        }
-        val slots = field3.split(",").map(_.trim).filter(_.nonEmpty).toSet
+        val nodeId = if (nodeIdStr.nonEmpty) Some(nodeIdStr) else None
+        
+        val slotsSplit = slots.split(",").map(_.trim).filter(_.nonEmpty).toSet
         
         new ResponseStreamer {
           def stream(os: OutputStream) = {
             val printStream = new PrintStream(os)
             try {
-              FindSlotFills.runForServerOutput(entityString, field2, slots, printStream)
+              new FindSlotFills(corpusUrl).runForServerOutput(entityString, nodeId, typ, slotsSplit, printStream)
             } catch {
               case e: Throwable => {
                 e.printStackTrace(printStream)
