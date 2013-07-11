@@ -138,3 +138,37 @@ object PatternFinder extends App {
 
   if (output != System.out) output.close()
 }
+
+
+object KbPatternFinder extends App {
+  
+  import scopt.OptionParser
+  import java.io.File
+  import java.io.PrintStream
+  
+  var solrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
+  var kbPath: File = new File(".") 
+  var output: PrintStream = System.out
+  var elementLimit = Int.MaxValue
+  
+  val parser = new OptionParser() {
+    arg("kbPath", "Path to knowledge base", { s => kbPath = new File(s) })
+    opt("output", "Output file (default stdout)", { s => output = new PrintStream(new File(s)) })
+    opt("limit", "debug limit elements, default no limit", { s => elementLimit = s.toInt })
+  }
+  
+  if (parser.parse(args)) {
+    
+    val elements = new KnowledgeBaseReader(kbPath)
+    
+    val patternFinder = new PatternFinder(solrUrl, elements.take(elementLimit))
+    
+    patternFinder.getPatterns.iterator.toSeq.sortBy(-_._2.size) foreach { case (slotname, patterns) =>
+      output.println("PATTERNS FOR: " + slotname)
+      patterns foreach output.println
+      output.println
+    }
+  }
+
+  if (output != System.out) output.close()
+}
