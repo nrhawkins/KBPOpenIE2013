@@ -64,3 +64,12 @@ object KnowledgeBaseReader {
     new KnowledgeBaseReader(new File(path)) foreach println
   }
 }
+
+object InfoboxCounter extends App {
+  val path = args(0)
+  val out = new java.io.PrintStream(args(1))
+
+  new KnowledgeBaseReader(new File(path)).groupBy(e => e.slotname).iterator.map({ case (slotname, es) => 
+    (slotname, es.size) 
+  }).toSeq.sortBy(-_._2).take(500) foreach { case (slotname, count) => out.println(slotname) }
+}
