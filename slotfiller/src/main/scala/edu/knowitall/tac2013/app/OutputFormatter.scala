@@ -8,8 +8,16 @@ import edu.knowitall.tac2013.app.KBPQueryEntityType._
 import edu.knowitall.collection.immutable.Interval
 
 
-class OutputFormatter(out: PrintStream) {
-
+case class OutputFormatter(
+    val out: PrintStream, 
+    val printUnfiltered: Boolean = false, 
+    val printFiltered: Boolean = false, 
+    val detailedCandidates: Boolean = true,
+    val printGroups: Boolean = true,
+    val detailedGroups: Boolean = true,
+    val printAnswers: Boolean = true,
+    val detailedAnswers: Boolean = true) {
+  
   val runID = "UWashington-1"
  
   val indentSize = 4
@@ -18,16 +26,7 @@ class OutputFormatter(out: PrintStream) {
   
   val doubleSpace = false
   
-  val detailedCandidates = false
-  val detailedAnswers = false
-  
-  
-  val printUnfiltered = false
-  val printFiltered = false
-  
   val maxGroups = 15
-  val printGroups = true
-  val detailedGroups = true
   
   val indentStr: String = Seq.fill(indentSize)(' ').mkString
   
@@ -99,7 +98,7 @@ class OutputFormatter(out: PrintStream) {
   /**
    * Overloaded to return a string for server usage
    */
-  def printAnswers(bestAnswers: Map[Slot, Seq[Candidate]], kbpQuery: KBPQuery): Unit = {
+  def printAnswers(bestAnswers: Map[Slot, Seq[Candidate]], kbpQuery: KBPQuery): Unit = if (printAnswers) {
 
     val detailed = if (detailedAnswers) "DEBUG " else ""
 

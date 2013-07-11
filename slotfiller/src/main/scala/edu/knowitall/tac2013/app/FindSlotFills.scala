@@ -32,12 +32,12 @@ class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
 
     val slots = slotStrings.split(",").map(_.trim).filter(_.nonEmpty).toSet
     
-    runForServerOutput(entityName, None, entityType, slots, System.out)
+    runForServerOutput(entityName, None, entityType, slots, new OutputFormatter(System.out))
     
     if (output != System.out) output.close()
   }
 
-  def runForServerOutput(rawName: String, nodeId: Option[String], entityTypeString: String, overrideSlotNames: Set[String], output: PrintStream): Unit = {
+  def runForServerOutput(rawName: String, nodeId: Option[String], entityTypeString: String, overrideSlotNames: Set[String], fmt: OutputFormatter): Unit = {
     
     val entityName = rawName.replace("_", " ").trim()
     val entityType = entityTypeString.trim() match {
@@ -52,8 +52,6 @@ class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
     } else {
       KBPQuery.forEntityName(entityName, entityType, nodeId).withOverrideSlots(overrideSlots)
     }
-    
-    val fmt = new OutputFormatter(output)
     
     val unfilteredSlotCandidateSets = kbpQuery.slotsToFill.map { slot => 
       (slot, queryExecutor.executeUnfilteredQuery(kbpQuery, slot)) 

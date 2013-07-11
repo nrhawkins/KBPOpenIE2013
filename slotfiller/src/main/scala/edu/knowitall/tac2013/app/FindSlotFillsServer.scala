@@ -46,7 +46,14 @@ object FindSlotFillsServer extends App {
             req.parameterValues("nodeId").head,
             req.parameterValues("type").head,
             req.parameterValues("slots").head,
-            req.parameterValues("corpusUrl").head)
+            req.parameterValues("corpusUrl").head,
+            req.parameterValues("pu").headOption,
+            req.parameterValues("pf").headOption,
+            req.parameterValues("dc").headOption,
+            req.parameterValues("pg").headOption,
+            req.parameterValues("dg").headOption,
+            req.parameterValues("pa").headOption,
+            req.parameterValues("da").headOption)
         case req @ GET(Path(Seg(Nil))) =>
           ResponseString("""<html>
               <h1>KnowItAll Slot Fill Test Server</h1>
@@ -61,6 +68,12 @@ object FindSlotFillsServer extends App {
               Corpus:<br/>
               <input type="radio" name="corpusUrl" value="http://knowitall:knowit!@rv-n16:8123/solr" checked>2013 Corpus<br/>
         	  <input type="radio" name="corpusUrl" value="http://knowitall:knowit!@rv-n16:9321/solr">2010 Corpus<br/>
+              Output Options:<br/>
+              <input type="checkbox" name="pu" value="true">Print Unfiltered Candidates?<br/>
+              <input type="checkbox" name="pf" value="true" checked>Print Filtered Candidates?<br/>
+              <input type="checkbox" name="dc" value="true" checked>Detailed filtered/unfiltered output?<br/>
+              <input type="checkbox" name="pg" value="true" checked>Print merged answer groups? <input type="checkbox" name="dg" value="true" checked>Detailed?<br/>
+              <input type="checkbox" name="pa" value="true" checked>Print answers? <input type="checkbox" name="da" value="true" checked>Detailed?<br/>
               <input type="submit"/>
             </form>
             </body></html>""") ~> Ok
@@ -70,17 +83,46 @@ object FindSlotFillsServer extends App {
        * *
        * Handles the POST input to the server
        */
-      def handlePost(entityString: String, nodeIdStr: String, typ: String, slots: String, corpusUrl: String) = {
+      def handlePost(
+          entityString: String, 
+          nodeIdStr: String, 
+          typ: String, slots: 
+          String, corpusUrl: String,
+          pu: Option[String], // print unfiltered?
+          pf: Option[String], // print filtered?
+          dc: Option[String], // detailed candidates?
+          pg: Option[String], // print groups?
+          dg: Option[String], // detailed groups?
+          pa: Option[String], // print answers?
+          da: Option[String]) = { // detailed answers?
 
         val nodeId = if (nodeIdStr.nonEmpty) Some(nodeIdStr) else None
         
         val slotsSplit = slots.split(",").map(_.trim).filter(_.nonEmpty).toSet
         
+        val printUnfiltered = pu.nonEmpty
+        val printFiltered = pf.nonEmpty
+        val detailedCandidates = dc.nonEmpty
+        val printGroups = pg.nonEmpty
+        val detailedGroups = dg.nonEmpty
+        val printAnswers = pa.nonEmpty
+        val detailedAnswers = da.nonEmpty
+
+        def getFormatter(out: PrintStream) = new OutputFormatter(out,
+          printUnfiltered = printUnfiltered,
+          printFiltered = printFiltered,
+          detailedCandidates = detailedCandidates,
+          printGroups = printGroups,
+          detailedGroups = detailedGroups,
+          printAnswers = printAnswers,
+          detailedAnswers = detailedAnswers)
+        
+        
         new ResponseStreamer {
           def stream(os: OutputStream) = {
             val printStream = new PrintStream(os)
             try {
-              new FindSlotFills(corpusUrl).runForServerOutput(entityString, nodeId, typ, slotsSplit, printStream)
+              new FindSlotFills(corpusUrl).runForServerOutput(entityString, nodeId, typ, slotsSplit, getFormatter(printStream))
             } catch {
               case e: Throwable => {
                 e.printStackTrace(printStream)
