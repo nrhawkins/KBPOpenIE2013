@@ -16,9 +16,8 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
     val nameConstraint = constraintFor(fieldName, item.entity)
     val nodeConstraint = item.nodeId map { n => constraintFor(fieldName, n) }
     
-    (Seq(nameConstraint) ++ nodeConstraint).mkString(" OR ")
-    
+    (Seq(nameConstraint) ++ nodeConstraint).mkString("(", " OR ", ")")
   }
   
-
+  def queryString = Seq(constraintFor("arg1Text", arg1), constraintFor("arg2Text", arg2)).mkString(" AND ")
 }

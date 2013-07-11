@@ -1,7 +1,7 @@
 package edu.knowitall.tac2013.app
 
 import edu.knowitall.tac2013.openie.KbpExtraction
-import edu.knowitall.tac2013.findSlotFillersApp.LocationHelper.findLocationTaggedType
+import edu.knowitall.tac2013.app.LocationHelper.findLocationTaggedType
 import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.solr.query.SolrQueryType
 
