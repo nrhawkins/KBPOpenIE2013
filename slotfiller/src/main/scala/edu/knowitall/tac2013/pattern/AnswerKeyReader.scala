@@ -14,7 +14,7 @@ class AnswerKeyReader(answerKeyFile: File, queryEntities: Map[String, EntityInfo
 
 class AnswerKeyIterator(answerKeySource: Source, queryEntities: Map[String, EntityInfo]) extends Iterator[KbElement] {
   
-  val lines = answerKeySource.getLines
+  val lines = answerKeySource.getLines.drop(1) // drop the header row
   
   def hasNext = {
     val linesHasNext = lines.hasNext
@@ -30,12 +30,12 @@ class AnswerKeyIterator(answerKeySource: Source, queryEntities: Map[String, Enti
   /**
    * Reads a line from the TAC_2010 evaluation annotations tab-delimited file.
    * Columns:
-   * filler_id | sf_id | system_id | slot_name | docid | fill_start_char | filler | just_start_char | just_end_char | justification | norm_response |  equiv_class_id | judgement
+   * filler_id | sf_id | system_id | slot_name | docid | fill_start_char | fill_end_char | filler | just_start_char | just_end_char | justification | norm_response |  equiv_class_id | judgement
    */
   def readLine(str: String): KbElement = {
 
-    str.split(str) match {
-      case Array(filler_id, sf_id, system_id, slot_name, docid, fill_start_char, filler,
+    str.split("\t") match {
+      case Array(filler_id, sf_id, system_id, slot_name, docid, fill_start_char, fill_end_char, filler,
         just_start_char, just_end_char, justification, norm_response, equiv_class_id, judgement, _*) => {
         
         val entityInfo = queryEntities(sf_id)
@@ -44,6 +44,7 @@ class AnswerKeyIterator(answerKeySource: Source, queryEntities: Map[String, Enti
         val fillItem = KbItem(filler, None)
         KbElement(entityItem, fillItem, entityType, slot_name)
       }
+      case _ => throw new RuntimeException("Invalid row (%d cols):\n%s".format(str.split("\t").length, str))
     }
   }
 }
