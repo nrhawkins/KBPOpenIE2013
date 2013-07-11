@@ -91,31 +91,37 @@ object SlotFillConsistency {
     if(countryDeathSlot.isDefined && stateOrProvinceDeathSlot.isDefined){
     	if(secondLocationSlotFillCopiesFirstLocationSlotFill(countryDeathSlot.get,stateOrProvinceDeathSlot.get,answers)){
              //replace list with empty list for stateOrProvinceSlot
-             locationConsistentMap += (stateOrProvinceDeathSlot.get -> Seq[Candidate]())
+             locationConsistentMap += (breakTie(countryDeathSlot.get,stateOrProvinceDeathSlot.get,answers) -> Seq[Candidate]())
     	}
     }
     if(countryDeathSlot.isDefined && cityDeathSlot.isDefined){
     	if(secondLocationSlotFillCopiesFirstLocationSlotFill(countryDeathSlot.get,cityDeathSlot.get,answers)){
              //replace list with empty list for stateOrProvinceSlot
-             locationConsistentMap += (cityDeathSlot.get -> Seq[Candidate]())
+             locationConsistentMap += (breakTie(countryDeathSlot.get,cityDeathSlot.get,answers) -> Seq[Candidate]())
     	}
     }
     if(stateOrProvinceDeathSlot.isDefined && cityDeathSlot.isDefined){
     	if(secondLocationSlotFillCopiesFirstLocationSlotFill(stateOrProvinceDeathSlot.get,cityDeathSlot.get,answers)){
              //replace list with empty list for stateOrProvinceSlot
-             locationConsistentMap += (cityDeathSlot.get -> Seq[Candidate]())
+             locationConsistentMap += (breakTie(stateOrProvinceDeathSlot.get,cityDeathSlot.get,answers) -> Seq[Candidate]())
     	}
     }
     
     if(countryListSlot.isDefined && stateOrProvinceListSlot.isDefined){
-         locationConsistentMap += (stateOrProvinceListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(countryListSlot.get,stateOrProvinceListSlot.get,answers))
+         val truncatedLists = getTruncatedListForSlotFills(countryListSlot.get,stateOrProvinceListSlot.get,locationConsistentMap.toMap)
+         locationConsistentMap += (countryListSlot.get -> truncatedLists(0))
+         locationConsistentMap += (stateOrProvinceListSlot.get -> truncatedLists(1))
     }
     
     if(countryListSlot.isDefined && cityListSlot.isDefined){
-         locationConsistentMap += (cityListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(countryListSlot.get,cityListSlot.get,answers))
+         val truncatedLists = getTruncatedListForSlotFills(countryListSlot.get,cityListSlot.get,locationConsistentMap.toMap)
+         locationConsistentMap += (countryListSlot.get -> truncatedLists(0))
+         locationConsistentMap += (cityListSlot.get -> truncatedLists(1))
     }
     if(stateOrProvinceListSlot.isDefined && cityListSlot.isDefined){
-         locationConsistentMap += (cityListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(stateOrProvinceListSlot.get,cityListSlot.get,locationConsistentMap.toMap))
+         val truncatedLists = getTruncatedListForSlotFills(countryListSlot.get,cityListSlot.get,locationConsistentMap.toMap)
+         locationConsistentMap += (stateOrProvinceListSlot.get -> truncatedLists(0))
+         locationConsistentMap += (cityListSlot.get -> truncatedLists(1))
     }
         
  
@@ -161,21 +167,29 @@ object SlotFillConsistency {
     doRemove
   }
   
-  /**
-   * Pass in two location list slots and their map to best answers. This will return the new list of best answers for the second slot
-   * given that the first slot is trusted more.
+  
+    /**
+   * Pass in two location list slots and their map to best answers. This will return a list of 2 lists of
+   * the new resulst after collisions have been resolved.
    */
-  def getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(slot1: Slot, slot2: Slot, answers: Map[Slot, Seq[Candidate]]): Seq[Candidate] = {
+  def getTruncatedListForSlotFills(slot1: Slot, slot2: Slot, answers: Map[Slot, Seq[Candidate]]): Seq[Seq[Candidate]] = {
     require((slot1.isLocation && slot2.isLocation && slot1.isList && slot2.isList), {println("To use this method slots must be of location type and list type")})
     
     val slot1BestAnswers = answers(slot1)
     val slot2BestAnswers = answers(slot2)
     var doRemove = false
     
-    var truncatedArray = scala.collection.mutable.ArrayBuffer[Candidate]()
-    for(ans <- slot2BestAnswers){
-      truncatedArray ++= List(ans)
+    var truncatedSlot1Array = scala.collection.mutable.ArrayBuffer[Candidate]()
+    for(ans <- slot1BestAnswers){
+      truncatedSlot1Array ++= List(ans)
     }
+    
+    var truncatedSlot2Array = scala.collection.mutable.ArrayBuffer[Candidate]()
+    for(ans <- slot2BestAnswers){
+      truncatedSlot2Array ++= List(ans)
+    }
+    
+    
     
     
     // if both lists are not empty then there may be some collissions
@@ -201,15 +215,21 @@ object SlotFillConsistency {
 	         }
 	      }
           if(doRemove){
+            //break a Tie to see which list the location belongs in
+            var worstSlot = breakTieGivenString(slot1,slot2,slot1AnswerString)
+            val truncatedList = worstSlot match{
+              case `slot1` => {truncatedSlot1Array}
+              case `slot2` => {truncatedSlot2Array}
+            }
             //remove from truncated Array
             var ansToRemove: Option[Candidate] = None
-            for(ans <- truncatedArray){
+            for(ans <- truncatedList){
               if(ans.trimmedFill.string == slot2AnswerString){
                 ansToRemove = Some(ans)
               }
             }
             if(ansToRemove.isDefined){
-              truncatedArray -= ansToRemove.get
+              truncatedList -= ansToRemove.get
             }
             
           }
@@ -217,7 +237,7 @@ object SlotFillConsistency {
       }
     }
     
-    truncatedArray.toSeq
+    Seq(truncatedSlot1Array,truncatedSlot2Array)
   }
   
   /**
@@ -237,6 +257,24 @@ object SlotFillConsistency {
       slot1
     }
     
+  }
+  
+  /**
+   * returns least likely slot
+   */
+  def breakTieGivenString(slot1: Slot, slot2: Slot, str:String): Slot = {
+    val slot1Prob = getNellProb(str,slot1)
+    val slot2Prob = getNellProb(str,slot2)
+    
+    if(slot1Prob == slot2Prob){
+      slot2
+    }
+    else if(slot1Prob > slot2Prob){
+      slot2
+    }
+    else{
+      slot1
+    }
   }
   
   def getNellProb(str: String, slot: Slot): Double ={
