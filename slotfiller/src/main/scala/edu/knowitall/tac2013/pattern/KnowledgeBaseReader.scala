@@ -7,7 +7,7 @@ import java.io.File
  */
 class KnowledgeBaseReader(val path: File) extends Iterable[KbElement] {
 
-  def iterator = path.listFiles.iterator.flatMap(file => KnowledgeBaseReader.readXml(file))
+  def iterator = path.listFiles.par.flatMap(file => KnowledgeBaseReader.readXml(file)).iterator
 }
 
 object KnowledgeBaseReader {
