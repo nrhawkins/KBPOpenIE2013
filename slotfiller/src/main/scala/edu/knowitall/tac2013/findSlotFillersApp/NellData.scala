@@ -16,6 +16,7 @@ object NellData {
   val citySet =  scala.collection.mutable.Set[NellData]()
   val stateOrProvinceSet = scala.collection.mutable.Set[NellData]()
   val countrySet = scala.collection.mutable.Set[NellData]()
+  private var nellMap = Map[String,NellData]()
   
 
   // read in tipster lines with latin encoding so as not to get errors.
@@ -53,7 +54,8 @@ object NellData {
       
       
       val nellData = new NellData(name,cityProbability,stateOrProvinceProbability,countryProbability)
-
+      nellMap = nellMap + (nellData.name -> nellData)
+      
       if(nellData.cityProbability.isDefined){
         citySet.add(nellData)
       }
@@ -75,6 +77,10 @@ object NellData {
   lazy val cityNameSet = cities.map(f => f.name)
   lazy val countryNameSet = countries.map(f => f.name)
   lazy val stateOrProvinceNameSet = stateOrProvinces.map(f => f.name)
+  
+  def getNellData(str: String): Option[NellData] = {
+    if(nellMap.contains(str)) Some(nellMap(str)) else None
+  }
 
   
   
