@@ -14,7 +14,9 @@ object KnowledgeBaseReader {
   
   import scala.xml.XML
   
-  val wikiNameRegex = """(.*)(\s+\(.+\)\s*)""".r
+  val wikiNameRegex = """(.*)(\s+\(.+\)\s*)?""".r
+
+  def clean(str: String): String = str.replaceAll("\n", " ")
 
   def readXml(file: File): Iterable[KbElement] = {
 
@@ -22,17 +24,20 @@ object KnowledgeBaseReader {
     val entities = root.\("entity")
     entities.flatMap { entity =>
       val nameNode = entity.attribute("name").get.head
-      val name = wikiNameRegex.findFirstIn(nameNode.text).get
+      val name = nameNode.text match {
+        case wikiNameRegex(realName, _) => realName
+        case _ => throw new Exception("Should have been able to match: " + nameNode.text)
+      }
       val id = entity.attribute("id").get.head.text
       val entityType = entity.attribute("type").get.head.text
-      val factNodes = entity.attribute("facts").get
+      val factNodes = entity.\("facts").\("fact")
       val facts = factNodes map processFactNode
       facts map { fact =>
-        val entityItem = KbItem(name, Some(id))
-        val factItem = KbItem(fact.text, fact.linkId)
+        val entityItem = KbItem(clean(name), Some(id))
+        val factItem = KbItem(clean(fact.text), fact.linkId)
         val element = KbElement(entityItem, factItem, entityType, fact.factType)
         element
-      }
+      } filter(e => e.entityType == "ORG" || e.entityType == "PER")
     }
   }
   
