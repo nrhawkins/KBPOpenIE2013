@@ -3,9 +3,7 @@ package edu.knowitall.tac2013.pattern
 import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.openie.KbpExtraction
 
-case class Pattern(val freq: Int, val relString: String, val query: KbQuery, val sampleFills: Seq[String], val sampleEntities: Seq[String]) {
-  
-  import Pattern.getMostCommon
+case class Pattern(val freq: Int, val relString: String, val query: KbQuery, val sampleFills: StringCounter, val sampleEntities: StringCounter) {
   
   def arg1 = query.arg1Type
   def arg2 = query.arg2Type
@@ -15,14 +13,17 @@ case class Pattern(val freq: Int, val relString: String, val query: KbQuery, val
   
   def combineWith(other: Pattern): Pattern = {
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relString, query, this.sampleFills ++ other.sampleFills, this.sampleEntities ++ other.sampleEntities)
+    Pattern(this.freq + other.freq, relString, query, this.sampleFills.addAll(other.sampleFills).trim(100), this.sampleEntities.addAll(other.sampleEntities).trim(100))
   }
   
   override def toString: String = {
-    val sampleArg1s = if (query.entityArg1) getMostCommon(4, sampleEntities).mkString(", ") else getMostCommon(4, sampleFills).mkString(", ")
-    val sampleArg2s = if (query.entityArg2) getMostCommon(4, sampleEntities).mkString(", ") else getMostCommon(4, sampleFills).mkString(", ")
+    val sampleArg1s = if (query.entityArg1) sampleEntities.top(4) else sampleFills.top(4)
+    val sampleArg2s = if (query.entityArg2) sampleEntities.top(4) else sampleFills.top(4)
     
-    val fields = Seq(freq.toString) ++ groupFields ++ Seq(sampleArg1s, sampleArg2s)
+    val a1String = sampleArg1s.map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
+    val a2String = sampleArg2s.map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
+    
+    val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String)
     fields.mkString("\t")
   }
   
@@ -34,11 +35,7 @@ object Pattern {
     def sampleFills = if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText)
     def sampleEntities = if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText)
     
-    Pattern(freq, relString, query, sampleFills, sampleEntities)
-  }
-  
-  def getMostCommon(num: Int, items: Seq[String]) = {
-    items.groupBy(identity).values.toSeq.sortBy(-_.size).take(num)
+    Pattern(freq, relString, query, StringCounter.fromStrings(sampleFills), StringCounter.fromStrings(sampleEntities))
   }
 }
 
