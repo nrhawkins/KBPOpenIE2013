@@ -75,7 +75,7 @@ object SlotFillConsistency {
          locationConsistentMap += (cityListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(countryListSlot.get,cityListSlot.get,answers))
     }
     if(stateOrProvinceListSlot.isDefined && cityListSlot.isDefined){
-         locationConsistentMap += (cityListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(stateOrProvinceListSlot.get,cityListSlot.get,answers))
+         locationConsistentMap += (cityListSlot.get -> getTruncatedListOfSlotFillsInSlot2ThatDoNotCopySlot1(stateOrProvinceListSlot.get,cityListSlot.get,locationConsistentMap.toMap))
     }
         
  
@@ -137,6 +137,8 @@ object SlotFillConsistency {
       truncatedArray ++= List(ans)
     }
     
+    println("Size of array = " + truncatedArray.size)
+    
     // if both lists are not empty then there may be some collissions
     if(!slot1BestAnswers.isEmpty && !slot2BestAnswers.isEmpty){
       
@@ -150,6 +152,7 @@ object SlotFillConsistency {
           val sent  = slot2Extr.sentenceText
           doRemove = false
 	      if(slot1AnswerString == slot2AnswerString){
+	         println(slot1AnswerString + " " + slot2AnswerString)
 	         doRemove = true
 	         val firstOccurrence = sent.indexOfSlice(slot1AnswerString)
 	         if(firstOccurrence != -1){
@@ -160,13 +163,26 @@ object SlotFillConsistency {
 	         }
 	      }
           if(doRemove){
+            println("Removing..")
             //remove from truncated Array
-            truncatedArray -= slot2Answer
+            var ansToRemove: Option[Candidate] = None
+            for(ans <- truncatedArray){
+              if(ans.trimmedFill.string == slot2AnswerString){
+                ansToRemove = Some(ans)
+              }
+            }
+            if(ansToRemove.isDefined){
+              println("Deleting...")
+              truncatedArray -= ansToRemove.get
+              println("New size = " + truncatedArray.size)
+            }
+            
           }
         }
       }
     }
     
+    println("new array = " + truncatedArray.foreach(f =>println(f.trimmedFill.string)))
     truncatedArray.toSeq
   }
 }
