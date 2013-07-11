@@ -3,17 +3,17 @@ package edu.knowitall.tac2013.pattern
 import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.openie.KbpExtraction
 
-case class Pattern(val freq: Int, val relString: String, val query: KbQuery, val sampleFills: StringCounter, val sampleEntities: StringCounter) {
+case class Pattern private (val freq: Int, val relStemmed: String, val query: KbQuery, val sampleFills: StringCounter, val sampleEntities: StringCounter) {
   
   def arg1 = query.arg1Type
   def arg2 = query.arg2Type
   
-  def groupFields = Seq(arg1, relString, arg2)
+  def groupFields = Seq(arg1, relStemmed, arg2)
   def groupKey = groupFields.mkString(",")
   
   def combineWith(other: Pattern): Pattern = {
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relString, query, this.sampleFills.addAll(other.sampleFills).trim(100), this.sampleEntities.addAll(other.sampleEntities).trim(100))
+    Pattern(this.freq + other.freq, relStemmed, query, this.sampleFills.addAll(other.sampleFills).trim(100), this.sampleEntities.addAll(other.sampleEntities).trim(100))
   }
   
   override def toString: String = {
@@ -31,12 +31,24 @@ case class Pattern(val freq: Int, val relString: String, val query: KbQuery, val
 }
 object Pattern {
   
-  def from(freq: Int, relString: String, query: KbQuery, samples: Seq[KbpExtraction]): Pattern = {
+  import edu.knowitall.tool.stem.MorphaStemmer
+  import edu.knowitall.tool.chunk.ChunkedToken
+  
+  val morphaLocal = new ThreadLocal[MorphaStemmer]() {
+    override def initialValue = new MorphaStemmer
+  }
+  def morpha = morphaLocal.get
+  
+  def from(freq: Int, relStemmed: String, query: KbQuery, samples: Seq[KbpExtraction]): Pattern = {
     def sampleFills = if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText)
     def sampleEntities = if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText)
     
-    Pattern(freq, relString, query, StringCounter.fromStrings(sampleFills), StringCounter.fromStrings(sampleEntities))
+    
+    
+    Pattern(freq, relStemmed, query, StringCounter.fromStrings(sampleFills), StringCounter.fromStrings(sampleEntities))
   }
+  
+  def stemRel(tokens: Seq[ChunkedToken]): String = tokens.map({ t => morpha.lemmatizeToken(t) }).map(_.lemma).mkString(" ")
 }
 
 class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
@@ -69,9 +81,9 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>
-      val relGroups = extrs.groupBy(_.rel.originalText)
-      relGroups.iterator.map { case (relString, extrs) =>
-        Pattern.from(extrs.size, relString, query, extrs)  
+      val relGroups = extrs.groupBy(e => Pattern.stemRel(e.rel.tokens))
+      relGroups.iterator.map { case (relStemmed, extrs) =>
+        Pattern.from(extrs.size, relStemmed, query, extrs)  
       }
     }
     
@@ -100,11 +112,13 @@ object PatternFinder extends App {
   var queriesFile: File = new File(".") 
   var answerFile: File = new File(".")
   var output: PrintStream = System.out
+  var elementLimit = Int.MaxValue
   
   val parser = new OptionParser() {
     arg("queriesFile", "Path to queries xml file", { s => queriesFile = new File(s) })
     arg("answerFile", "Path to annotations tab file", { s => answerFile = new File(s) })
     opt("output", "Output file (default stdout)", { s => output = new PrintStream(new File(s)) })
+    opt("limit", "debug limit elements, default no limit", { s => elementLimit = s.toInt })
   }
   
   if (parser.parse(args)) {
@@ -113,7 +127,7 @@ object PatternFinder extends App {
     
     val patternFinder = new PatternFinder(solrUrl, elements)
     
-    patternFinder.getPatterns foreach output.println
+    patternFinder.getPatterns.take(elementLimit) foreach output.println
   }
 
   if (output != System.out) output.close()
