@@ -113,6 +113,8 @@ object PatternFinder extends App {
     
     val patternFinder = new PatternFinder(solrUrl, elements)
     
-    patternFinder.getPatterns foreach println
+    patternFinder.getPatterns foreach output.println
   }
+
+  if (output != System.out) output.close()
 }
