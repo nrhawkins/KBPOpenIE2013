@@ -13,7 +13,7 @@ case class Pattern private (val freq: Int, val relStemmed: String, val query: Kb
   
   def combineWith(other: Pattern): Pattern = {
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relStemmed, query, this.sampleFills.addAll(other.sampleFills).trim(100), this.sampleEntities.addAll(other.sampleEntities).trim(100))
+    Pattern(this.freq + other.freq, relStemmed, query, this.sampleFills.addAll(other.sampleFills).trim(200), this.sampleEntities.addAll(other.sampleEntities).trim(200))
   }
   
   override def toString: String = {
@@ -26,8 +26,6 @@ case class Pattern private (val freq: Int, val relStemmed: String, val query: Kb
     val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String)
     fields.mkString("\t")
   }
-  
-  
 }
 object Pattern {
   
@@ -77,7 +75,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   def getPatterns: Map[String, Seq[Pattern]] = {
     
     System.err.println("Issuing Queries...")
-    
+
     val results = elements flatMap sendQueries
     
     // flatMap results into patterns, then group patterns and combine.
@@ -90,9 +88,15 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Combining patterns...")
     
-    // group patterns by key and combine
     def combine(p1: Pattern, p2: Pattern) = p1.combineWith(p2)
-    val combinedPatterns = rawPatterns.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
+    
+    // combine intermediate results to reduce memory footprint...
+    val intermediate = rawPatterns.grouped(10000).flatMap { group =>
+      group.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
+    } toSeq
+    
+    // group patterns by key and combine
+    val combinedPatterns = intermediate.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     
     System.err.println("Grouping patterns...")
     val groupedPatterns = combinedPatterns.groupBy(_.query.element.slotname)
