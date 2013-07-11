@@ -1,10 +1,10 @@
 @(form: Form[Query], advancedForm: Form[AdvancedQuery], advanced: Boolean = false, results: Option[ResultSet] = None, query: Option[AdvancedQuery] = None)
 
-@helper.main("Open Information Extractions") {
+@helper.main("TAC 2013 Slot Filling Extraction Browser") {
   <body>
 
   <div class="page-header">
-    <h1><a href="/">KDD Open Information Extraction</a></h1>
+    <h1><a href="/">TAC 2013 Slot Filling Extraction Browser</a></h1>
   </div>
 
   @if(form.hasErrors) {
@@ -74,7 +74,7 @@
 
       @helper.select(
         form("corpus"), 
-        options=("" -> "2013") +: (Query.corpora zip Query.corpora),
+        options= (Query.corpora zip Query.corpora),
         '_class -> "dl-horizontal",
         '_label -> "Corpus:")
 

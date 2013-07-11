@@ -36,25 +36,19 @@ object LuceneQueryExecutor {
       q.usedStrings.map { p => p.string.zipWithIndex.map
         { case (string, i) => "+" + p.part.short + ":%" + p.part.short + "_" + i + "%" }.mkString(" ")
       }
-    val i = new AtomicInteger(0)
-    val types = {
-      for {
-        part <- q.usedTypes
-        typ <- part.typ
-      } yield {
-        "+(" + Application.typeHierarchy.baseTypes(typ).zipWithIndex.map{ case (typ, i) => part.part.short + "_types:%" + part.part.short + "_types_" + i + "%" }.mkString(" OR ") + ")"
-      }
-    }
-    val extractor = q.extractor match { case Some(ex) => " +extractor:%extractor%" case None => "" }
 
-    (strings ++ types :+ extractor).mkString(" ")
+    (strings).mkString(" ")
   }
 
   def luceneQueryVariables(q: Query): Map[String, String] =
     Map.empty ++
        q.usedStrings.flatMap(part => part.string.zipWithIndex.map { case (string, i) => (part.part.short + "_" + i) -> part.part(q).string(i) }) ++
-       q.usedTypes.flatMap(part => part.typ.flatMap(Application.typeHierarchy.baseTypes).zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> typ }) ++
-       q.extractor.map("extractor" -> _)
+       q.usedTypes.flatMap(part => part.typ.flatMap(Application.typeHierarchy.baseTypes).zipWithIndex.map { case (typ, i) => (part.part.short + "_types_" + i) -> typ })
+       
+  def filterExtractor(eOpt: Option[String])(inst: ExtractionInstance) = eOpt match {
+    case Some(extractor) => inst.extractor == extractor
+    case None => true
+  }
 
   def execute(q: Query) = {
     Logger.info("query for: " + q)
@@ -72,14 +66,14 @@ object LuceneQueryExecutor {
     val result = client.query(queryString)
       .rows(10000)
       .getResultAsMap(queryVariables)
-
+      
     val list = result.documents.toList
     Logger.info("results received: " + list.size)
     
-    list.map(ExtractionInstance.fromMap)
+    list.map(ExtractionInstance.fromMap) filter filterExtractor(q.extractor)
   }
 
-  def executeExact(arg1: String, rel: String, arg2: String, corpus: Option[String]) = {
+  def executeExact(arg1: String, rel: String, arg2: String, corpus: Option[String], extractor: Option[String]) = {
 
     Logger.info("sentenes for: " + List(arg1, rel, arg2))
     import jp.sf.amateras.solr.scala._
@@ -96,28 +90,8 @@ object LuceneQueryExecutor {
 
     val list = result.documents.toList
     Logger.info("sentence extractions received: " + list.size)
-    list.map(ExtractionInstance.fromMap)
+    list.map(ExtractionInstance.fromMap) filter filterExtractor(extractor)
   }
-
-//  def executeIds(ids: Seq[String]) = {
-//    Logger.info("sentenes for: " + ids)
-//    import jp.sf.amateras.solr.scala._
-//
-//    val client = new SolrClient(defaultSolrUrl)
-//
-//    val queryString = ids.zipWithIndex.map { case (id, i) => s"id:%id$i%" }.mkString(" OR ")
-//    val queryVariables = ids.zipWithIndex.map { case (id, i) => s"id$i" -> id }.toMap
-//    Logger.logger.debug("Lucene query: " + queryString)
-//    Logger.logger.debug("Lucene variables: " + queryVariables)
-//
-//    val result = client.query(queryString)
-//      .rows(10000)
-//      .getResultAsMap(queryVariables)
-//
-//    val list = result.documents.toList
-//    Logger.info("sentence extractions received: " + list.size)
-//    list.map(ExtractionInstance.fromMap)
-//  }
 
   def execute(q: String) = {
     Logger.info("query for: " + q)
