@@ -25,6 +25,14 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
     (Seq(nameConstraint) ++ nodeConstraint).mkString("(", " OR ", ")")
   }
   
+  def linkConstraintFor(fieldName: String, item: KbItem): Option[String] = {
+    
+    item.nodeId map { n => constraintFor(fieldName + "WikiLinkNodeId", n) }
+  }
+  
   def queryString = Seq(constraintFor("arg1", arg1), constraintFor("arg2", arg2)).mkString(" AND ")
+  
+  // only useful when both are linked
+  def linkQueryString = Seq(linkConstraintFor("arg1", arg1) ++ linkConstraintFor("arg2", arg2)).flatten.mkString(" AND ")
 }
 
