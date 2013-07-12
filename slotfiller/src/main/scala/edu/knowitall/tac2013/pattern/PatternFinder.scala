@@ -12,13 +12,15 @@ case class Pattern private (
     val sampleEntities: StringCounter, 
     val sampleFills: StringCounter) {
   
+  def entityInArg2 = !entityInArg1
+  
   def arg1Type = if (entityInArg1) entityType else slotName
-  def arg2Type = if (entityInArg1) slotName else entityType
+  def arg2Type = if (entityInArg2) entityType else slotName
   
   def sampleArg1s = if (entityInArg1) sampleEntities else sampleFills
   def sampleArg2s = if (entityInArg2) sampleEntities else sampleFills
   
-  def entityInArg2 = !entityInArg1
+  
   def groupFields = Seq(arg1Type, relStemmed, arg2Type)
   def groupKey = groupFields.mkString(",")
   
@@ -54,7 +56,7 @@ object Pattern {
     val sampleArg2s = samples.map(_.arg2.originalText) map cleanSample
     
     val sampleEntities = if (query.entityArg1) sampleArg1s else sampleArg2s
-    val sampleFills = if (query.entityArg2) sampleArg1s else sampleArg1s
+    val sampleFills =    if (query.entityArg2) sampleArg1s else sampleArg2s
     
     query.element.slotNames.map { slotName =>
       Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleArg2s))
