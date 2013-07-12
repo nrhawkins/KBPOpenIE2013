@@ -10,8 +10,6 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
   def entityArg2 = !entityArg1
   def arg1 = if (entityArg1) element.entity else element.fill
   def arg2 = if (entityArg2) element.entity else element.fill
-  //def arg1Type = if (entityArg1) element.entityType else element.slotname
-  //def arg2Type = if (entityArg2) element.entityType else element.slotname
   
   def cleanQuery(queryString: String): String = queryString.split(" ").map(s => ClientUtils.escapeQueryChars(s.replaceAll("\"", ""))).mkString(" ")
   
@@ -25,14 +23,6 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
     (Seq(nameConstraint) ++ nodeConstraint).mkString("(", " OR ", ")")
   }
   
-  def linkConstraintFor(fieldName: String, item: KbItem): Option[String] = {
-    
-    item.nodeId map { n => constraintFor(fieldName + "WikiLinkNodeId", n) }
-  }
-  
   def queryString = Seq(constraintFor("arg1", arg1), constraintFor("arg2", arg2)).mkString(" AND ")
-  
-  // only useful when both are linked
-  def linkQueryString = Seq(linkConstraintFor("arg1", arg1) ++ linkConstraintFor("arg2", arg2)).flatten.mkString(" AND ")
 }
 

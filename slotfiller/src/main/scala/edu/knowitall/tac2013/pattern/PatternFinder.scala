@@ -66,7 +66,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   def sendQuery(query: KbQuery) = {
 
     try {
-      val solrQuery = solrClient.query(query.linkQueryString)
+      val solrQuery = solrClient.query(query.queryString)
       val result = solrQuery.sortBy("confidence", Order.desc).rows(10000).getResultAsMap()
       val kbpExtrs = result.documents.flatMap { doc =>
         val fieldMap = doc.asInstanceOf[Map[String, Any]]
@@ -83,13 +83,9 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   
   def sendQueries(kbElement: KbElement): Iterable[(KbQuery, Seq[KbpExtraction])] = {
     
-    if (kbElement.entity.nodeId.isDefined && kbElement.fill.nodeId.isDefined) {
-    
-    // send query with arg1=entity, arg2=fill, and vice versa
     val q1 = KbQuery(kbElement, true)
     val q2 = KbQuery(kbElement, false)
     Seq(sendQuery(q1), sendQuery(q2))
-    } else Nil
   }
   
   /**
