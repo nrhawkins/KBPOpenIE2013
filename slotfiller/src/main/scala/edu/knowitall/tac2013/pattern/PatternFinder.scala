@@ -86,7 +86,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Issuing Queries...")
 
-    val results = elements flatMap sendQueries
+    val results = elements flatMap sendQueries filter(_._2.nonEmpty)
     
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>

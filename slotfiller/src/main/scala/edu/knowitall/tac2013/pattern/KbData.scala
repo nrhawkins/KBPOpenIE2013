@@ -13,9 +13,7 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
   def arg1Type = if (entityArg1) element.entityType else element.slotname
   def arg2Type = if (entityArg2) element.entityType else element.slotname
   
-  def cleanQuery(queryString: String): String = {
-    ClientUtils.escapeQueryChars(queryString.replaceAll("\"", ""))
-  }
+  def cleanQuery(queryString: String): String = queryString.split(" ").map(s => ClientUtils.escapeQueryChars(s.replaceAll("\"", ""))).mkString(" ")
   
   def constraintFor(fieldName: String, attr: String): String = "%s:\"%s\"".format(fieldName, cleanQuery(attr))
   
