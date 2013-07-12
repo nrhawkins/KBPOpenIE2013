@@ -17,11 +17,11 @@ case class Pattern private (val freq: Int, val relStemmed: String, val query: Kb
   }
   
   override def toString: String = {
-    val sampleArg1s = if (query.entityArg1) sampleEntities.top(4) else sampleFills.top(4)
-    val sampleArg2s = if (query.entityArg2) sampleEntities.top(4) else sampleFills.top(4)
+    val sampleArg1s = if (query.entityArg1) sampleEntities.top(2) else sampleFills.top(2)
+    val sampleArg2s = if (query.entityArg2) sampleEntities.top(2) else sampleFills.top(2)
     
-    val a1String = sampleArg1s.map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
-    val a2String = sampleArg2s.map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
+    val a1String = sampleArg1s.map(p => "ARG1s: %s(%d)".format(p._1, p._2)).mkString(", ")
+    val a2String = sampleArg2s.map(p => "ARG2s: %s(%d)".format(p._1, p._2)).mkString(", ")
     
     val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String)
     fields.mkString("\t")
