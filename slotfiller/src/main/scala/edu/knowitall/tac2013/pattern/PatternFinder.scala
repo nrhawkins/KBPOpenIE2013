@@ -49,16 +49,31 @@ object Pattern {
 
 class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   
+  import org.apache.solr.client.solrj.util.ClientUtils
+  
   def this(url: String, elements: Iterable[KbElement]) = this(new SolrClient(url), elements)
+  
+  def cleanQuery(queryString: String): String = {
+    ClientUtils.escapeQueryChars(queryString.replaceAll("\"", ""))
+  }
 
   def sendQuery(query: KbQuery) = {
-    val solrQuery = solrClient.query(query.queryString)
-    val result = solrQuery.sortBy("confidence",Order.desc).rows(10000).getResultAsMap() 
-    val kbpExtrs = result.documents.flatMap { doc =>
-      val fieldMap = doc.asInstanceOf[Map[String, Any]]
-      KbpExtraction.fromFieldMap(fieldMap)
+
+    try {
+      val cleanedQueryString = cleanQuery(query.queryString)
+      val solrQuery = solrClient.query(cleanedQueryString)
+      val result = solrQuery.sortBy("confidence", Order.desc).rows(10000).getResultAsMap()
+      val kbpExtrs = result.documents.flatMap { doc =>
+        val fieldMap = doc.asInstanceOf[Map[String, Any]]
+        KbpExtraction.fromFieldMap(fieldMap)
+      }
+      (query, kbpExtrs)
+    } catch {
+      case e: Exception => {
+        e.printStackTrace()
+        (query, Nil)
+      }
     }
-    (query, kbpExtrs)
   }
   
   def sendQueries(kbElement: KbElement): Iterable[(KbQuery, Seq[KbpExtraction])] = {
