@@ -1,5 +1,7 @@
 package edu.knowitall.tac2013.pattern
 
+import org.apache.solr.client.solrj.util.ClientUtils
+
 case class KbItem(val entity: String, val nodeId: Option[String])
 
 case class KbElement(val entity: KbItem, val fill: KbItem, val entityType: String, val slotname: String)
@@ -11,7 +13,11 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
   def arg1Type = if (entityArg1) element.entityType else element.slotname
   def arg2Type = if (entityArg2) element.entityType else element.slotname
   
-  def constraintFor(fieldName: String, attr: String): String = "%s:\"%s\"".format(fieldName, attr)
+  def cleanQuery(queryString: String): String = {
+    ClientUtils.escapeQueryChars(queryString.replaceAll("\"", ""))
+  }
+  
+  def constraintFor(fieldName: String, attr: String): String = "%s:\"%s\"".format(fieldName, cleanQuery(attr))
   
   def constraintFor(fieldName: String, item: KbItem): String = {
     
