@@ -59,7 +59,7 @@ object Pattern {
     val sampleFills =    if (query.entityArg2) sampleArg1s else sampleArg2s
     
     query.element.slotNames.map { slotName =>
-      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleArg2s))
+      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleEntities), StringCounter.fromStrings(sampleFills))
     }
   }
   
