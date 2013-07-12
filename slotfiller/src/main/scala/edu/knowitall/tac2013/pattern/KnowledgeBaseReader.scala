@@ -8,7 +8,7 @@ import edu.knowitall.common.Resource.using
  */
 class KnowledgeBaseReader(val path: File) extends Iterable[KbElement] {
 
-  def iterator = path.listFiles.par.flatMap(file => KnowledgeBaseReader.readXml(file)).iterator
+  def iterator = path.listFiles.iterator.flatMap(file => KnowledgeBaseReader.readXml(file))
 }
 
 object KnowledgeBaseReader {
@@ -19,11 +19,11 @@ object KnowledgeBaseReader {
 
   def clean(str: String): String = str.replaceAll("\n", " ")
 
-  def readXml(file: File): Iterable[KbElement] = {
+  def readXml(file: File): Iterator[KbElement] = {
 
     val root = XML.loadFile(file)
     val entities = root.\("entity")
-    entities.flatMap { entity =>
+    entities.iterator.flatMap { entity =>
       val nameNode = entity.attribute("name").get.head
       val name = nameNode.text match {
         case wikiNameRegex(realName, _) => realName
@@ -33,7 +33,7 @@ object KnowledgeBaseReader {
       val entityType = entity.attribute("type").get.head.text
       val factNodes = entity.\("facts").\("fact")
       val facts = factNodes map processFactNode
-      facts map { fact =>
+      facts.iterator map { fact =>
         val entityItem = KbItem(clean(name), Some(id))
         val factItem = KbItem(clean(fact.text), fact.linkId)
         val element = KbElement(entityItem, factItem, entityType, fact.factType)

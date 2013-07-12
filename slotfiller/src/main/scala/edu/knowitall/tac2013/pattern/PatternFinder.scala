@@ -49,16 +49,26 @@ object Pattern {
 
 class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   
+  import org.apache.solr.client.solrj.util.ClientUtils
+  
   def this(url: String, elements: Iterable[KbElement]) = this(new SolrClient(url), elements)
 
   def sendQuery(query: KbQuery) = {
-    val solrQuery = solrClient.query(query.queryString)
-    val result = solrQuery.sortBy("confidence",Order.desc).rows(10000).getResultAsMap() 
-    val kbpExtrs = result.documents.flatMap { doc =>
-      val fieldMap = doc.asInstanceOf[Map[String, Any]]
-      KbpExtraction.fromFieldMap(fieldMap)
+
+    try {
+      val solrQuery = solrClient.query(query.queryString)
+      val result = solrQuery.sortBy("confidence", Order.desc).rows(10000).getResultAsMap()
+      val kbpExtrs = result.documents.flatMap { doc =>
+        val fieldMap = doc.asInstanceOf[Map[String, Any]]
+        KbpExtraction.fromFieldMap(fieldMap)
+      }
+      (query, kbpExtrs)
+    } catch {
+      case e: Exception => {
+        e.printStackTrace()
+        (query, Nil)
+      }
     }
-    (query, kbpExtrs)
   }
   
   def sendQueries(kbElement: KbElement): Iterable[(KbQuery, Seq[KbpExtraction])] = {
@@ -76,7 +86,11 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Issuing Queries...")
 
-    val results = elements flatMap sendQueries
+    val groupSize = 1000
+    
+    val results = elements.iterator.grouped(groupSize) flatMap { group =>
+      group.par flatMap sendQueries filter(_._2.nonEmpty)
+    }
     
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>
@@ -89,9 +103,10 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     System.err.println("Combining patterns...")
     
     def combine(p1: Pattern, p2: Pattern) = p1.combineWith(p2)
-    
+
     // combine intermediate results to reduce memory footprint...
-    val intermediate = rawPatterns.grouped(10000).flatMap { group =>
+    val intermediate = rawPatterns.grouped(groupSize).zipWithIndex.flatMap { case (group, index) =>
+      System.err.println("Patterns processed: " + (index + 1) * groupSize)
       group.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     } toSeq
     
@@ -153,19 +168,17 @@ object KbPatternFinder extends App {
   var solrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
   var kbPath: File = new File(".") 
   var output: PrintStream = System.out
-  var elementLimit = Int.MaxValue
   
   val parser = new OptionParser() {
     arg("kbPath", "Path to knowledge base", { s => kbPath = new File(s) })
     opt("output", "Output file (default stdout)", { s => output = new PrintStream(new File(s)) })
-    opt("limit", "debug limit elements, default no limit", { s => elementLimit = s.toInt })
   }
   
   if (parser.parse(args)) {
     
     val elements = new KnowledgeBaseReader(kbPath)
     
-    val patternFinder = new PatternFinder(solrUrl, elements.take(elementLimit))
+    val patternFinder = new PatternFinder(solrUrl, elements)
     
     patternFinder.getPatterns.iterator.toSeq.sortBy(-_._2.size) foreach { case (slotname, patterns) =>
       output.println("PATTERNS FOR: " + slotname)
