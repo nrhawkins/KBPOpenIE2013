@@ -3,25 +3,30 @@ package edu.knowitall.tac2013.pattern
 import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.openie.KbpExtraction
 
-case class Pattern private (val freq: Int, val relStemmed: String, val query: KbQuery, val sampleFills: StringCounter, val sampleEntities: StringCounter) {
+case class Pattern private (
+    val freq: Int, 
+    val relStemmed: String, 
+    val entityType: String, 
+    val slotName: String,
+    val entityInArg1: Boolean,
+    val sampleArg1s: StringCounter, 
+    val sampleArg2s: StringCounter) {
   
-  def arg1 = query.arg1Type
-  def arg2 = query.arg2Type
+  def arg1Type = if (entityInArg1) entityType else slotName
+  def arg2Type = if (entityInArg1) slotName else entityType
   
-  def groupFields = Seq(arg1, relStemmed, arg2)
+  def groupFields = Seq(arg1Type, relStemmed, arg2Type)
   def groupKey = groupFields.mkString(",")
   
   def combineWith(other: Pattern): Pattern = {
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relStemmed, query, this.sampleFills.addAll(other.sampleFills).trim(200), this.sampleEntities.addAll(other.sampleEntities).trim(200))
+    Pattern(this.freq + other.freq, relStemmed, entityType, slotName, entityInArg1, this.sampleArg1s.addAll(other.sampleArg1s).trim(200), this.sampleArg2s.addAll(other.sampleArg2s).trim(200))
   }
   
   override def toString: String = {
-    val sampleArg1s = if (query.entityArg1) sampleEntities.top(2) else sampleFills.top(2)
-    val sampleArg2s = if (query.entityArg2) sampleEntities.top(2) else sampleFills.top(2)
     
-    val a1String = sampleArg1s.map(p => "ARG1s: %s(%d)".format(p._1, p._2)).mkString(", ")
-    val a2String = sampleArg2s.map(p => "ARG2s: %s(%d)".format(p._1, p._2)).mkString(", ")
+    val a1String = "ARG1s: " + sampleArg1s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
+    val a2String = "ARG2s: " + sampleArg2s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
     
     val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String)
     fields.mkString("\t")
@@ -37,11 +42,16 @@ object Pattern {
   }
   def morpha = morphaLocal.get
   
-  def from(freq: Int, relStemmed: String, query: KbQuery, samples: Seq[KbpExtraction]): Pattern = {
-    def sampleFills = if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText)
-    def sampleEntities = if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText)
+  def from(freq: Int, relStemmed: String, query: KbQuery, samples: Seq[KbpExtraction]): Seq[Pattern] = {
     
-    Pattern(freq, relStemmed, query, StringCounter.fromStrings(sampleFills), StringCounter.fromStrings(sampleEntities))
+    
+    def cleanSample(str: String): String = str.toLowerCase.replaceAll("\\s+", " ")
+    val sampleArg1s = { if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText) } map cleanSample
+    val sampleEntities = { if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText) } map cleanSample
+    
+    query.element.slotNames.map { slotName =>
+      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleEntities))
+    }
   }
   
   def stemRel(tokens: Seq[ChunkedToken]): String = tokens.map({ t => morpha.lemmatizeToken(t) }).map(_.lemma).mkString(" ")
@@ -95,7 +105,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>
       val relGroups = extrs.groupBy(e => Pattern.stemRel(e.rel.tokens))
-      relGroups.iterator.map { case (relStemmed, extrs) =>
+      relGroups.iterator.flatMap { case (relStemmed, extrs) =>
         Pattern.from(extrs.size, relStemmed, query, extrs)  
       }
     }
@@ -114,7 +124,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     val combinedPatterns = intermediate.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     
     System.err.println("Grouping patterns...")
-    val groupedPatterns = combinedPatterns.groupBy(_.query.element.slotname)
+    val groupedPatterns = combinedPatterns.groupBy(_.slotName)
     
     // sort patterns in descending order by frequency
     val sortedPatterns = groupedPatterns.map { case (slotname, patterns) => (slotname, patterns.toSeq.sortBy(-_.freq)) }
@@ -168,15 +178,20 @@ object KbPatternFinder extends App {
   var solrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
   var kbPath: File = new File(".") 
   var output: PrintStream = System.out
+  var limit: Option[Int] = None
   
   val parser = new OptionParser() {
     arg("kbPath", "Path to knowledge base", { s => kbPath = new File(s) })
     opt("output", "Output file (default stdout)", { s => output = new PrintStream(new File(s)) })
+    opt("limit", "Limit amount of KB to read (debug)", { s => limit = Some(s.toInt) })
   }
   
   if (parser.parse(args)) {
     
-    val elements = new KnowledgeBaseReader(kbPath)
+    val elements = limit match {
+      case Some(l) => new KnowledgeBaseReader(kbPath).take(l)
+      case None => new KnowledgeBaseReader(kbPath)
+    }
     
     val patternFinder = new PatternFinder(solrUrl, elements)
     

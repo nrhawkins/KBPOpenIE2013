@@ -4,14 +4,14 @@ import org.apache.solr.client.solrj.util.ClientUtils
 
 case class KbItem(val entity: String, val nodeId: Option[String])
 
-case class KbElement(val entity: KbItem, val fill: KbItem, val entityType: String, val slotname: String)
+case class KbElement(val entity: KbItem, val fill: KbItem, val entityType: String, val slotNames: Seq[String])
 
 case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
   def entityArg2 = !entityArg1
   def arg1 = if (entityArg1) element.entity else element.fill
   def arg2 = if (entityArg2) element.entity else element.fill
-  def arg1Type = if (entityArg1) element.entityType else element.slotname
-  def arg2Type = if (entityArg2) element.entityType else element.slotname
+  //def arg1Type = if (entityArg1) element.entityType else element.slotname
+  //def arg2Type = if (entityArg2) element.entityType else element.slotname
   
   def cleanQuery(queryString: String): String = queryString.split(" ").map(s => ClientUtils.escapeQueryChars(s.replaceAll("\"", ""))).mkString(" ")
   

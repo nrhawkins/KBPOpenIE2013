@@ -42,7 +42,7 @@ class AnswerKeyIterator(answerKeySource: Source, queryEntities: Map[String, Enti
         val entityType = if (slot_name.startsWith("org:")) "ORG" else "PER"
         val entityItem = KbItem(entityInfo.name, entityInfo.nodeId)
         val fillItem = KbItem(filler, None)
-        KbElement(entityItem, fillItem, entityType, slot_name)
+        KbElement(entityItem, fillItem, entityType, Seq(slot_name))
       }
       case _ => throw new RuntimeException("Invalid row (%d cols):\n%s".format(str.split("\t").length, str))
     }

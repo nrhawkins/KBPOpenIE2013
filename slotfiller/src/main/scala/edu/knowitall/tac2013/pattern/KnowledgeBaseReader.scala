@@ -36,9 +36,9 @@ object KnowledgeBaseReader {
       facts.iterator map { fact =>
         val entityItem = KbItem(clean(name), Some(id))
         val factItem = KbItem(clean(fact.text), fact.linkId)
-        val element = KbElement(entityItem, factItem, entityType, fact.factType)
+        val element = KbElement(entityItem, factItem, entityType, Seq(fact.factType))
         element
-      } filter(e => e.entityType == "ORG" || e.entityType == "PER") filter(infoboxFilter)
+      } filter(e => e.entityType == "ORG" || e.entityType == "PER")
     }
   }
   
@@ -64,22 +64,38 @@ object KnowledgeBaseReader {
     
     new KnowledgeBaseReader(new File(path)) foreach println
   }
-  
-  val infoboxResource = "/edu/knowitall/tac2013/pattern/top500infoboxes.txt" 
-  def topInfoboxes = {
-    val url = getClass.getResource(infoboxResource)
-    require(url != null, "Could not find resource: " + infoboxResource)
-    using(io.Source.fromURL(url, "UTF8")) { source => source.getLines.toSet }
-  }
-  
-  def infoboxFilter(e: KbElement) = topInfoboxes.contains(e.slotname)
 }
 
-object InfoboxCounter extends App {
-  val path = args(0)
-  val out = new java.io.PrintStream(args(1))
-
-  new KnowledgeBaseReader(new File(path)).groupBy(e => e.slotname).iterator.map({ case (slotname, es) => 
-    (slotname, es.size) 
-  }).toSeq.sortBy(-_._2).take(500) foreach { case (slotname, count) => out.println(slotname) }
+object InfoboxMappings {
+  
+  val personMappingResource = "/edu/knowitall/tac2013/pattern/per_infobox_mapping.tab"
+  val orgMappingResource = "/edu/knowitall/tac2013/pattern/orgr_infobox_mapping.tab"
+        
+  private def loadMap(resource: String): Map[String, Seq[String]] = {
+    val url = Option(getClass.getResource(resource)).getOrElse(throw new RuntimeException("Not found: " + resource))
+    using(io.Source.fromURL(url)) { source =>
+      val splitLines = source.getLines.map { line => line.toLowerCase.replaceAll("""/""", "_").split("\t") }
+      val parsedLines = splitLines.map { 
+        case Array(reg, generic, _*) => (reg, generic)
+        case x => throw new RuntimeException("Parse error loading %s: malformed line %s".format(resource, x.mkString("\t")))
+      }
+      // group by reg infobox and fixup resulting groupby type.
+      parsedLines.toSeq.groupBy(_._1).map { case (key, keyValues) => (key, keyValues.map { case (key, value) => value })}
+    }
+  }
+  
+  private val perMap = loadMap(personMappingResource)
+  private val orgMap = loadMap(orgMappingResource)
+    
+  private def lookup(infoboxMap: Map[String, Seq[String]], infoboxClass: String, infoboxName: String): Seq[String] = {
+    val key = s"infoboxClass:infoboxName".toLowerCase
+    infoboxMap(key)
+  }
+  
+  /**
+   * Example args: "Infobox Artist", "birthplace"  -->  Seq("per:city_of_birth", "per:country_of_birth, ...)
+   */
+  def perSlotLookup(kbInfoboxClass: String, kbInfobox: String) = lookup(perMap, kbInfoboxClass, kbInfobox)
+  
+  def orgSlotLookup(kbInfoboxClass: String, kbInfobox: String) = lookup(orgMap, kbInfoboxClass, kbInfobox)
 }

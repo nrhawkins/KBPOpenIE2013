@@ -9,7 +9,7 @@ class KbDataSpec extends FlatSpec {
     val entity = KbItem("Ben Bernanke", Some("E0780408"))
     val fill = KbItem("SomeSlotFill", None)
     
-    val element = KbElement(entity, fill, "PER", "per:some_slot")
+    val element = KbElement(entity, fill, "PER", Seq("per:some_slot"))
     
     val query = KbQuery(element, entityArg1 = true)
     
