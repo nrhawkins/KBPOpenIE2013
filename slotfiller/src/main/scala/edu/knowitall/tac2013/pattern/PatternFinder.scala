@@ -105,8 +105,11 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     def combine(p1: Pattern, p2: Pattern) = p1.combineWith(p2)
     
+    val groupSize = 10000
+    
     // combine intermediate results to reduce memory footprint...
-    val intermediate = rawPatterns.grouped(10000).flatMap { group =>
+    val intermediate = rawPatterns.grouped(groupSize).zipWithIndex.flatMap { case (group, index) =>
+      System.err.println("Patterns processed: " + index * groupSize)
       group.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     } toSeq
     
