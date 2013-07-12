@@ -8,7 +8,7 @@ import edu.knowitall.common.Resource.using
  */
 class KnowledgeBaseReader(val path: File) extends Iterable[KbElement] {
 
-  def iterator = path.listFiles.iterator.flatMap(file => KnowledgeBaseReader.readXml(file))
+  def iterator = path.listFiles.iterator.grouped(10).flatMap(group => group.par.flatMap(file => KnowledgeBaseReader.readXml(file)))
 }
 
 object KnowledgeBaseReader {

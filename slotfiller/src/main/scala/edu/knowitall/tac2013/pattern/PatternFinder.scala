@@ -73,8 +73,8 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
   def this(url: String, elements: Iterable[KbElement]) = this(new SolrClient(url), elements)
 
   def filterLongArgs(query: KbQuery)(extr: KbpExtraction): Boolean = {
-    val arg1TooLong = extr.arg1.originalText.length > query.arg1.entity.length + 20
-    val arg2TooLong = extr.arg2.originalText.length > query.arg2.entity.length + 20
+    val arg1TooLong = extr.arg1.originalText.length > query.arg1.entity.length + 30
+    val arg2TooLong = extr.arg2.originalText.length > query.arg2.entity.length + 30
     !arg1TooLong && !arg2TooLong
   }
   
@@ -110,7 +110,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Issuing Queries...")
 
-    val groupSize = 1000
+    val groupSize = 10000
     
     val results = elements.iterator.grouped(groupSize) flatMap { group =>
       group.par flatMap sendQueries filter(_._2.nonEmpty)
@@ -153,7 +153,7 @@ object PatternFinder extends App {
   import java.io.File
   import java.io.PrintStream
   
-  var solrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
+  var solrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
   var queriesFile: File = new File(".") 
   var answerFile: File = new File(".")
   var output: PrintStream = System.out
