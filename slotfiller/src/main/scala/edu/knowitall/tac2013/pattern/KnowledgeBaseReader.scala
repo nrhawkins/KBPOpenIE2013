@@ -31,30 +31,37 @@ object KnowledgeBaseReader {
       }
       val id = entity.attribute("id").get.head.text
       val entityType = entity.attribute("type").get.head.text
+      val factsClass = entity.\("facts").head.attribute("class").get.head.text
       val factNodes = entity.\("facts").\("fact")
-      val facts = factNodes map processFactNode
+      val facts = factNodes map processFactNode(factsClass, entityType)
       facts.iterator map { fact =>
         val entityItem = KbItem(clean(name), Some(id))
         val factItem = KbItem(clean(fact.text), fact.linkId)
-        val element = KbElement(entityItem, factItem, entityType, Seq(fact.factType))
+        val element = KbElement(entityItem, factItem, entityType, fact.slotNames)
         element
-      } filter(e => e.entityType == "ORG" || e.entityType == "PER")
+      } filter(e => e.entityType == "ORG" || e.entityType == "PER") filter(_.slotNames.nonEmpty)
     }
   }
   
-  case class Fact(val factType: String, val text: String, val linkId: Option[String])
+  case class Fact(val slotNames: Seq[String], val text: String, val linkId: Option[String])
   
-  def processFactNode(factNode: scala.xml.Node): Fact = {
+  def processFactNode(factClass: String, entityType: String)(factNode: scala.xml.Node): Fact = {
     val factType = factNode.attribute("name").get.head.text
-    // just consider one link node for now, one that's linked, if possible...
-    val linkNodes = factNode.\("link")
-    val linkNode = linkNodes.find(_.attribute("entity_id").isDefined) match {
-      case Some(link) => Some(link)
-      case None => linkNodes.headOption
+    
+    val slotNames = entityType match {
+      case "PER" => InfoboxMappings.perSlotLookup(factClass, factType)
+      case "ORG" => InfoboxMappings.orgSlotLookup(factClass, factType)
+      case _ => throw new Exception("Need either ORG or PER...")
     }
-    linkNode match {
-      case Some(link) => Fact(factType, link.text, link.attribute("entity_id").map(_.head.text))
-      case None => Fact(factType, factNode.text, None)
+    // Use a fact link only if it is the only link and there is no fact text (due to formatting... otherwise cant trust it.)
+    val factText = factNode.text
+    val linkNode = factNode.\("link").headOption
+    if (factText.nonEmpty) Fact(slotNames, factText, None)
+    else if (linkNode.isDefined) {
+      val nodeId = linkNode.get.attribute("entity_id") map { attr => attr.head.text }
+      Fact(slotNames, linkNode.get.text, nodeId)
+    } else {
+      new Fact(Nil, "DISCARD", None)
     }
   }
   
