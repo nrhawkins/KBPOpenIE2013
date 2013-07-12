@@ -1,6 +1,7 @@
 package edu.knowitall.tac2013.pattern
 
 import java.io.File
+import edu.knowitall.common.Resource.using
 
 /**
  * Reads KbElements from the TAC 2009 knowledge base.
@@ -37,7 +38,7 @@ object KnowledgeBaseReader {
         val factItem = KbItem(clean(fact.text), fact.linkId)
         val element = KbElement(entityItem, factItem, entityType, fact.factType)
         element
-      } filter(e => e.entityType == "ORG" || e.entityType == "PER")
+      } filter(e => e.entityType == "ORG" || e.entityType == "PER") filter(infoboxFilter)
     }
   }
   
@@ -63,6 +64,15 @@ object KnowledgeBaseReader {
     
     new KnowledgeBaseReader(new File(path)) foreach println
   }
+  
+  val infoboxResource = "/edu/knowitall/tac2013/pattern/top500infoboxes.txt" 
+  def topInfoboxes = {
+    val url = getClass.getResource(infoboxResource)
+    require(url != null, "Could not find resource: " + infoboxResource)
+    using(io.Source.fromURL(url, "UTF8")) { source => source.getLines.toSet }
+  }
+  
+  def infoboxFilter(e: KbElement) = topInfoboxes.contains(e.slotname)
 }
 
 object InfoboxCounter extends App {
