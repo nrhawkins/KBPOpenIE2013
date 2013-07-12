@@ -9,18 +9,22 @@ case class Pattern private (
     val entityType: String, 
     val slotName: String,
     val entityInArg1: Boolean,
-    val sampleArg1s: StringCounter, 
-    val sampleArg2s: StringCounter) {
+    val sampleEntities: StringCounter, 
+    val sampleFills: StringCounter) {
   
   def arg1Type = if (entityInArg1) entityType else slotName
   def arg2Type = if (entityInArg1) slotName else entityType
   
+  def sampleArg1s = if (entityInArg1) sampleEntities else sampleFills
+  def sampleArg2s = if (entityInArg2) sampleEntities else sampleFills
+  
+  def entityInArg2 = !entityInArg1
   def groupFields = Seq(arg1Type, relStemmed, arg2Type)
   def groupKey = groupFields.mkString(",")
   
   def combineWith(other: Pattern): Pattern = {
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relStemmed, entityType, slotName, entityInArg1, this.sampleArg1s.addAll(other.sampleArg1s).trim(200), this.sampleArg2s.addAll(other.sampleArg2s).trim(200))
+    Pattern(this.freq + other.freq, relStemmed, entityType, slotName, entityInArg1, this.sampleEntities.addAll(other.sampleEntities).trim(200), this.sampleFills.addAll(other.sampleFills).trim(200))
   }
   
   override def toString: String = {
@@ -47,10 +51,13 @@ object Pattern {
     
     def cleanSample(str: String): String = str.toLowerCase.replaceAll("\\s+", " ")
     val sampleArg1s = samples.map(_.arg1.originalText) map cleanSample
-    val sampleEntities = samples.map(_.arg2.originalText) map cleanSample
+    val sampleArg2s = samples.map(_.arg2.originalText) map cleanSample
+    
+    val sampleEntities = if (query.entityArg1) sampleArg1s else sampleArg2s
+    val sampleFills = if (query.entityArg2) sampleArg1s else sampleArg1s
     
     query.element.slotNames.map { slotName =>
-      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleEntities))
+      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleArg2s))
     }
   }
   
