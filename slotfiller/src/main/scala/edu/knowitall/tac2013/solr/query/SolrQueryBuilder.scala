@@ -9,6 +9,7 @@ case class SolrQuery(val queryString: String, val queryType: SolrQueryType, val 
 
 class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val corefOn: Boolean) {
 
+  def this(pattern: SlotPattern, kbpQuery: KBPQuery) = this(pattern, kbpQuery ,false)
   val arg1TextConstraint: Option[String] = {
     pattern.entityIn match {
       case Some("arg1") => Some("+arg1Text:\"%s\"".format(kbpQuery.name))
