@@ -46,8 +46,8 @@ object Pattern {
     
     
     def cleanSample(str: String): String = str.toLowerCase.replaceAll("\\s+", " ")
-    val sampleArg1s = { if (query.entityArg1) samples.map(_.arg2.originalText) else samples.map(_.arg1.originalText) } map cleanSample
-    val sampleEntities = { if (query.entityArg1) samples.map(_.arg1.originalText) else samples.map(_.arg2.originalText) } map cleanSample
+    val sampleArg1s = samples.map(_.arg1.originalText) map cleanSample
+    val sampleEntities = samples.map(_.arg2.originalText) map cleanSample
     
     query.element.slotNames.map { slotName =>
       Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleArg1s), StringCounter.fromStrings(sampleEntities))
