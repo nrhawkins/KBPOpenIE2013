@@ -86,7 +86,11 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Issuing Queries...")
 
-    val results = elements.par flatMap sendQueries filter(_._2.nonEmpty)
+    val groupSize = 1000
+    
+    val results = elements.iterator.grouped(groupSize) flatMap { group =>
+      group flatMap sendQueries filter(_._2.nonEmpty)
+    }
     
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>
@@ -99,11 +103,9 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     System.err.println("Combining patterns...")
     
     def combine(p1: Pattern, p2: Pattern) = p1.combineWith(p2)
-    
-    val groupSize = 10000
-    
+
     // combine intermediate results to reduce memory footprint...
-    val intermediate = rawPatterns.iterator.grouped(groupSize).zipWithIndex.flatMap { case (group, index) =>
+    val intermediate = rawPatterns.grouped(groupSize).zipWithIndex.flatMap { case (group, index) =>
       System.err.println("Patterns processed: " + index * groupSize)
       group.groupBy(_.groupKey).values.map { patterns => patterns.reduce(combine) }
     } toSeq
