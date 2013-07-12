@@ -51,7 +51,7 @@ object KnowledgeBaseReader {
     val slotNames = entityType match {
       case "PER" => InfoboxMappings.perSlotLookup(factClass, factType)
       case "ORG" => InfoboxMappings.orgSlotLookup(factClass, factType)
-      case _ => throw new Exception("Need either ORG or PER...")
+      case _ => Nil
     }
     // Use a fact link only if it is the only link and there is no fact text (due to formatting... otherwise cant trust it.)
     val factText = factNode.text
@@ -76,7 +76,7 @@ object KnowledgeBaseReader {
 object InfoboxMappings {
   
   val personMappingResource = "/edu/knowitall/tac2013/pattern/per_infobox_mapping.tab"
-  val orgMappingResource = "/edu/knowitall/tac2013/pattern/orgr_infobox_mapping.tab"
+  val orgMappingResource = "/edu/knowitall/tac2013/pattern/org_infobox_mapping.tab"
         
   private def loadMap(resource: String): Map[String, Seq[String]] = {
     val url = Option(getClass.getResource(resource)).getOrElse(throw new RuntimeException("Not found: " + resource))
@@ -95,8 +95,8 @@ object InfoboxMappings {
   private val orgMap = loadMap(orgMappingResource)
     
   private def lookup(infoboxMap: Map[String, Seq[String]], infoboxClass: String, infoboxName: String): Seq[String] = {
-    val key = s"infoboxClass:infoboxName".toLowerCase
-    infoboxMap(key)
+    val key = s"$infoboxClass:$infoboxName".toLowerCase
+    infoboxMap.get(key).getOrElse(Nil)
   }
   
   /**
