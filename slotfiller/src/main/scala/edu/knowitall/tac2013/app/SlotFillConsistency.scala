@@ -1,7 +1,11 @@
 package edu.knowitall.tac2013.app
 
+import edu.knowitall.tac2013.stanford.annotator.utils.StanfordAnnotatorHelperMethods
+
 object SlotFillConsistency {
   
+  val stanfordHelper = new StanfordAnnotatorHelperMethods()
+
   
   def makeConsistent(answers: Map[Slot,Seq[Candidate]]): Map[Slot,Seq[Candidate]] = {
     
