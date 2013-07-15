@@ -92,7 +92,7 @@ object Pattern {
     lemmatizedTokens.map({lt => lt.lemma}).mkString(" ")
     val filteredTokens = lemmatizedTokens.filter(t => !stripPostags.contains(t.postag))
     val convertedTokens = filteredTokens.map { lt => if (convertPostags.contains(lt.postag)) lt.postag else lt.lemma }
-    convertedTokens.mKstring(" ")
+    convertedTokens.mkString(" ")
   }
 }
 
