@@ -11,6 +11,7 @@ import edu.knowitall.tac2013.prep.util.LineReader
 import edu.knowitall.tac2013.solr.KbpExtractionConverter
 import scala.Option.option2Iterable
 import org.apache.solr.common.SolrInputDocument
+import scala.io.Source
 
 class SolrDocumentPathXMLPopulator private (val solrServer: ConcurrentUpdateSolrServer) {
 
@@ -30,17 +31,22 @@ class SolrDocumentPathXMLPopulator private (val solrServer: ConcurrentUpdateSolr
 
   private def addSingle(docId: String, xml: String): Unit = {
     val doc = new SolrInputDocument()
-    doc.addField("docId", docId)
+    doc.addField("docid", docId)
     doc.addField("xml", xml)
     
     solrServer.add(doc)
     if (extrCounter.incrementAndGet() % 10000 == 0) {
-      System.err.println("SolrPopulator: %d extractions added.".format(extrCounter.get))
+      System.err.println("SolrPopulator: %d documents added.".format(extrCounter.get))
     }
   }
   
   private def populate(docs: Iterator[(String,String)]): Unit = {
     
+    //delete all old documents
+    solrServer.deleteByQuery("*:*")
+    solrServer.commit()
+    
+    //add all new documents
     docs.foreach(f => tryAddSingle(f._1,f._2))
     solrServer.commit()
     solrServer.shutdown()
@@ -79,12 +85,41 @@ object SolrDocumentPathXMLPopulator {
         return
       else {
         val files = FileUtils.getFilesRecursive(new java.io.File(inputPath))
-        val pathXMLPairs = files.map(f => (f.getName(),f.getAbsolutePath()))
-        pathXMLPairs
+        val pathXMLPairs = files.map(f => {getIdXmlTuple(f)})
+        pathXMLPairs.flatten
       }
     }
 
     populate(input, solrUrl)
     
+  }
+  
+  /**
+   * returns an xml string for each doc id
+   */
+  def getIdXmlTuple(f : java.io.File): Iterator[(String,String)] = {
+    val docSplitter = new DocSplitter(LineReader.fromFile(f,"UTF-8"))
+    val idXmlPairs = for (d <- docSplitter) yield {
+        val lines = d.lines
+        var pair :Option[(String,String)] = None
+        val docIdLineOption = lines.filter(l => l.line.startsWith("<DOCID>")).headOption
+        if(docIdLineOption.isDefined){
+          val processedKbpDoc = new KbpProcessedDoc(docIdLineOption.get,None,None,lines)
+          val docIdOption = processedKbpDoc.extractDocId
+          val xmlString = d.getString
+          if(docIdOption.isDefined){
+            pair = Some((docIdOption.get,xmlString))
+          }
+          else{
+            pair = None
+          }
+          
+        }
+        else{
+          pair = None
+        }
+        pair
+    }
+    idXmlPairs.flatten
   }
 }

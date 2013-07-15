@@ -66,6 +66,9 @@ class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
     
     fmt.printFilteredResults(slotCandidateSets, kbpQuery)
     
+    //get correct date format strings
+    val formattedSlotCandidateSets = putInTimexFormat(slotCandidateSets)
+    
     val slotBestAnswers = slotCandidateSets map { case (slot, patternCandidates) =>
       (slot -> new SlotFillReranker(fmt).findSlotAnswers(slot, kbpQuery, patternCandidates))  
     }

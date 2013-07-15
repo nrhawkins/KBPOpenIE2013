@@ -19,10 +19,14 @@ import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.time.SUTimeMain;
 import edu.stanford.nlp.time.TimeAnnotations.TimexAnnotation;
 import edu.stanford.nlp.time.TimeAnnotations.TimexAnnotations;
+import edu.stanford.nlp.time.SUTime;
 import edu.stanford.nlp.time.Timex;
 import edu.stanford.nlp.util.CoreMap;
+
+import edu.knowitall.tac2013.solr.query.SolrHelper;
 
 
 
@@ -78,39 +82,30 @@ public class StanfordAnnotatorHelperMethods {
 		return timexString;
 	}
 	
-	private String getPathToDoc(String docId){
-		return docId;
 
-	}
-	
 	
 	public String getNormalizedDate(Interval charInterval, String docId, String originalString) throws IOException{
-		String filePathPlusDocId = getPathToDoc(docId);
-		FileInputStream in = new FileInputStream(new File(filePathPlusDocId));
-		String fileString = IOUtils.toString(in,"UTF-8");
-		in.close();
-		
-		Annotation document = new Annotation(fileString);
-		suTimePipeline.annotate(document);
-
-		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-	    for(CoreMap sentence: sentences){
-	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
-	    		Timex tt = token.get(TimexAnnotation.class);
-	    		if(charInterval.intersects(Interval.closed(token.beginPosition(), token.endPosition()))){
-	    			if(tt != null){
-	    				return normalizeTimex(tt.value());
-	    			}
-	    		}
-	    	}
-	    }
+		String xmlDoc = SolrHelper.getRawDoc(docId);
+		if(xmlDoc.trim().isEmpty()){
+			return originalString;
+		}
+		else{
+			Annotation document = new Annotation(xmlDoc);
+			suTimePipeline.annotate(document);
+	
+			List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		    for(CoreMap sentence: sentences){
+		    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
+		    		Timex tt = token.get(TimexAnnotation.class);
+		    		if(charInterval.intersects(Interval.closed(token.beginPosition(), token.endPosition()))){
+		    			if(tt != null){
+		    				return normalizeTimex(tt.value());
+		    			}
+		    		}
+		    	}
+		    }
+		}
 	    
 	    return originalString;
-	    
-
 	}
-	
-	
-	
-
 }

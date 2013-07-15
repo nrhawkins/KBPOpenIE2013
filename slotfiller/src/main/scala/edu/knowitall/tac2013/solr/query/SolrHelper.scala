@@ -1,6 +1,11 @@
 package edu.knowitall.tac2013.solr.query
 
+import jp.sf.amateras.solr.scala.SolrClient
+
 object SolrHelper {
+  
+  val solrUrlForXMLDocsFromOldCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/oldCorpus"
+  val solrUrlForXMLDocsFromNewCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/newCorpus"
   
   def getDocIDMapToSentNumsForEntityNameAndNodeID(entityName: String, nodeID: Option[String]) : Map[String,List[(String,Int)]] ={
  
@@ -20,6 +25,19 @@ object SolrHelper {
     val constrainedMap = docIdMapListOfSentNums.filter(p => (p._2.length > 2))
     val sortedMap = constrainedMap.toList.sortBy(_._2.length)(Ordering[Int].reverse).take(20).toMap
     sortedMap
+  }
+  
+  
+  def getRawDoc(docId: String): String = {
+    val client = new SolrClient(solrUrlForXMLDocsFromOldCorpus)
+    val query = client.query("docid:\""+ docId + "\"")
+    val result = query.getResultAsMap()
+    if(result.documents.length != 1){
+      throw new Exception("There should be exactly 1 result returned from Solr")
+    }
+    else{
+      result.documents.head("xml").toString
+    }
   }
 
 }

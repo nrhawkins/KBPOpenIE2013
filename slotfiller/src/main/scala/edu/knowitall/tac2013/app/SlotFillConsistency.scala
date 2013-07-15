@@ -300,5 +300,9 @@ object SlotFillConsistency {
     else{
       0.0
     }
-  } 
+  }
+  
+  def formatDateAnswers(answers: Map[Slot,Seq[Candidate]]){
+    
+  }
 }
