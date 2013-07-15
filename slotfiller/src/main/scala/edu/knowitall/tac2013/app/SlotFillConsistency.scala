@@ -4,7 +4,6 @@ import edu.knowitall.tac2013.stanford.annotator.utils.StanfordAnnotatorHelperMet
 
 object SlotFillConsistency {
   
-  val stanfordHelper = new StanfordAnnotatorHelperMethods()
 
   
   def makeConsistent(answers: Map[Slot,Seq[Candidate]]): Map[Slot,Seq[Candidate]] = {
@@ -302,7 +301,4 @@ object SlotFillConsistency {
     }
   }
   
-  def formatDateAnswers(answers: Map[Slot,Seq[Candidate]]){
-    
-  }
 }
