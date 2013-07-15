@@ -46,9 +46,9 @@ case class Pattern private (
    
     val a1String = "ARG1s: " + sampleArg1s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
     val a2String = "ARG2s: " + sampleArg2s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
-    val extrString = "EXTRS:" + sampleExtrs.top(4).map { p => "(%d) %s".format(p._2, p._1) }
+    val extrString = "EXTRS:" + sampleExtrs.top(4).map { p => "(%d) %s".format(p._2, p._1) }.mkString(", ")
     
-    val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String, extrString) 
+    val fields = Seq(freq.toString) ++ groupFields ++ Seq(sample, a1String, a2String, extrString) 
     fields.mkString("\t")
   }
 }
