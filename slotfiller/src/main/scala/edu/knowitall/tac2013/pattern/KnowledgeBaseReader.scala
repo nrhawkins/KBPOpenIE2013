@@ -56,11 +56,12 @@ object KnowledgeBaseReader {
     // Use a fact link only if it is the only link and there is no fact text (due to formatting... otherwise cant trust it.)
     val factText = factNode.text
     val linkNode = factNode.\("link").headOption
-    if (factText.nonEmpty) Fact(slotNames, factText, None)
-    else if (linkNode.isDefined) {
+    
+    if (linkNode.isDefined) {
       val nodeId = linkNode.get.attribute("entity_id") map { attr => attr.head.text }
       Fact(slotNames, linkNode.get.text, nodeId)
-    } else {
+    } else if (factText.nonEmpty) Fact(slotNames, factText, None)
+    else {
       new Fact(Nil, "DISCARD", None)
     }
   }

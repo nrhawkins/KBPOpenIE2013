@@ -116,7 +116,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     System.err.println("Issuing Queries...")
 
-    val groupSize = 10000
+    val groupSize = 2000
     
     val results = elements.iterator.grouped(groupSize) flatMap { group =>
       group.par flatMap sendQueries filter(_._2.nonEmpty)
