@@ -2,6 +2,7 @@ package edu.knowitall.tac2013.pattern
 
 import jp.sf.amateras.solr.scala._
 import edu.knowitall.tac2013.openie.KbpExtraction
+import edu.knowitall.tool.stem.Lemmatized
 
 case class Pattern private (
     val freq: Int, 
@@ -41,12 +42,12 @@ case class Pattern private (
   override def toString: String = {
     
     val (top, topfreq) = sampleExtrs.top(1).head
-    val sample = "SAMPLE: (%s, %s, %s) freq=%d sent=%s"
-      .format(top.arg1.originalText, top.rel.originalText, top.arg2.originalText, topfreq, top.sentenceText) 
+    def sampleExtr(extr: KbpExtraction, freq: Int) = "(%s, %s, %s) freq=%d sent=%s".format(extr.arg1.originalText, extr.rel.originalText, extr.arg2.originalText, freq, extr.sentenceText) 
+    val sample = "SAMPLE: " + sampleExtr(top, topfreq)
    
     val a1String = "ARG1s: " + sampleArg1s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
     val a2String = "ARG2s: " + sampleArg2s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
-    val extrString = "EXTRS:" + sampleExtrs.top(4).map { p => "(%d) %s".format(p._2, p._1) }.mkString(", ")
+    val extrString = "EXTRS:" + sampleExtrs.top(4).map { p => sampleExtr(p._1, p._2) }.mkString(", ")
     
     val fields = Seq(freq.toString) ++ groupFields ++ Seq(sample, a1String, a2String, extrString) 
     fields.mkString("\t")
@@ -84,15 +85,13 @@ object Pattern {
     }
   }
   
-  val stripPostags = Set("WRB", "DT")
-  val convertPostags = Set("JJ", "RB", "VBG", "IN")
-  
+  val stripPostags = Set("WRB", "DT", "JJ", "RB")
+
   def stemRel(tokens: Seq[ChunkedToken]): String = {
     val lemmatizedTokens = tokens.map({ t => morpha.lemmatizeToken(t) })
     lemmatizedTokens.map({lt => lt.lemma}).mkString(" ")
-    val filteredTokens = lemmatizedTokens.filter(t => !stripPostags.contains(t.postag))
-    val convertedTokens = filteredTokens.map { lt => if (convertPostags.contains(lt.postag)) lt.postag else lt.lemma }
-    convertedTokens.mkString(" ")
+    val filteredTokens = lemmatizedTokens.filter(t => !stripPostags.contains(t.postag)).map(_.lemma)
+    filteredTokens.mkString(" ")
   }
 }
 
@@ -153,7 +152,7 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     
     // flatMap results into patterns, then group patterns and combine.
     val rawPatterns = results.flatMap { case (query, extrs) =>
-      val relGroups = extrs.groupBy(e => Pattern.stemRel(e.rel.tokens))
+      val relGroups = extrs.groupBy(e => Pattern.stemRel(e.rel.tokens)).filter(_._1.nonEmpty)
       relGroups.iterator.flatMap { case (relStemmed, extrs) =>
         Pattern.from(extrs.size, relStemmed, query, extrs)  
       }
