@@ -25,6 +25,7 @@ case class Pattern private (
   def groupKey = groupFields.mkString(",")
   
   def combineWith(other: Pattern): Pattern = {
+    require(this.entityInArg1 == other.entityInArg1)
     require(this.groupKey == other.groupKey) 
     Pattern(this.freq + other.freq, relStemmed, entityType, slotName, entityInArg1, this.sampleEntities.addAll(other.sampleEntities).trim(200), this.sampleFills.addAll(other.sampleFills).trim(200))
   }
@@ -141,7 +142,9 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     val groupedPatterns = combinedPatterns.groupBy(_.slotName)
     
     // sort patterns in descending order by frequency
-    val sortedPatterns = groupedPatterns.map { case (slotname, patterns) => (slotname, patterns.toSeq.sortBy(-_.freq)) }
+    val sortedPatterns = groupedPatterns.map { case (slotname, patterns) => 
+      (slotname, patterns.toSeq.sortBy(-_.freq).take(50)) 
+    }
     
     sortedPatterns
   }
