@@ -9,8 +9,9 @@ case class Pattern private (
     val entityType: String, 
     val slotName: String,
     val entityInArg1: Boolean,
-    val sampleEntities: StringCounter, 
-    val sampleFills: StringCounter) {
+    val sampleEntities: Counter[String], 
+    val sampleFills: Counter[String],
+    val sampleExtrs: Counter[KbpExtraction]) {
   
   def entityInArg2 = !entityInArg1
   
@@ -27,15 +28,27 @@ case class Pattern private (
   def combineWith(other: Pattern): Pattern = {
     require(this.entityInArg1 == other.entityInArg1)
     require(this.groupKey == other.groupKey) 
-    Pattern(this.freq + other.freq, relStemmed, entityType, slotName, entityInArg1, this.sampleEntities.addAll(other.sampleEntities).trim(200), this.sampleFills.addAll(other.sampleFills).trim(200))
+    Pattern(this.freq + other.freq, 
+        relStemmed, 
+        entityType, 
+        slotName, 
+        entityInArg1, 
+        this.sampleEntities.addAll(other.sampleEntities).trim(200), 
+        this.sampleFills.addAll(other.sampleFills).trim(200),
+        this.sampleExtrs.addAll(other.sampleExtrs).trim(25))
   }
   
   override def toString: String = {
     
+    val (top, topfreq) = sampleExtrs.top(1).head
+    val sample = "SAMPLE: (%s, %s, %s) freq=%d sent=%s"
+      .format(top.arg1.originalText, top.rel.originalText, top.arg2.originalText, topfreq, top.sentenceText) 
+   
     val a1String = "ARG1s: " + sampleArg1s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
     val a2String = "ARG2s: " + sampleArg2s.top(4).map(p => "%s(%d)".format(p._1, p._2)).mkString(", ")
+    val extrString = "EXTRS:" + sampleExtrs.top(4).map { p => "(%d) %s".format(p._2, p._1) }
     
-    val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String)
+    val fields = Seq(freq.toString) ++ groupFields ++ Seq(a1String, a2String, extrString) 
     fields.mkString("\t")
   }
 }
@@ -60,11 +73,27 @@ object Pattern {
     val sampleFills =    if (query.entityArg2) sampleArg1s else sampleArg2s
     
     query.element.slotNames.map { slotName =>
-      Pattern(freq, relStemmed, query.element.entityType, slotName, query.entityArg1, StringCounter.fromStrings(sampleEntities), StringCounter.fromStrings(sampleFills))
+      Pattern(freq, 
+          relStemmed, 
+          query.element.entityType, 
+          slotName, 
+          query.entityArg1, 
+          Counter.from(sampleEntities), 
+          Counter.from(sampleFills),
+          Counter.from(samples))
     }
   }
   
-  def stemRel(tokens: Seq[ChunkedToken]): String = tokens.map({ t => morpha.lemmatizeToken(t) }).map(_.lemma).mkString(" ")
+  val stripPostags = Set("WRB", "DT")
+  val convertPostags = Set("JJ", "RB", "VBG", "IN")
+  
+  def stemRel(tokens: Seq[ChunkedToken]): String = {
+    val lemmatizedTokens = tokens.map({ t => morpha.lemmatizeToken(t) })
+    lemmatizedTokens.map({lt => lt.lemma}).mkString(" ")
+    val filteredTokens = lemmatizedTokens.filter(t => !stripPostags.contains(t.postag))
+    val convertedTokens = filteredTokens.map { lt => if (convertPostags.contains(lt.postag)) lt.postag else lt.lemma }
+    convertedTokens.mKstring(" ")
+  }
 }
 
 class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
