@@ -15,14 +15,19 @@ case class KbQuery(val element: KbElement, val entityArg1: Boolean) {
   
   def constraintFor(fieldName: String, attr: String): String = "%s:\"%s\"".format(fieldName, cleanQuery(attr))
   
-  def constraintFor(fieldName: String, item: KbItem): String = {
-    
-    val nameConstraint = constraintFor(fieldName + "Text", item.entity)
-    val nodeConstraint = item.nodeId map { n => constraintFor(fieldName + "WikiLinkNodeId", n) }
-    
-    (Seq(nameConstraint) ++ nodeConstraint).mkString("(", " OR ", ")")
-  }
+  def nodeConstraint(fieldName: String, item: KbItem) = item.nodeId map { n => constraintFor(fieldName + "WikiLinkNodeId", n) }
   
-  def queryString = Seq(constraintFor("arg1", arg1), constraintFor("arg2", arg2)).mkString(" AND ")
+  def nameConstraint(fieldName: String, item: KbItem): String = constraintFor(fieldName + "Text", item.entity)
+  
+  def queryString: Option[String] = {
+    val fill = element.fill
+    val entity = element.entity
+    if (entity.nodeId.nonEmpty && fill.nodeId.nonEmpty) {
+      val constraints = (nodeConstraint("arg1", arg1) ++ nodeConstraint("arg2", arg2))
+      Some(constraints.mkString(" AND "))   
+    } else {
+      None
+    }
+  }
 }
 

@@ -78,17 +78,22 @@ class PatternFinder(val solrClient: SolrClient, elements: Iterable[KbElement]) {
     val arg2TooLong = extr.arg2.originalText.length > query.arg2.entity.length + 30
     !arg1TooLong && !arg2TooLong
   }
-  
+
   def sendQuery(query: KbQuery) = {
 
     try {
-      val solrQuery = solrClient.query(query.queryString)
-      val result = solrQuery.sortBy("confidence", Order.desc).rows(10000).getResultAsMap()
-      val kbpExtrs = result.documents.flatMap { doc =>
-        val fieldMap = doc.asInstanceOf[Map[String, Any]]
-        KbpExtraction.fromFieldMap(fieldMap)
+      query.queryString match {
+        case Some(qs) => {
+          val solrQuery = solrClient.query(qs)
+          val result = solrQuery.sortBy("confidence", Order.desc).rows(10000).getResultAsMap()
+          val kbpExtrs = result.documents.flatMap { doc =>
+            val fieldMap = doc.asInstanceOf[Map[String, Any]]
+            KbpExtraction.fromFieldMap(fieldMap)
+          }
+          (query, kbpExtrs filter filterLongArgs(query))
+        }
+        case None => (query, Nil)
       }
-      (query, kbpExtrs filter filterLongArgs(query))
     } catch {
       case e: Exception => {
         e.printStackTrace()
