@@ -38,6 +38,7 @@ class SolrDocumentPathXMLPopulator private (val solrServer: ConcurrentUpdateSolr
     
     solrServer.add(doc)
     if (extrCounter.incrementAndGet() % 10000 == 0) {
+      solrServer.commit()
       System.err.println("SolrPopulator: %d documents added.".format(extrCounter.get))
     }
   }
