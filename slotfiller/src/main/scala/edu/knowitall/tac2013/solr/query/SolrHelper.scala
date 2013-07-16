@@ -44,7 +44,8 @@ object SolrHelper {
     val query = solrXMLDocsClient.get.query("docid:\""+ docId + "\"")
     val result = query.getResultAsMap()
     if(result.documents.length != 1){
-      throw new Exception("There should be exactly 1 result returned from Solr")
+      System.err.println(docId + " was not found in corpus");
+      ""
     }
     else{
       result.documents.head("xml").toString
