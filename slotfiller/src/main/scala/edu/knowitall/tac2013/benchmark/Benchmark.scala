@@ -119,10 +119,10 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItems: Iterable[
   private def finalStats: Seq[String] = {
     
     val pessFrac = numCorrect.get.toDouble / (numNotInBenchmark.get.toDouble + numNotFound.get.toDouble + numCorrect.get.toDouble)
-    val pessString = "%.02f%%".format(pessFrac)
+    val pessString = "%.02f%%".format(pessFrac * 100.0)
     
     val optFrac = (numCorrect.get.toDouble+numNotInBenchmark.get.toDouble) / (numNotInBenchmark.get.toDouble + numNotFound.get.toDouble + numCorrect.get.toDouble)
-    val optString = "%.02f%%".format(optFrac)
+    val optString = "%.02f%%".format(optFrac * 100.0)
     
     Seq("", 
         "OVERALL STATS",
@@ -130,8 +130,8 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItems: Iterable[
         s"Num correct:${numCorrect.get}",
         s"Num not in benchmark:${numNotInBenchmark.get}",
         s"Num not found:${numNotFound.get}",
-        s"Optimistic  Fraction Correct = $optString",
-        s"Pessimistic Fraction Correct = $pessString")
+        s"Optimistic  % Correct = $optString",
+        s"Pessimistic % Correct = $pessString")
   }
   
   def go: Iterable[String] = {
