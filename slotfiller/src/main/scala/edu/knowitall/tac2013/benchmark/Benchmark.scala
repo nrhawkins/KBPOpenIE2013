@@ -28,7 +28,9 @@ case class BenchmarkItem(val entityName: String, val entityType: String, val nod
   }
 }
 
-class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItems: Iterable[BenchmarkItem]) {
+case class BenchmarkItemSet(val entityName: String, val entityType: String, val nodeId: String, val items: Set[BenchmarkItem])
+
+class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItemSets: Iterable[BenchmarkItemSet]) {
 
   import edu.knowitall.tac2013.app.Candidate
   import edu.knowitall.tac2013.app.FilterSolrResults
@@ -41,17 +43,23 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItems: Iterable[
   
   private val nullOutput = new OutputFormatter(new PrintStream("/dev/null"), printFiltered = false, printUnfiltered = false, printGroups = false, printAnswers = false)
   
-  private def getResponse(item: BenchmarkItem): Seq[Candidate] = {
+  private def getResponse(itemSet: BenchmarkItemSet): Map[Slot, Seq[Candidate]] = {
     
-    val unfiltered = solrExec.executeUnfilteredQuery(item.kbpQuery, item.slot)
-
-    val filteredCandidates = FilterSolrResults.filterResults(unfiltered, item.kbpQuery)
-
-    val bestAnswers = new SlotFillReranker(nullOutput).findSlotAnswers(item.slot, item.kbpQuery, filteredCandidates)
-
-    val smoothedSlotBestAnswers = SlotFillConsistency.makeConsistent(Map(item.slot -> bestAnswers))
+    val slots = Slot.getSlotTypesList(KBPQueryEntityType.fromString(itemSet.entityType))
+    val items = itemSet.items
     
-    smoothedSlotBestAnswers(item.slot)
+    val unfiltered = items.map( item => 
+      (item.slot, solrExec.executeUnfilteredQuery(item.kbpQuery, item.slot)) ).toMap
+
+    val filteredCandidates = items.map( item => (item.slot, FilterSolrResults.filterResults(unfiltered(item.slot), item.kbpQuery))).toMap
+
+    val bestAnswers = items.map( item => (item.slot, new SlotFillReranker(nullOutput).findSlotAnswers(item.slot, item.kbpQuery, filteredCandidates(item.slot)))).toMap
+
+    val bestAnswersAllSlots = slots.map(s => (s, bestAnswers.getOrElse(s, Nil))).toMap
+    
+    val smoothedSlotBestAnswers = SlotFillConsistency.makeConsistent(bestAnswersAllSlots)
+    
+    smoothedSlotBestAnswers
   }
   
   private def judgeResponses(responses: Seq[Candidate], item: BenchmarkItem): List[String] = {
@@ -135,7 +143,18 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItems: Iterable[
   }
   
   def go: Iterable[String] = {
-    benchmarkItems.flatMap(item => judgeResponses(getResponse(item), item)) ++ finalStats
+    val responses = benchmarkItemSets.map(itemSet => (itemSet, getResponse(itemSet)))
+    
+    val results = responses.flatMap { case (itemSet, resultsMap) =>
+      val slotsToItems = itemSet.items.groupBy(_.slot).map { case (slot, items) => 
+        require(items.size == 1)
+        (slot, items.head)
+      }
+      val itemsToResults = resultsMap.flatMap { case (slot, results) => slotsToItems.get(slot).map(i => judgeResponses(results, i)) }
+      itemsToResults
+    }
+    
+    results.toList.flatten ++ finalStats
   }
 }
 
@@ -156,7 +175,7 @@ object Benchmarker {
  
   private val tabRegex = "\t".r
   
-  private def loadBenchmark(url: URL) = using(Source.fromURL(url, "UTF8")) { source =>
+  private def loadBenchmark(url: URL): Iterable[BenchmarkItemSet] = using(Source.fromURL(url, "UTF8")) { source =>
     
     // drop header line and filter empty lines.
     val filteredLines = source.getLines.drop(1).filter(_.trim.nonEmpty)
@@ -183,7 +202,11 @@ object Benchmarker {
       }
       case _ => throw new RuntimeException("(#3) Malformed benchmark item fields.")
     }
-    benchmarkItems.toList
+    // group benchmarkItems by name :: typ :: nodeId to produce benchmarkItemSets
+    val groupedItems = benchmarkItems.groupBy { item => (item.entityName, item.entityType, item.nodeId) }
+    val itemSets = groupedItems.iterator.map { case ((entityName, entityType, nodeId), items) => 
+      new BenchmarkItemSet(entityName, entityType, nodeId, items.toSet) }
+    itemSets.toSeq
   }
   
   private def load2012Benchmark = loadBenchmark(b2012src)
