@@ -16,7 +16,7 @@ class SolrQueryExecutor(val solrClient: SolrClient, val corefOn: Boolean) {
   val queryCounter = new java.util.concurrent.atomic.AtomicInteger
   
   def this(url: String) = this(new SolrClient(url),false)
-  def this(url: String, corefFlag: Boolean) = this(new SolrClient(url), corefFlag)
+  def this(url: String, corefOn: Boolean) = this(new SolrClient(url), corefOn)
   
   
   private def issueSolrQuery(kbpSolrQuery: SolrQuery): Seq[Candidate] = {
@@ -71,17 +71,30 @@ class SolrQueryExecutor(val solrClient: SolrClient, val corefOn: Boolean) {
 
 object SolrQueryExecutor {
   
-  val oldCorpusUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
-    
-  val defaultSolrUrl = oldCorpusUrl
-    
-  val newCorpusUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
-    
-  lazy val defaultInstance = new SolrQueryExecutor(defaultSolrUrl)
+  val oldUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
+
+  val newUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
+
+  private lazy val oldCorpus = new SolrQueryExecutor(oldUrl)
+  private lazy val oldCorpusCoref = new SolrQueryExecutor(oldUrl, corefOn=true)
+ 
+  private lazy val newCorpus = new SolrQueryExecutor(newUrl)
+  private lazy val newCorpusCoref = new SolrQueryExecutor(newUrl, corefOn=true)
   
-  lazy val oldCorpus = new SolrQueryExecutor(oldCorpusUrl)
+  @deprecated
+  def defaultInstance = oldCorpus
+  @deprecated
+  def corefInstance = oldCorpusCoref
+
+  def getCorefInstance(str: String): SolrQueryExecutor = str match {
+    case "old" => oldCorpus
+    case "new" => newCorpus
+    case _ => throw new IllegalArgumentException("Corpus must be either \"old\" or \"new\"")
+  }
   
-  lazy val newCorpus = new SolrQueryExecutor(newCorpusUrl)
-  
-  lazy val corefInstance = new SolrQueryExecutor(defaultSolrUrl,true)
+  def getForCorpus(str: String): SolrQueryExecutor = str match {
+    case "old" => oldCorpus
+    case "new" => newCorpus
+    case _ => throw new IllegalArgumentException("Corpus must be either \"old\" or \"new\"")
+  }
 }
