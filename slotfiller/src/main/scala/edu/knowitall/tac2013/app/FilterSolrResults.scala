@@ -5,16 +5,53 @@ import edu.knowitall.tac2013.app.LocationHelper.findLocationTaggedType
 import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.solr.query.SolrQueryType
 import edu.knowitall.collection.immutable.Interval
+import scala.util.matching.Regex
 
 object FilterSolrResults {
+  
+  lazy val semanticCategoryPattern = new Regex("[A-Z<>]\\w+")
+
 
   //filter for arg2 beginning with proper preposition
-  private def satisfiesArg2PrepositionFilter(candidate: Candidate): Boolean = {
+  private def satisfiesArg2BeginsFilter(candidate: Candidate): Boolean = {
+    
 
     candidate.pattern.arg2Begins match {
-      case Some(arg2PrepositionString) => {
-        val solrResultsArg2 = candidate.extr.arg2.originalText
-        (solrResultsArg2.toString().toLowerCase().substring(0, arg2PrepositionString.length) == arg2PrepositionString.toLowerCase())
+      case Some(arg2BeginsString) => {
+        
+        val patternSpecificationStrings = arg2BeginsString.split(" ")
+        var intervalHead = candidate.extr.arg2.tokenInterval.start
+        for(arg2RequirementString <- patternSpecificationStrings){
+          //if the string is a semantic category requirement string
+          if(intervalHead >= candidate.extr.arg2.tokenInterval.end){
+            System.out.println("Returns false because of token interval")
+            return false
+          }
+          if (semanticCategoryPattern.findFirstIn(arg2RequirementString).isDefined){
+            val newIntervalHead = updateIntervalHead(arg2RequirementString,candidate,Interval.closed(intervalHead,candidate.extr.arg2.tokenInterval.end))
+            if(newIntervalHead.isDefined){
+              intervalHead =  newIntervalHead.get.start
+            }
+            else{
+              return false
+            }
+          }
+          //if the string is simply a word to match
+          else{
+            val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalHead, intervalHead+1)).head.string.replace("[", "").replace("]", "").toLowerCase()
+   
+            if(arg2RequirementString.toLowerCase().trim() == extractionTokenWithoutBrackets){
+              System.out.println("EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+              intervalHead = intervalHead+1
+            }
+            else{
+              System.out.println("NOT EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+              return false
+            }
+          }
+        }
+        System.out.println("Arg2Begins filter returns true")
+        return true
       }
       case None => true
     }
@@ -127,7 +164,7 @@ object FilterSolrResults {
     }
   }
   
-  private def semanticTypeIsInInterval(semanticType: String, candidate: Candidate, interval :Interval ): Boolean = {
+  private def updateIntervalHead(semanticType: String, candidate: Candidate, interval :Interval ): Option[Interval] = {
 
     
     val chunkedSentence = candidate.extr.sentence.chunkedTokens
@@ -136,104 +173,102 @@ object FilterSolrResults {
     if (semanticType == "Organization") {
       val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) {
+        if (t.interval().start == interval.start) {
             if (t.descriptor() == "StanfordORGANIZATION") {
-                return true
+                return Some(t.interval())
             }
         }
       }
-      return false
+      return None
     } else if(semanticType == "Person"){
       val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) {
+        if (t.interval().start == interval.start) {
             if (t.descriptor() == "StanfordPERSON") {
-                return true
+                return Some(t.interval())
             }
         }
       }
-      return false
+      return None
     }
      else if(semanticType == "Location"){
       val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) {
+        if (t.interval().start == interval.start) {
             if (t.descriptor() == "StanfordLOCATION") {
-                return true
+                return Some(t.interval())
             }
         }
       }
-      return false
+      return None
       
     }
     else if (semanticType == "School") {
       val types = SemanticTaggers.useEducationalOrganizationTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
+        if (t.interval().start == interval.start) return Some(t.interval())
       }
 
-      return false
+      return None
 
     } else if (semanticType == "JobTitle") {
 
       val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
 
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
-
+        if (t.interval().start == interval.start) return Some(t.interval())
       }
 
-      return false
+      return None
 
     } else if (semanticType == "Nationality") {
 
       val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
+        if (t.interval().start == interval.start) return Some(t.interval())
 
       }
 
-      return false
+      return None
 
     } else if (semanticType == "Religion") {
       val types = SemanticTaggers.useReligionTagger(chunkedSentence)
 
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
-
+        if (t.interval().start == interval.start) return Some(t.interval())
       }
 
-      return false
+      return None
 
     } else if (semanticType == "Date") {
       val types = SemanticTaggers.useDateTagger(chunkedSentence)
       
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
+        if (t.interval().start == interval.start) return Some(t.interval())
 
       }
 
-      return false
+      return None
 
     } else if (semanticType == "ProperNoun"){
       //need to figure out what to do for general ProperNoun semantic filter
       
-      return true
+      return None
     }  else if ((semanticType =="<integer>-year-old") || (semanticType == "Integer")){
 
       val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
       for (t <- types) {
-        if (t.interval().intersects(interval)) return true
+        if (t.interval().start == interval.start) return Some(t.interval())
 
       }
 
-      return false
+      return None
       
     } else {
     
     
 
-      return true
+      return None
 
     }
 
@@ -367,7 +402,7 @@ object FilterSolrResults {
   def filterResults(unfiltered: Seq[Candidate], kbpQuery: KBPQuery): Seq[Candidate] = {
     
     def combinedFilter(candidate: Candidate) = (
-            satisfiesArg2PrepositionFilter(candidate) &&
+            satisfiesArg2BeginsFilter(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
             satisfiesRelFilter(candidate) &&
             satisfiesSemanticFilter(candidate))

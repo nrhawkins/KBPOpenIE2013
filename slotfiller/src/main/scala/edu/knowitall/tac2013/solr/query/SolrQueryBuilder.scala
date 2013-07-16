@@ -43,7 +43,15 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
 
   val arg2StartConstraint: Option[String] = {
     pattern.arg2Begins match {
-      case Some(arg2Begins) => Some("+arg2Text:\"%s\"".format(arg2Begins))
+      case Some(arg2Begins) => {
+        val noJobTitleString = arg2Begins.replace("<JobTitle>", "")
+        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(noJobTitleString, "")
+        if (noSemanticCategoriesString != "") {
+          Some("+arg2Text:\"" + noSemanticCategoriesString + "\"")
+        } else {
+          None
+        }
+      }
       case None => None
     }
   }
@@ -159,5 +167,5 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
 
 object SolrQueryBuilder{
   
-  lazy val semanticCategoryPattern = new Regex("""[A-Z]\w+"""")
+  lazy val semanticCategoryPattern = new Regex("[A-Z]\\w+")
 }
