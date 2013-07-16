@@ -46,7 +46,7 @@ object KBPQueryExecutor {
     assert(args.length == 3,
       "there should be three arguments: path to KBP query File, path to the output File, and \"old\" or \"new\" to specify corpus")
 
-    val queryExecutor = SolrQueryExecutor.getForCorpus(args(2))
+    val queryExecutor = SolrQueryExecutor.getInstance(args(2))
     val KBPQueryPath = args(0)
     val outputPath = args(1)
 

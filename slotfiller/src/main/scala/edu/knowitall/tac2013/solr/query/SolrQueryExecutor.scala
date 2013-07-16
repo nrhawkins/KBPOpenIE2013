@@ -86,15 +86,12 @@ object SolrQueryExecutor {
   @deprecated
   def corefInstance = oldCorpusCoref
 
-  def getCorefInstance(str: String): SolrQueryExecutor = str match {
-    case "old" => oldCorpus
-    case "new" => newCorpus
-    case _ => throw new IllegalArgumentException("Corpus must be either \"old\" or \"new\"")
-  }
   
-  def getForCorpus(str: String): SolrQueryExecutor = str match {
-    case "old" => oldCorpus
-    case "new" => newCorpus
+  def getInstance(str: String, corefOn: Boolean = false): SolrQueryExecutor = (str, corefOn) match {
+    case ("old", true) => oldCorpusCoref
+    case ("old", false) => oldCorpus
+    case ("new", true) => newCorpusCoref
+    case ("new", false) => newCorpus
     case _ => throw new IllegalArgumentException("Corpus must be either \"old\" or \"new\"")
   }
 }
