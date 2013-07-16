@@ -1,6 +1,7 @@
 package edu.knowitall.tac2013.solr.populate
 
 import org.apache.solr.client.solrj.impl.ConcurrentUpdateSolrServer
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import edu.knowitall.tac2013.openie._
 import edu.knowitall.tac2013.prep._
 import java.util.concurrent.atomic.AtomicInteger
@@ -12,6 +13,7 @@ import edu.knowitall.tac2013.solr.KbpExtractionConverter
 import scala.Option.option2Iterable
 import org.apache.solr.common.SolrInputDocument
 import scala.io.Source
+import java.io.FileInputStream
 
 class SolrDocumentPathXMLPopulator private (val solrServer: ConcurrentUpdateSolrServer) {
 
@@ -98,8 +100,15 @@ object SolrDocumentPathXMLPopulator {
    * returns an xml string for each doc id
    */
   def getIdXmlTuple(f : java.io.File): Iterator[(String,String)] = {
-    val docSplitter = new DocSplitter(LineReader.fromFile(f,"UTF-8"))
-    val idXmlPairs = for (d <- docSplitter) yield {
+    // docSplitter changes depending on if the files are zipped or not
+    var docSplitter : Option[DocSplitter] = None
+    if(f.getName().contains(".gz")){
+      docSplitter = Some( new DocSplitter(LineReader.fromInputStream(new GzipCompressorInputStream(new FileInputStream(f)), "UTF8")))
+    }
+    else{
+      docSplitter = Some(new DocSplitter(LineReader.fromFile(f,"UTF8")))
+    }
+    val idXmlPairs = for (d <- docSplitter.get) yield {
         val lines = d.lines
         var pair :Option[(String,String)] = None
         val docIdLineOption = lines.filter(l => l.line.startsWith("<DOCID>")).headOption
