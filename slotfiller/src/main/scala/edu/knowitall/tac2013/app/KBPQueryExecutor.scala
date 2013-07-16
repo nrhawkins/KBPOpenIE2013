@@ -3,6 +3,7 @@ package edu.knowitall.tac2013.app
 import java.io._
 import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 import edu.knowitall.tac2013.app.FilterSolrResults.filterResults
+import edu.knowitall.tac2013.app.util.DateUtils
 
 object KBPQueryExecutor {
 
@@ -15,6 +16,8 @@ object KBPQueryExecutor {
     val unfiltered = slots map { slot => (slot, qExec.executeUnfilteredQuery(kbpQuery, slot)) } toMap
     
     val filteredCandidates = slots map { slot => (slot, filterResults(unfiltered(slot), kbpQuery)) } toMap
+    
+    DateUtils.putInTimexFormat(filteredCandidates)
 
     val bestAnswers = slots map { slot => 
       (slot, new SlotFillReranker(outFmt).findSlotAnswers(slot, kbpQuery, filteredCandidates(slot))) 

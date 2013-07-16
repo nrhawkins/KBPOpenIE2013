@@ -15,7 +15,8 @@ object DateUtils {
         //get timex format from SUTime
         val candidates = slotCandidates(slot)
         for(candidate <- candidates){
-          val timexFormattedFill = stanfordHelper.getNormalizedDate(candidate.trimmedFill.interval, candidate.extr.sentence.docId ,candidate.trimmedFill.string)
+          val timexFormattedFill = stanfordHelper.getNormalizedDate(candidate.fillOffsetInterval, candidate.extr.sentence.docId ,candidate.trimmedFill.string)
+          println(timexFormattedFill + " " + candidate.trimmedFill.string)
           candidate.trimmedFill.setString(timexFormattedFill)
         }
         

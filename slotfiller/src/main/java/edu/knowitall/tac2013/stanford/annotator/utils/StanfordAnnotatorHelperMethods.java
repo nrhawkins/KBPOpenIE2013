@@ -10,6 +10,7 @@ import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.FileUtils;
@@ -78,8 +79,24 @@ public class StanfordAnnotatorHelperMethods {
 
 	}
 	
-	private String normalizeTimex(String timexString){
-		return timexString;
+	private String normalizeTimex(Timex t){
+		if(t.timexType() == "DATE"){
+	      String timexString = t.value();
+	      String formattedString = timexString;
+	      if(Pattern.matches("\\w{4}", timexString)){
+	    	  formattedString = timexString +"-XX-XX";
+	      }
+	      else if(Pattern.matches("\\w{2}-\\w{2}",timexString)){
+	    	  formattedString = "XXXX-" + timexString; 
+	      }
+	      else if(Pattern.matches("\\w{4}-\\w{2}", timexString)){
+	    	  formattedString = timexString + "-XX";
+	      }
+		  return formattedString;
+		}
+		else{
+			return "";
+		}
 	}
 	
 
@@ -99,7 +116,7 @@ public class StanfordAnnotatorHelperMethods {
 		    		Timex tt = token.get(TimexAnnotation.class);
 		    		if(charInterval.intersects(Interval.closed(token.beginPosition(), token.endPosition()))){
 		    			if(tt != null){
-		    				return normalizeTimex(tt.value());
+		    				return normalizeTimex(tt);
 		    			}
 		    		}
 		    	}

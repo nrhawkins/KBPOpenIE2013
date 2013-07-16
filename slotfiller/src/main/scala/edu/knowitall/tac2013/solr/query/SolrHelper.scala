@@ -6,6 +6,8 @@ object SolrHelper {
   
   val solrUrlForXMLDocsFromOldCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/oldCorpus"
   val solrUrlForXMLDocsFromNewCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/newCorpus"
+  val clientForXMLDocsFromOldCorpus = new SolrClient(solrUrlForXMLDocsFromOldCorpus)
+  
   
   def getDocIDMapToSentNumsForEntityNameAndNodeID(entityName: String, nodeID: Option[String]) : Map[String,List[(String,Int)]] ={
  
@@ -29,8 +31,7 @@ object SolrHelper {
   
   
   def getRawDoc(docId: String): String = {
-    val client = new SolrClient(solrUrlForXMLDocsFromOldCorpus)
-    val query = client.query("docid:\""+ docId + "\"")
+    val query = clientForXMLDocsFromOldCorpus.query("docid:\""+ docId + "\"")
     val result = query.getResultAsMap()
     if(result.documents.length != 1){
       throw new Exception("There should be exactly 1 result returned from Solr")
