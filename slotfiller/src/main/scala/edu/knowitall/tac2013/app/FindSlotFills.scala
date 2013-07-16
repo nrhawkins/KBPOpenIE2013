@@ -58,7 +58,16 @@ class FindSlotFills(val oldOrNew: String, val corefOn: Boolean) {
     val entityType = KBPQueryEntityType.fromString(entityTypeString)
     val overrideSlots = overrideSlotNames map Slot.fromName
     
-    val extraPatterns = extraPatternStrings.map(s => splitPattern.split(s).map(_.trim)) flatMap SlotPattern.read
+    val extraPatternOpts = extraPatternStrings.map(s => splitPattern.split(s).map(_.trim)).map(split => (split, SlotPattern.read(split)))
+    val extraPatterns = extraPatternOpts.flatMap { case (split, patOpt) =>
+      patOpt match {
+        case Some(pat) => Some(pat)
+        case None => {
+          fmt.out.println("Couldn't parse pattern: " + split.mkString(","))
+          None
+        }
+      }
+    }
 
     val kbpQuery = if (overrideSlotNames.isEmpty) {
       KBPQuery.forEntityName(entityName, entityType, nodeId, extraPatterns)
