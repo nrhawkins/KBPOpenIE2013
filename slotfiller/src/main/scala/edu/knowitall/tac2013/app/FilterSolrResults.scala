@@ -4,6 +4,7 @@ import edu.knowitall.tac2013.openie.KbpExtraction
 import edu.knowitall.tac2013.app.LocationHelper.findLocationTaggedType
 import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.solr.query.SolrQueryType
+import edu.knowitall.collection.immutable.Interval
 
 object FilterSolrResults {
 
@@ -124,6 +125,119 @@ object FilterSolrResults {
     else {
       true
     }
+  }
+  
+  private def semanticTypeIsInInterval(semanticType: String, candidate: Candidate, interval :Interval ): Boolean = {
+
+    
+    val chunkedSentence = candidate.extr.sentence.chunkedTokens
+   
+    
+    if (semanticType == "Organization") {
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) {
+            if (t.descriptor() == "StanfordORGANIZATION") {
+                return true
+            }
+        }
+      }
+      return false
+    } else if(semanticType == "Person"){
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) {
+            if (t.descriptor() == "StanfordPERSON") {
+                return true
+            }
+        }
+      }
+      return false
+    }
+     else if(semanticType == "Location"){
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) {
+            if (t.descriptor() == "StanfordLOCATION") {
+                return true
+            }
+        }
+      }
+      return false
+      
+    }
+    else if (semanticType == "School") {
+      val types = SemanticTaggers.useEducationalOrganizationTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+      }
+
+      return false
+
+    } else if (semanticType == "JobTitle") {
+
+      val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
+
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+
+      }
+
+      return false
+
+    } else if (semanticType == "Nationality") {
+
+      val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+
+      }
+
+      return false
+
+    } else if (semanticType == "Religion") {
+      val types = SemanticTaggers.useReligionTagger(chunkedSentence)
+
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+
+      }
+
+      return false
+
+    } else if (semanticType == "Date") {
+      val types = SemanticTaggers.useDateTagger(chunkedSentence)
+      
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+
+      }
+
+      return false
+
+    } else if (semanticType == "ProperNoun"){
+      //need to figure out what to do for general ProperNoun semantic filter
+      
+      return true
+    }  else if ((semanticType =="<integer>-year-old") || (semanticType == "Integer")){
+
+      val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
+      for (t <- types) {
+        if (t.interval().intersects(interval)) return true
+
+      }
+
+      return false
+      
+    } else {
+    
+    
+
+      return true
+
+    }
+
+    
   }
 
   private def satisfiesSemanticFilter(candidate: Candidate): Boolean = {
