@@ -11,11 +11,13 @@ import edu.knowitall.taggers.Type
 import scala.Option.option2Iterable
 import edu.knowitall.tac2013.app.SemanticTaggers.getTagTypes
 
-class SolrQueryExecutor(val solrClient: SolrClient) {
+class SolrQueryExecutor(val solrClient: SolrClient, val corefOn: Boolean) {
   
   val queryCounter = new java.util.concurrent.atomic.AtomicInteger
   
-  def this(url: String) = this(new SolrClient(url))
+  def this(url: String) = this(new SolrClient(url),false)
+  def this(url: String, corefFlag: Boolean) = this(new SolrClient(url), corefFlag)
+  
   
   private def issueSolrQuery(kbpSolrQuery: SolrQuery): Seq[Candidate] = {
     
@@ -45,8 +47,13 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
     val patterns = slot.patterns
 
+    val wikiID = kbpQuery.id match{
+      case "" => None
+      case _ => Some(kbpQuery.id)
+    }
+    
     val solrQueries = patterns.flatMap { pattern => 
-      val queryBuilder = new SolrQueryBuilder(pattern, kbpQuery)
+      val queryBuilder = new SolrQueryBuilder(pattern, kbpQuery,corefOn)
       queryBuilder.getQueries 
     }
     
@@ -64,7 +71,17 @@ class SolrQueryExecutor(val solrClient: SolrClient) {
 
 object SolrQueryExecutor {
   
-  val defaultSolrUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
+  val defaultSolrUrl = oldCorpusUrl
+  
+  val oldCorpusUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9321/solr"
     
-  lazy val defaultInstance = new SolrQueryExecutor(defaultSolrUrl) 
+  val newCorpusUrl = "http://knowitall:knowit!@rv-n16.cs.washington.edu:8123/solr"
+    
+  lazy val defaultInstance = new SolrQueryExecutor(defaultSolrUrl)
+  
+  lazy val oldCorpus = new SolrQueryExecutor(oldCorpusUrl)
+  
+  lazy val newCorpus = new SolrQueryExecutor(newCorpusUrl)
+  
+  lazy val corefInstance = new SolrQueryExecutor(defaultSolrUrl,true)
 }

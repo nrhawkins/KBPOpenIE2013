@@ -9,7 +9,7 @@ import scopt.OptionParser
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
 class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
-  def this(url: String) = this(new SolrQueryExecutor(url))
+  def this(url: String, corefOn: Boolean) = this(new SolrQueryExecutor(url,corefOn))
   
   def main(args: Array[String]): Unit = {
 
@@ -40,11 +40,7 @@ class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
   def runForServerOutput(rawName: String, nodeId: Option[String], entityTypeString: String, overrideSlotNames: Set[String], fmt: OutputFormatter): Unit = {
     
     val entityName = rawName.replace("_", " ").trim()
-    val entityType = entityTypeString.trim() match {
-      case "organization" => ORG
-      case "person" => PER
-      case _ => throw new IllegalArgumentException("Second Argument must be either 'person' or 'organization'")
-    }
+    val entityType = KBPQueryEntityType.fromString(entityTypeString)
     val overrideSlots = overrideSlotNames map Slot.fromName
 
     val kbpQuery = if (overrideSlotNames.isEmpty) {
@@ -61,7 +57,7 @@ class FindSlotFills(val queryExecutor: SolrQueryExecutor) {
     fmt.printUnfilteredResults(unfilteredSlotCandidateSets, kbpQuery)
     
     val slotCandidateSets = unfilteredSlotCandidateSets map { case (slot, candidates) => 
-      (slot -> FilterSolrResults.filterResults(candidates, entityName)) 
+      (slot -> FilterSolrResults.filterResults(candidates, kbpQuery)) 
     }
     
     fmt.printFilteredResults(slotCandidateSets, kbpQuery)
