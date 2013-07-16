@@ -6,12 +6,16 @@ import edu.knowitall.tac2013.solr.query.SolrQueryExecutor
 import java.io.PrintStream
 import scopt.OptionParser
 import edu.knowitall.tac2013.app.util.DateUtils
+import edu.knowitall.tac2013.solr.query.SolrHelper
 
 //Command line application object for running solr queries on all the slots
 //of a given entity and semantic type
 class FindSlotFills(val oldOrNew: String, val corefOn: Boolean) {
   
   val queryExecutor = SolrQueryExecutor.getInstance(oldOrNew, corefOn)
+  
+  //set XML url to correct place
+  SolrHelper.setConfigurations(oldOrNew,corefOn)
   
   def main(args: Array[String]): Unit = {
 

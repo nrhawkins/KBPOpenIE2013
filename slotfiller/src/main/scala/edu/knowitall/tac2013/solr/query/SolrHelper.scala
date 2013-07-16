@@ -6,12 +6,22 @@ object SolrHelper {
   
   val solrUrlForXMLDocsFromOldCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/oldCorpus"
   val solrUrlForXMLDocsFromNewCorpus = "http://knowitall:knowit!@rv-n16.cs.washington.edu:9325/solr/newCorpus"
-  val clientForXMLDocsFromOldCorpus = new SolrClient(solrUrlForXMLDocsFromOldCorpus)
+  var solrXMLDocsClient : Option[SolrClient] = None
+  var solrQueryExecutor : Option[SolrQueryExecutor] = None
   
+  
+  def setConfigurations(oldOrNew: String, corefOn: Boolean){
+    oldOrNew match{
+      case "old" => {solrXMLDocsClient = Some(new SolrClient(solrUrlForXMLDocsFromOldCorpus)) }
+      case "new" => {solrXMLDocsClient = Some(new SolrClient(solrUrlForXMLDocsFromNewCorpus)) }
+    }
+    
+    solrQueryExecutor = Some(SolrQueryExecutor.getInstance(oldOrNew, corefOn))
+  }
   
   def getDocIDMapToSentNumsForEntityNameAndNodeID(entityName: String, nodeID: Option[String]) : Map[String,List[(String,Int)]] ={
  
-    val client  = SolrQueryExecutor.defaultInstance.solrClient
+    val client  = solrQueryExecutor.get.solrClient
     
     var solrEntityQueryString = "arg1Text:" + "\"" + entityName + "\" " + "arg2Text:" + "\"" + entityName + "\" "
     if(nodeID.isDefined){
@@ -31,7 +41,7 @@ object SolrHelper {
   
   
   def getRawDoc(docId: String): String = {
-    val query = clientForXMLDocsFromOldCorpus.query("docid:\""+ docId + "\"")
+    val query = solrXMLDocsClient.get.query("docid:\""+ docId + "\"")
     val result = query.getResultAsMap()
     if(result.documents.length != 1){
       throw new Exception("There should be exactly 1 result returned from Solr")
