@@ -167,7 +167,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   lazy val entityOffsetInterval = getOffset(entityField)
   
-  lazy val fillOffsetInterval = getOffset(fillField)
+  lazy val fillOffsetInterval = getOffset(trimmedFill)
   
   lazy val relOffsetInterval = getOffset(extr.rel)
   
