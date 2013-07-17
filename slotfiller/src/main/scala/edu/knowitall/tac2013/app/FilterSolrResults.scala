@@ -11,26 +11,20 @@ object FilterSolrResults {
   
   lazy val semanticCategoryPattern = new Regex("[A-Z<>]\\w+")
 
-
-  //filter for arg2 beginning with proper preposition
-  private def satisfiesArg2BeginsFilter(candidate: Candidate): Boolean = {
+  
+  private def satisfiesRequirementAtInterval(start: Integer, end: Integer, specificationStrings: Array[String], candidate: Candidate ): Boolean = {
     
-
-    candidate.pattern.arg2Begins match {
-      case Some(arg2BeginsString) => {
-        
-        val patternSpecificationStrings = arg2BeginsString.split(" ")
-        var intervalHead = candidate.extr.arg2.tokenInterval.start
-        for(arg2RequirementString <- patternSpecificationStrings){
+        var intervalHead = start
+        for(specificationString <- specificationStrings){
           //if the string is a semantic category requirement string
-          if(intervalHead >= candidate.extr.arg2.tokenInterval.end){
+          if(intervalHead >= end){
             System.out.println("Returns false because of token interval")
             return false
           }
-          if (semanticCategoryPattern.findFirstIn(arg2RequirementString).isDefined){
-            val newIntervalHead = updateIntervalHead(arg2RequirementString,candidate,Interval.closed(intervalHead,candidate.extr.arg2.tokenInterval.end))
+          if (semanticCategoryPattern.findFirstIn(specificationString).isDefined){
+            val newIntervalHead = updateIntervalHead(specificationString,candidate,Interval.closed(intervalHead,end),false)
             if(newIntervalHead.isDefined){
-              intervalHead =  newIntervalHead.get.start
+              intervalHead =  newIntervalHead.get.end
             }
             else{
               return false
@@ -40,64 +34,320 @@ object FilterSolrResults {
           else{
             val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalHead, intervalHead+1)).head.string.replace("[", "").replace("]", "").toLowerCase()
    
-            if(arg2RequirementString.toLowerCase().trim() == extractionTokenWithoutBrackets){
-              System.out.println("EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+            if(specificationString.toLowerCase().trim() == extractionTokenWithoutBrackets){
+              System.out.println("EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               intervalHead = intervalHead+1
             }
             else{
-              System.out.println("NOT EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+              System.out.println("NOT EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               return false
             }
           }
         }
-        System.out.println("Arg2Begins filter returns true")
+        return true
+  }
+  
+  
+  private def filterOutBrackets(specificationStrings: Array[String], rel: String): Option[Array[String]] = {
+    
+    var newLength = specificationStrings.length
+    val relWords = rel.split(" ")
+    if(relWords.last.contains("[")){
+      if(relWords.last.replace("[", "").replace("]", "").trim().toLowerCase() == specificationStrings.last){
+        return Some(specificationStrings.take(specificationStrings.length-1))
+      }
+      else{
+        return None
+      }
+    }
+    else{
+      Some(specificationStrings)
+    }
+    
+  }
+  private def satisfiesRequirementAtIntervalFromEnd(start: Integer, end: Integer, specificationStrings: Array[String], candidate: Candidate ): Boolean = {
+        val remainingSpecificationStringsOption = filterOutBrackets(specificationStrings,candidate.extr.rel.originalText)
+        if(remainingSpecificationStringsOption.isEmpty) return false
+        var intervalTail = end
+        for(specificationString <- remainingSpecificationStringsOption.get.reverse){
+          //if the string is a semantic category requirement string
+          if(start >= intervalTail){
+            System.out.println("Returns false because of token interval")
+            return false
+          }
+          if (semanticCategoryPattern.findFirstIn(specificationString).isDefined){
+            System.out.println("Semantic Specification string is :" + specificationString)
+            val newIntervalTail = updateIntervalHead(specificationString,candidate,Interval.open(start,intervalTail),true)
+            if(newIntervalTail.isDefined){
+              intervalTail =  newIntervalTail.get.start
+            }
+            else{
+              System.out.println("Semantic Tag for " + specificationString + " not found, so returning false")
+              return false
+            }
+          }
+          //if the string is simply a word to match
+          else{
+            val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalTail-1, intervalTail)).head.string.replace("[", "").replace("]", "").toLowerCase()
+   
+            if(specificationString.toLowerCase().trim() == extractionTokenWithoutBrackets){
+              System.out.println("EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+              intervalTail = intervalTail -1 
+            }
+            else{
+              System.out.println("NOT EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+              return false
+            }
+          }
+        }
+        return true
+  }
+  
+  private def intervalMatches(t: Interval, target: Interval, backwards: Boolean): Boolean = {
+     
+    if(backwards){
+      if(t.end == target.end){
         return true
       }
+      else{
+        return false
+      }
+      
+    }
+    else{
+      if(t.start == target.start){
+        return true
+      }
+      else{ return false}
+    }
+  }
+  
+  private def updateIntervalHead(semanticTypeRaw: String, candidate: Candidate, interval :Interval, backwards: Boolean ): Option[Interval] = {
+
+    val semanticType = semanticTypeRaw.replace("<","").replace(">", "").trim()
+    
+    val chunkedSentence = candidate.extr.sentence.chunkedTokens
+   
+    
+    if (semanticType == "Organization") {
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+         if (t.descriptor() == "StanfordORGANIZATION") {
+             if(intervalMatches(t.interval,interval,backwards)){
+                return Some(t.interval())
+             }
+            }
+      }
+      return None
+    } else if(semanticType == "Person"){
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) {
+            if (t.descriptor() == "StanfordPERSON") {
+                return Some(t.interval())
+            }
+        }
+      }
+      return None
+    }
+     else if(semanticType == "Location"){
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) {
+            if (t.descriptor() == "StanfordLOCATION") {
+                return Some(t.interval())
+            }
+        }
+      }
+      return None
+      
+    }
+    else if (semanticType == "School") {
+      val types = SemanticTaggers.useEducationalOrganizationTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+      }
+
+      return None
+
+    } else if (semanticType == "JobTitle") {
+      println("Looking for JobTitle")
+      val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
+      println("Number of tags = " + types.length)
+      println("Target Interval = " + interval)
+      for (t <- types) {
+        println("Tagged Interval = " + t.interval())
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+      }
+
+      return None
+
+    } else if (semanticType == "Nationality") {
+
+      val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+
+      }
+
+      return None
+
+    } else if (semanticType == "Religion") {
+      val types = SemanticTaggers.useReligionTagger(chunkedSentence)
+
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+      }
+
+      return None
+
+    } else if (semanticType == "Date") {
+      val types = SemanticTaggers.useDateTagger(chunkedSentence)
+      
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+
+      }
+
+      return None
+
+    } else if (semanticType == "ProperNoun"){
+      //need to figure out what to do for general ProperNoun semantic filter
+      
+      return None
+    }  else if ((semanticType =="<integer>-year-old") || (semanticType == "Integer")){
+
+      val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+
+      }
+
+      return None
+      
+    } else {
+    
+    
+
+      return None
+
+    }
+
+    
+  }
+
+  //filter for arg2 beginning with proper preposition
+  private def satisfiesArg2BeginsFilter(candidate: Candidate): Boolean = {
+    
+
+    candidate.pattern.arg2Begins match {
+      case Some(arg2BeginsString) => {
+        
+        val patternSpecificationStrings = arg2BeginsString.split(" ")
+        val intervalHead = candidate.extr.arg2.tokenInterval.start
+        val end = candidate.extr.arg2.tokenInterval.end
+        satisfiesRequirementAtInterval(intervalHead, end, patternSpecificationStrings, candidate)
+        
+        
+      }
+//        for(arg2RequirementString <- patternSpecificationStrings){
+//          //if the string is a semantic category requirement string
+//          if(intervalHead >= candidate.extr.arg2.tokenInterval.end){
+//            System.out.println("Returns false because of token interval")
+//            return false
+//          }
+//          if (semanticCategoryPattern.findFirstIn(arg2RequirementString).isDefined){
+//            val newIntervalHead = updateIntervalHead(arg2RequirementString,candidate,Interval.closed(intervalHead,candidate.extr.arg2.tokenInterval.end))
+//            if(newIntervalHead.isDefined){
+//              intervalHead =  newIntervalHead.get.start
+//            }
+//            else{
+//              return false
+//            }
+//          }
+//          //if the string is simply a word to match
+//          else{
+//            val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalHead, intervalHead+1)).head.string.replace("[", "").replace("]", "").toLowerCase()
+//   
+//            if(arg2RequirementString.toLowerCase().trim() == extractionTokenWithoutBrackets){
+//              System.out.println("EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+//              intervalHead = intervalHead+1
+//            }
+//            else{
+//              System.out.println("NOT EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
+//              return false
+//            }
+//          }
+//        }
+//        System.out.println("Arg2Begins filter returns true")
+//        return true
+//      }
       case None => true
     }
   }
 
   private def satisfiesRelFilter(candidate: Candidate): Boolean = {
 
-    val pattern = candidate.pattern
     
-    if (pattern.isValid) {
+    //if there are no semantic strings in the relation condidtion then count backwards for
+    //the start interval and call satisfiesRequirementAtInterval
+    
+    
 
-      if (!pattern.relString.get.contains("<JobTitle>")) {
-
-        val relationTerms = pattern.relString.get.trim().split(" ")
-
-        val relationTermsReversed = relationTerms.reverse
-
-        val relationTermsFromExtraction = candidate.extr.rel.originalText.trim().split(" ")
-
-        var count = 0
-        for (term <- relationTermsReversed) {
-          val sentenceWord = relationTermsFromExtraction(relationTermsFromExtraction.length - 1 - count)
-          if ((term.toLowerCase() != sentenceWord.toLowerCase()) &&
-            (term.replace("[", "").replace("]", "").toLowerCase() != sentenceWord.replace("[", "").replace("]", "").toLowerCase())) {
-            return false
-          }
-          count = count + 1
-        }
-        return true
-      } else {
-        val chunkedSentence = candidate.extr.sentence.chunkedTokens
-        val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
-        val relLocation = candidate.extr.rel.tokenInterval
-
-        for (t <- types) {
-          if (t.interval().intersects(relLocation)) {
-            return true
-          }
-        }
-        return false
+    candidate.pattern.relString match {
+      case Some(relString) => {
+        
+        val patternSpecificationStrings = relString.split(" ")
+        val intervalHead = candidate.extr.rel.tokenInterval.start
+        val end = candidate.extr.rel.tokenInterval.end
+        val b = satisfiesRequirementAtIntervalFromEnd(intervalHead, end, patternSpecificationStrings, candidate)
+        println("RelString passes? = " + b)
+        b
       }
-    } else {
-
-      throw new Exception("KbpSlotToOpenIEData instance is not valid.")
-      false
+      case None => true
     }
+    
+    
+    
+//    val pattern = candidate.pattern
+//    
+//    if (pattern.isValid) {
+//
+//      if (!pattern.relString.get.contains("<JobTitle>")) {
+//
+//        val relationTerms = pattern.relString.get.trim().split(" ")
+//
+//        val relationTermsReversed = relationTerms.reverse
+//
+//        val relationTermsFromExtraction = candidate.extr.rel.originalText.trim().split(" ")
+//
+//        var count = 0
+//        for (term <- relationTermsReversed) {
+//          val sentenceWord = relationTermsFromExtraction(relationTermsFromExtraction.length - 1 - count)
+//          if ((term.toLowerCase() != sentenceWord.toLowerCase()) &&
+//            (term.replace("[", "").replace("]", "").toLowerCase() != sentenceWord.replace("[", "").replace("]", "").toLowerCase())) {
+//            return false
+//          }
+//          count = count + 1
+//        }
+//        return true
+//      } else {
+//        val chunkedSentence = candidate.extr.sentence.chunkedTokens
+//        val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
+//        val relLocation = candidate.extr.rel.tokenInterval
+//
+//        for (t <- types) {
+//          if (t.interval().intersects(relLocation)) {
+//            return true
+//          }
+//        }
+//        return false
+//      }
+//    } else {
+//
+//      throw new Exception("KbpSlotToOpenIEData instance is not valid.")
+//      false
+//    }
   }
 
   private def satisfiesEntityFilter(kbpQuery: KBPQuery)(candidate: Candidate): Boolean = {
@@ -164,116 +414,6 @@ object FilterSolrResults {
     }
   }
   
-  private def updateIntervalHead(semanticType: String, candidate: Candidate, interval :Interval ): Option[Interval] = {
-
-    
-    val chunkedSentence = candidate.extr.sentence.chunkedTokens
-   
-    
-    if (semanticType == "Organization") {
-      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) {
-            if (t.descriptor() == "StanfordORGANIZATION") {
-                return Some(t.interval())
-            }
-        }
-      }
-      return None
-    } else if(semanticType == "Person"){
-      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) {
-            if (t.descriptor() == "StanfordPERSON") {
-                return Some(t.interval())
-            }
-        }
-      }
-      return None
-    }
-     else if(semanticType == "Location"){
-      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) {
-            if (t.descriptor() == "StanfordLOCATION") {
-                return Some(t.interval())
-            }
-        }
-      }
-      return None
-      
-    }
-    else if (semanticType == "School") {
-      val types = SemanticTaggers.useEducationalOrganizationTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-      }
-
-      return None
-
-    } else if (semanticType == "JobTitle") {
-
-      val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
-
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-      }
-
-      return None
-
-    } else if (semanticType == "Nationality") {
-
-      val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-
-      }
-
-      return None
-
-    } else if (semanticType == "Religion") {
-      val types = SemanticTaggers.useReligionTagger(chunkedSentence)
-
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-      }
-
-      return None
-
-    } else if (semanticType == "Date") {
-      val types = SemanticTaggers.useDateTagger(chunkedSentence)
-      
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-
-      }
-
-      return None
-
-    } else if (semanticType == "ProperNoun"){
-      //need to figure out what to do for general ProperNoun semantic filter
-      
-      return None
-    }  else if ((semanticType =="<integer>-year-old") || (semanticType == "Integer")){
-
-      val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
-      for (t <- types) {
-        if (t.interval().start == interval.start) return Some(t.interval())
-
-      }
-
-      return None
-      
-    } else {
-    
-    
-
-      return None
-
-    }
-
-    
-  }
 
   private def satisfiesSemanticFilter(candidate: Candidate): Boolean = {
 
