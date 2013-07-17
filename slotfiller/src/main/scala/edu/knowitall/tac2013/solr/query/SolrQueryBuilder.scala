@@ -22,8 +22,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
   val relTextConstraint: Option[String] = {
     pattern.relString match {
       case Some(relString) => {
-        val noJobTitleString = relString.replace("<JobTitle>", "")
-        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(noJobTitleString, "")
+        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(relString, "")
         if (noSemanticCategoriesString != "") {
           Some("+relText:\"" + noSemanticCategoriesString + "\"")
         } else {
@@ -44,8 +43,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
   val arg2StartConstraint: Option[String] = {
     pattern.arg2Begins match {
       case Some(arg2Begins) => {
-        val noJobTitleString = arg2Begins.replace("<JobTitle>", "")
-        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(noJobTitleString, "")
+        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(arg2Begins, "")
         if (noSemanticCategoriesString != "") {
           Some("+arg2Text:\"" + noSemanticCategoriesString + "\"")
         } else {
@@ -59,8 +57,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
   val arg1TermsConstraint: Option[String] = {
     pattern.arg1Terms match {
       case Some(arg1Terms) => {
-        val noJobTitleString = arg1Terms.replace("<JobTitle>", "")
-        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(noJobTitleString, "")
+        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(arg1Terms, "")
         if (noSemanticCategoriesString != "") {
           Some("+arg1Text:\"" + noSemanticCategoriesString + "\"")
         } else {
@@ -74,8 +71,7 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
   val arg2TermsConstraint: Option[String] = {
     pattern.arg2Terms match {
       case Some(arg2Terms) => {
-        val noJobTitleString = arg2Terms.replace("<JobTitle>", "")
-        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(noJobTitleString, "")
+        val noSemanticCategoriesString =  SolrQueryBuilder.semanticCategoryPattern.replaceAllIn(arg2Terms, "")
         if (noSemanticCategoriesString != "") {
           Some("+arg2Text:\"" + noSemanticCategoriesString + "\"")
         } else {
@@ -167,5 +163,5 @@ class SolrQueryBuilder(val pattern: SlotPattern, val kbpQuery: KBPQuery, val cor
 
 object SolrQueryBuilder{
   
-  lazy val semanticCategoryPattern = new Regex("[A-Z]\\w+")
+  lazy val semanticCategoryPattern = new Regex("[A-Z<]\\w+(>)?")
 }

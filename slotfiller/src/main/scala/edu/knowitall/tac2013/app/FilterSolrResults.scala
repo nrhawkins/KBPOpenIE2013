@@ -18,7 +18,6 @@ object FilterSolrResults {
         for(specificationString <- specificationStrings){
           //if the string is a semantic category requirement string
           if(intervalHead >= end){
-            System.out.println("Returns false because of token interval")
             return false
           }
           if (semanticCategoryPattern.findFirstIn(specificationString).isDefined){
@@ -35,11 +34,9 @@ object FilterSolrResults {
             val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalHead, intervalHead+1)).head.string.replace("[", "").replace("]", "").toLowerCase()
    
             if(specificationString.toLowerCase().trim() == extractionTokenWithoutBrackets){
-              System.out.println("EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               intervalHead = intervalHead+1
             }
             else{
-              System.out.println("NOT EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               return false
             }
           }
@@ -72,17 +69,14 @@ object FilterSolrResults {
         for(specificationString <- remainingSpecificationStringsOption.get.reverse){
           //if the string is a semantic category requirement string
           if(start >= intervalTail){
-            System.out.println("Returns false because of token interval")
             return false
           }
           if (semanticCategoryPattern.findFirstIn(specificationString).isDefined){
-            System.out.println("Semantic Specification string is :" + specificationString)
             val newIntervalTail = updateIntervalHead(specificationString,candidate,Interval.open(start,intervalTail),true)
             if(newIntervalTail.isDefined){
               intervalTail =  newIntervalTail.get.start
             }
             else{
-              System.out.println("Semantic Tag for " + specificationString + " not found, so returning false")
               return false
             }
           }
@@ -91,11 +85,9 @@ object FilterSolrResults {
             val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalTail-1, intervalTail)).head.string.replace("[", "").replace("]", "").toLowerCase()
    
             if(specificationString.toLowerCase().trim() == extractionTokenWithoutBrackets){
-              System.out.println("EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               intervalTail = intervalTail -1 
             }
             else{
-              System.out.println("NOT EQUAL: " + specificationString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
               return false
             }
           }
@@ -171,18 +163,23 @@ object FilterSolrResults {
       return None
 
     } else if (semanticType == "JobTitle") {
-      println("Looking for JobTitle")
       val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
-      println("Number of tags = " + types.length)
-      println("Target Interval = " + interval)
       for (t <- types) {
-        println("Tagged Interval = " + t.interval())
         if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
       }
 
       return None
 
-    } else if (semanticType == "Nationality") {
+    } else if (semanticType == "HeadJobTitle"){
+      
+      val types = SemanticTaggers.useHeadJobTitleTagger(chunkedSentence)
+      for(t <- types){
+        if (intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+      }
+      
+      return None
+    }
+      else if (semanticType == "Nationality") {
 
       val types = SemanticTaggers.useNationalityTagger(chunkedSentence)
       for (t <- types) {
@@ -250,38 +247,6 @@ object FilterSolrResults {
         
         
       }
-//        for(arg2RequirementString <- patternSpecificationStrings){
-//          //if the string is a semantic category requirement string
-//          if(intervalHead >= candidate.extr.arg2.tokenInterval.end){
-//            System.out.println("Returns false because of token interval")
-//            return false
-//          }
-//          if (semanticCategoryPattern.findFirstIn(arg2RequirementString).isDefined){
-//            val newIntervalHead = updateIntervalHead(arg2RequirementString,candidate,Interval.closed(intervalHead,candidate.extr.arg2.tokenInterval.end))
-//            if(newIntervalHead.isDefined){
-//              intervalHead =  newIntervalHead.get.start
-//            }
-//            else{
-//              return false
-//            }
-//          }
-//          //if the string is simply a word to match
-//          else{
-//            val extractionTokenWithoutBrackets = candidate.extr.sentence.chunkedTokens(Interval.closed(intervalHead, intervalHead+1)).head.string.replace("[", "").replace("]", "").toLowerCase()
-//   
-//            if(arg2RequirementString.toLowerCase().trim() == extractionTokenWithoutBrackets){
-//              System.out.println("EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
-//              intervalHead = intervalHead+1
-//            }
-//            else{
-//              System.out.println("NOT EQUAL: " + arg2RequirementString.toLowerCase().trim() + " and " + extractionTokenWithoutBrackets)
-//              return false
-//            }
-//          }
-//        }
-//        System.out.println("Arg2Begins filter returns true")
-//        return true
-//      }
       case None => true
     }
   }
@@ -301,53 +266,10 @@ object FilterSolrResults {
         val intervalHead = candidate.extr.rel.tokenInterval.start
         val end = candidate.extr.rel.tokenInterval.end
         val b = satisfiesRequirementAtIntervalFromEnd(intervalHead, end, patternSpecificationStrings, candidate)
-        println("RelString passes? = " + b)
         b
       }
       case None => true
     }
-    
-    
-    
-//    val pattern = candidate.pattern
-//    
-//    if (pattern.isValid) {
-//
-//      if (!pattern.relString.get.contains("<JobTitle>")) {
-//
-//        val relationTerms = pattern.relString.get.trim().split(" ")
-//
-//        val relationTermsReversed = relationTerms.reverse
-//
-//        val relationTermsFromExtraction = candidate.extr.rel.originalText.trim().split(" ")
-//
-//        var count = 0
-//        for (term <- relationTermsReversed) {
-//          val sentenceWord = relationTermsFromExtraction(relationTermsFromExtraction.length - 1 - count)
-//          if ((term.toLowerCase() != sentenceWord.toLowerCase()) &&
-//            (term.replace("[", "").replace("]", "").toLowerCase() != sentenceWord.replace("[", "").replace("]", "").toLowerCase())) {
-//            return false
-//          }
-//          count = count + 1
-//        }
-//        return true
-//      } else {
-//        val chunkedSentence = candidate.extr.sentence.chunkedTokens
-//        val types = SemanticTaggers.useJobTitleTagger(chunkedSentence)
-//        val relLocation = candidate.extr.rel.tokenInterval
-//
-//        for (t <- types) {
-//          if (t.interval().intersects(relLocation)) {
-//            return true
-//          }
-//        }
-//        return false
-//      }
-//    } else {
-//
-//      throw new Exception("KbpSlotToOpenIEData instance is not valid.")
-//      false
-//    }
   }
   
   private def satisfiesTermFilters(candidate: Candidate) : Boolean = {
@@ -523,7 +445,15 @@ object FilterSolrResults {
 
       return false
 
-    } else if (slotType == "Nationality") {
+    } else if (slotType == "HeadJobTitle"){
+      
+      for(t <- types){
+        if (t.interval().intersects(slotLocation)) return true
+      }
+      
+      return false
+    }
+      else if (slotType == "Nationality") {
 
 
       for (t <- types) {
