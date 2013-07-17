@@ -126,7 +126,7 @@ object FindSlotFillsServer extends App {
           printAnswers = printAnswers,
           detailedAnswers = detailedAnswers)
         
-        val extraPatternStrings = extraPatterns.toSeq.flatMap(p => p.split("\n"))
+        val extraPatternStrings = extraPatterns.map(_.trim).filter(_.nonEmpty).toSeq.flatMap(p => p.split("\n"))
         
         
         new ResponseStreamer {

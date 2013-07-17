@@ -61,7 +61,10 @@ class FindSlotFills(val oldOrNew: String, val corefOn: Boolean) {
     val extraPatternOpts = extraPatternStrings.map(s => splitPattern.split(s).map(_.trim)).map(split => (split, SlotPattern.read(split)))
     val extraPatterns = extraPatternOpts.flatMap { case (split, patOpt) =>
       patOpt match {
-        case Some(pat) => Some(pat)
+        case Some(pat) => {
+          fmt.out.println("Including extra pattern: " + split.mkString(",") + " => " + pat.debugString)
+          Some(pat)
+        }
         case None => {
           fmt.out.println("Couldn't parse pattern: " + split.mkString(","))
           None
