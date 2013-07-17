@@ -349,6 +349,46 @@ object FilterSolrResults {
 //      false
 //    }
   }
+  
+  private def satisfiesTermFilters(candidate: Candidate) : Boolean = {
+    
+    //arg1 Terms
+    val arg1TermsSatisfied =
+      candidate.pattern.arg1Terms match {
+        case Some(arg1Terms) => {
+              val arg1Interval = candidate.extr.arg1.tokenInterval
+              val patternSpecificationStrings = arg1Terms.split(" ")
+              var foundMatchingSubsequence = false
+              for(x  <- arg1Interval){
+            	  if(satisfiesRequirementAtInterval(x,arg1Interval.end,patternSpecificationStrings,candidate)){
+            	    foundMatchingSubsequence = true
+            	  }
+              }
+              foundMatchingSubsequence
+        }
+        case None => true
+      }
+
+
+    //arg2 Terms
+    val arg2TermsSatisfied =
+      candidate.pattern.arg2Terms match {
+        case Some(arg2Terms) => {
+              val arg2Interval = candidate.extr.arg2.tokenInterval
+              val patternSpecificationStrings = arg2Terms.split(" ")
+              var foundMatchingSubsequence = false
+              for(x  <- arg2Interval){
+            	  if(satisfiesRequirementAtInterval(x,arg2Interval.end,patternSpecificationStrings,candidate)){
+            	    foundMatchingSubsequence = true
+            	  }
+              }
+              foundMatchingSubsequence
+        }
+        case None => true
+      }
+    
+    (arg1TermsSatisfied && arg2TermsSatisfied)
+  }
 
   private def satisfiesEntityFilter(kbpQuery: KBPQuery)(candidate: Candidate): Boolean = {
 
@@ -545,7 +585,8 @@ object FilterSolrResults {
             satisfiesArg2BeginsFilter(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
             satisfiesRelFilter(candidate) &&
-            satisfiesSemanticFilter(candidate))
+            satisfiesSemanticFilter(candidate) &&
+            satisfiesTermFilters(candidate))
     
     unfiltered filter combinedFilter
   }
