@@ -508,6 +508,17 @@ object FilterSolrResults {
     }
 
   }
+  
+  def satisfiesLengthFilter(candidate: Candidate): Boolean = {
+    
+    //if an alternate name slot fill is longer than 5 tokens, it should be filtered out
+    if(Slot.fromName(candidate.pattern.slotName).isAlternateName){
+      if(candidate.trimmedFill.interval.length >5) return false
+    }
+    
+    
+    true
+  }
 
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
@@ -520,7 +531,8 @@ object FilterSolrResults {
             satisfiesRelFilter(candidate) &&
             satisfiesTermFilters(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
-            satisfiesSemanticFilter(candidate))
+            satisfiesSemanticFilter(candidate) &&
+            satisfiesLengthFilter(candidate))
     
     unfiltered filter combinedFilter
   }
