@@ -404,109 +404,55 @@ object FilterSolrResults {
 
       for (t <- types) {
         if (t.interval().intersects(slotLocation)) {
-          slotType match {
-            case "Organization" => {
-              if (t.descriptor() == "StanfordORGANIZATION") {
-                return true
-              }
-            }
-            case "Person" => {
-              if (t.descriptor() == "StanfordPERSON") {
-                return true
-              }
-            }
-            // default case will be location
-            case _ => {
-              //if trimmed Fill does not exist then the Candidate
-              //constructor has filtered out this extraction
-              val typesInSlotFill = types.filter(t => (t.interval().intersects(slotLocation)))
-              if(findLocationTaggedType(typesInSlotFill,slotType).isDefined){
-                return true
-              }
-              else{
-                return false
-              }
-
-            }
+          if(t.interval().start - slotLocation.start < 5){
+	          slotType match {
+	            case "Organization" => {
+	              if (t.descriptor() == "StanfordORGANIZATION") {
+	
+	                return true
+	              }
+	            }
+	            case "Person" => {
+	              if (t.descriptor() == "StanfordPERSON") {
+	                return true
+	              }
+	            }
+	            // default case will be location
+	            case _ => {
+	              //if trimmed Fill does not exist then the Candidate
+	              //constructor has filtered out this extraction
+	              val typesInSlotFill = types.filter(t => (t.interval().intersects(slotLocation)))
+	              if(findLocationTaggedType(typesInSlotFill,slotType).isDefined){
+	                return true
+	              }
+	              else{
+	                return false
+	              }
+	
+	            }
+	          }
           }
         }
       }
 
       return false
-    } else if (slotType == "School") {
+    } else if (slotType == "School" || slotType == "JobTitle" ||slotType == "HeadJobTitle" ||
+        slotType == "Nationality" || slotType == "Religion" || slotType == "Date" ||
+        slotType == "ProperNoun" || slotType =="<integer>-year-old" || slotType == "Integer") {
       
       for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
+        if (t.interval().intersects(slotLocation)){
+          if(t.interval().start - slotLocation.start < 5){
+            return true
+          }
+        } 
 
       }
 
-      return false
-
-    } else if (slotType == "JobTitle") {
-
-
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-
-    } else if (slotType == "HeadJobTitle"){
-      
-      for(t <- types){
-        if (t.interval().intersects(slotLocation)) return true
-      }
-      
       return false
     }
-      else if (slotType == "Nationality") {
 
-
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-
-    } else if (slotType == "Religion") {
-
-
-
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-
-    } else if (slotType == "Date") {
-
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-
-    } else if (slotType == "ProperNoun"){
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-    }  else if ((slotType =="<integer>-year-old") || (slotType == "Integer")){
-
-      for (t <- types) {
-        if (t.interval().intersects(slotLocation)) return true
-
-      }
-
-      return false
-      
-    } else {
+    else {
     
     
 
