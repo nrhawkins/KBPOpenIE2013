@@ -210,7 +210,11 @@ object FilterSolrResults {
       return None
 
     } else if (semanticType == "ProperNoun"){
-      //need to figure out what to do for general ProperNoun semantic filter
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+
+      }
       
       return None
     }  else if ((semanticType =="<integer>-year-old") || (semanticType == "Integer")){
@@ -487,9 +491,12 @@ object FilterSolrResults {
       return false
 
     } else if (slotType == "ProperNoun"){
-      //need to figure out what to do for general ProperNoun semantic filter
-      
-      return true
+      for (t <- types) {
+        if (t.interval().intersects(slotLocation)) return true
+
+      }
+
+      return false
     }  else if ((slotType =="<integer>-year-old") || (slotType == "Integer")){
 
       for (t <- types) {
