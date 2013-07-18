@@ -227,6 +227,16 @@ object FilterSolrResults {
 
       return None
       
+    } else if (semanticType =="Crime"){
+
+      val types = SemanticTaggers.useCrimeTagger(chunkedSentence)
+      for (t <- types) {
+        if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
+
+      }
+
+      return None
+      
     } else {
     
     
@@ -252,7 +262,22 @@ object FilterSolrResults {
         
         
       }
-      case None => true
+      case None => {
+        //if nothing specified then throw out any extractions where arg2 does begin with a preposition
+        val firstTokenInArg2Option = candidate.extr.arg2.tokens.headOption
+        if(firstTokenInArg2Option.isDefined){
+          val firstTokenInArg2 = firstTokenInArg2Option.get
+          if(firstTokenInArg2.isPreposition){
+            false
+          }
+          else{
+            true
+          }
+        }
+        else{
+          false
+        }
+      }
     }
   }
 
@@ -333,6 +358,27 @@ object FilterSolrResults {
           case "arg2" => candidate.extr.arg2.originalText
           case _ => throw new Exception("Poorly formatted entityIn field, should be arg1 or arg2")
         }
+        //if the query does have a nodeID make sure that the entity does not have a different nodeID
+        val noLinkConflict = {
+	        if(kbpQuery.nodeId.isDefined){
+	          val entityNodeID = kbpQuery.nodeId.get
+	          val thisNodeIDOption = candidate.entityField.wikiLink
+	          if(thisNodeIDOption.isDefined){
+	            val thisNodeID = thisNodeIDOption.get
+	            if(entityNodeID == thisNodeID){
+	               true
+	            }
+	            else{
+	              false
+	            }
+	          }
+	          else{
+	            true
+	          }
+	          
+	        }
+	        true
+        }
 
         val entityFromExtractionSplit = entityFromExtraction.toString().split(" ")
 
@@ -349,7 +395,7 @@ object FilterSolrResults {
           count = count + 1
         }
 
-        true
+        true && noLinkConflict
       } else {
 
         throw new Exception("KbpSlotToOpenIEData instance is not valid.")
@@ -438,7 +484,8 @@ object FilterSolrResults {
       return false
     } else if (slotType == "School" || slotType == "JobTitle" ||slotType == "HeadJobTitle" ||
         slotType == "Nationality" || slotType == "Religion" || slotType == "Date" ||
-        slotType == "ProperNoun" || slotType =="<integer>-year-old" || slotType == "Integer") {
+        slotType == "ProperNoun" || slotType =="<integer>-year-old" || slotType == "Integer" ||
+        slotType =="Crime") {
       
       for (t <- types) {
         if (t.interval().intersects(slotLocation)){
