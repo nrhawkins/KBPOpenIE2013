@@ -37,7 +37,11 @@ class SlotFillReranker(fmt: OutputFormatter) {
   def rankDateGroups(dateGroups: Map[String, Seq[Candidate]]): Seq[(String, Seq[Candidate])] = {
     // rank extractions by how specific the date is
     // e.g. rank by fewest number of X's...
-    dateGroups.iterator.toSeq.sortBy { case (dateString, candidates) => dateString.count(_ == 'X') - (candidates.size.toDouble / 2) }
+    dateGroups.iterator.toSeq.sortBy { case (dateString, candidates) =>
+      
+      val notDatePenalty = if (isDatePattern(dateString)) 0 else 1000
+      dateString.count(_ == 'X') - (candidates.size.toDouble / 2) + notDatePenalty
+    }
   }
   
   /**
@@ -57,7 +61,7 @@ class SlotFillReranker(fmt: OutputFormatter) {
       
       val groups = dateFill match {
         case false => getNameGroups(slotCandidates)
-        case true => slotCandidates.filter(c=>isDatePattern(c.trimmedFill.string)).groupBy(_.trimmedFill.string)
+        case true => slotCandidates.groupBy(_.trimmedFill.string)
       }
       
       // 
