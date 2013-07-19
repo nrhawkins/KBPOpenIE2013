@@ -381,7 +381,7 @@ object FilterSolrResults {
 	        //if the kbpQuery has no nodeID then make sure that the extraction entity
 	        //does not have a nodeID.
 	        else{
-	          if(thisNodeIDOption.isDefined) {
+	          if(thisNodeIDOption.isDefined && kbpQuery.numEntityFbids > 1) {
 	            println("KBPQuery wiki ID is not defined but extraction entity ID is defined for " + candidate.debugString )
 	            false
 	          } else {
