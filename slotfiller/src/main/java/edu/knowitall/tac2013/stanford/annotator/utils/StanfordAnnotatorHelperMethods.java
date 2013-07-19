@@ -150,9 +150,6 @@ public class StanfordAnnotatorHelperMethods {
 	    	}
 	    }
 	    
-	    for(CorefMention x : graph.get(corefClusterID).getMentionsInTextualOrder()){
-	    	System.out.println(x);
-	    }
 		
 	    if(corefClusterID != null){
 	    	return graph.get(corefClusterID).getMentionsInTextualOrder();
