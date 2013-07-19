@@ -42,7 +42,7 @@ public class StanfordAnnotatorHelperMethods {
 		this.suTimePipeline = new StanfordCoreNLP(suTimeProps);
 		
 		Properties corefProps = new Properties();
-	    corefProps.put("annotators", "tokenize, ssplit, pos, lemma, cleanxml, ner, dcoref");
+	    corefProps.put("annotators", "tokenize, ssplit, pos, lemma, cleanxml, ner, parse, dcoref");
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 
 	}
@@ -130,13 +130,16 @@ public class StanfordAnnotatorHelperMethods {
 	    return originalString;
 	}
 	
-	public List<String> getCorefMentions(String xmlString) {
+	public List<String> getCorefMentions(String xmlString, Int offset1, Int offset2) {
 		Annotation document = new Annotation(xmlString);
 		corefPipeline.annotate(document);
 		
 		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
-		for( CorefMention x : graph.get(0).getMentionsInTextualOrder()){
-			System.out.println(x.toString());
+		for(Integer i : graph.keySet()){
+			for( CorefMention x : graph.get(i).getMentionsInTextualOrder()){
+				System.out.println(x.toString());
+			}
+
 		}
 		List<String> x = new ArrayList<String>();
 		return x;

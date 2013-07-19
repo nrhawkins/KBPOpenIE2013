@@ -10,7 +10,7 @@ object PhilipKaiser {
     val rawDoc = SolrHelper.getRawDoc("NYT_ENG_20080101.0037.LDC2009T13")
     val altString = rawDoc.substring(4576,4589)
     val s = new StanfordAnnotatorHelperMethods()
-    s.getCorefMentions(rawDoc);
+    s.getCorefMentions(rawDoc,4576,4589);
     
   }
 
