@@ -536,6 +536,11 @@ object FilterSolrResults {
     return true
     
   }
+  
+  val htmlEntityPattern = ".*\\s+&\\w+.*".r.pattern
+  def satisfiesHtmlFilter(candidate: Candidate): Boolean = {
+    !htmlEntityPattern.matcher(candidate.trimmedFill.string).matches
+  }
 
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
@@ -544,12 +549,13 @@ object FilterSolrResults {
     
     
     def combinedFilter(candidate: Candidate) = (
+            satisfiesLengthFilter(candidate) &&
             satisfiesArg2BeginsFilter(candidate) &&
             satisfiesRelFilter(candidate) &&
+            satisfiesHtmlFilter(candidate) &&
             satisfiesTermFilters(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
             satisfiesSemanticFilter(candidate) &&
-            satisfiesLengthFilter(candidate) &&
             satisfiesSlotFilter(candidate))
     
     unfiltered filter combinedFilter
