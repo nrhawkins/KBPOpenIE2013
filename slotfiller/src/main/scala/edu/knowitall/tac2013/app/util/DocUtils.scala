@@ -3,8 +3,12 @@ package edu.knowitall.tac2013.app.util
 import edu.knowitall.tac2013.app.Candidate
 import edu.knowitall.tac2013.stanford.annotator.utils.StanfordAnnotatorHelperMethods
 import edu.knowitall.tac2013.app.Slot
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention
+import edu.knowitall.collection.immutable.Interval
+import edu.knowitall.tac2013.solr.query.SolrHelper
+import scala.collection.JavaConverters._
 
-object DateUtils {
+object DocUtils {
   
   val stanfordHelper = new StanfordAnnotatorHelperMethods()
   
@@ -21,6 +25,29 @@ object DateUtils {
         }
         
       }
+    }
+    
+  }
+  
+  def getCorefMentions(docId: String, interval: Interval): Option[List[CorefMention]] = {
+    val rawDoc = SolrHelper.getRawDoc(docId)
+    val mentions = stanfordHelper.getCorefMentions(rawDoc, interval)
+    if(mentions.isEmpty()){
+      return None
+    }
+    else {
+     return Some(mentions.asScala.toList)
+    }
+  }
+  
+  def main(args: Array[String]){
+    
+    SolrHelper.setConfigurations("old",false)
+    
+    val mentions = getCorefMentions(args(0),Interval.closed(args(1).toInt,args(2).toInt))
+    
+    for(m <- mentions){
+      println(m.toString)
     }
     
   }

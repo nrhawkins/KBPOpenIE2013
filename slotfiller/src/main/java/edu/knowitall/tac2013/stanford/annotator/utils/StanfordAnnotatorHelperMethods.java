@@ -16,6 +16,7 @@ import edu.knowitall.collection.immutable.Interval;
 import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -130,19 +131,35 @@ public class StanfordAnnotatorHelperMethods {
 	    return originalString;
 	}
 	
-	public List<String> getCorefMentions(String xmlString, Int offset1, Int offset2) {
+	public List<CorefMention> getCorefMentions(String xmlString, Interval interval) {
 		Annotation document = new Annotation(xmlString);
 		corefPipeline.annotate(document);
 		
+		
+		
 		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
-		for(Integer i : graph.keySet()){
-			for( CorefMention x : graph.get(i).getMentionsInTextualOrder()){
-				System.out.println(x.toString());
-			}
 
-		}
-		List<String> x = new ArrayList<String>();
-		return x;
+		Integer corefClusterID = null;
+		
+		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+	    for(CoreMap sentence: sentences){
+	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
+	    		if(token.beginPosition() == interval.start() && token.endPosition() == interval.end()){
+	    			corefClusterID = token.get(CorefClusterIdAnnotation.class);
+	    		}
+	    	}
+	    }
+	    
+	    for(CorefMention x : graph.get(corefClusterID).getMentionsInTextualOrder()){
+	    	System.out.println(x);
+	    }
+		
+	    if(corefClusterID != null){
+	    	return graph.get(corefClusterID).getMentionsInTextualOrder();
+	    }
+	    else{
+	    	return new ArrayList<CorefMention>();
+	    }
 		
 	}
 }
