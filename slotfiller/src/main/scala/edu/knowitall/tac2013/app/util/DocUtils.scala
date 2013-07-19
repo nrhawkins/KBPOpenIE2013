@@ -44,6 +44,10 @@ object DocUtils {
     
     SolrHelper.setConfigurations("old",false)
     
+    if(args.length != 3){
+      throw new Exception("There must be three args, arg 1 is docId from the old corpus, arg2 is beginning offset of string and arg3 is ending offset of string")
+    }
+    
     val mentions = getCorefMentions(args(0),Interval.closed(args(1).toInt,args(2).toInt))
     
     for(m <- mentions){
