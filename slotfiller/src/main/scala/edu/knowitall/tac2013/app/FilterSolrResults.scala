@@ -495,6 +495,14 @@ object FilterSolrResults {
         } 
 
       return false
+    }  else if (Slot.fromName(candidate.pattern.slotName).isCauseOfDeath){
+       
+       if(candidate.fillField.tokens.headOption.isDefined){
+         if(candidate.fillField.tokens.head.isPronoun)
+           return false
+       }
+       
+       return true
     }
 
     else {

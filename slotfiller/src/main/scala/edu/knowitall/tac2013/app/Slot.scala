@@ -19,6 +19,7 @@ case class Slot(name: String, maxResults: Int, patterns: Seq[SlotPattern]) {
   def isList = if(maxResults > 1) true else false
   def isDate = if(name.contains("date")) true else false
   def isAlternateName = if(name.contains("alternate_names")) true else false
+  def isCauseOfDeath = if(name.contains("cause_of_death")) true else false
 }
 
 object Slot {
