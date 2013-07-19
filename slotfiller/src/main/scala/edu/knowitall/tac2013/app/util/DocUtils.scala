@@ -56,5 +56,16 @@ object DocUtils {
     }
     
   }
+  
+  def findBestFillMention(slotCandidates: Map[Slot,Seq[Candidate]]){
+    
+    for(slot <-slotCandidates.keys){
+      for(candidate <- slotCandidates(slot)){
+        
+      }
+    }
+    
+    
+  }
 
 }

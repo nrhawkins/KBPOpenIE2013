@@ -17,6 +17,7 @@ import edu.stanford.nlp.dcoref.CorefChain;
 import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefGraphAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -24,7 +25,11 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.time.TimeAnnotations.TimexAnnotation;
 import edu.stanford.nlp.time.Timex;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.IntTuple;
+import edu.stanford.nlp.util.Pair;
 
+import edu.knowitall.tac2013.app.Candidate;
+import edu.knowitall.tac2013.app.KBPQueryEntityType;
 import edu.knowitall.tac2013.solr.query.SolrHelper;
 
 
@@ -43,10 +48,8 @@ public class StanfordAnnotatorHelperMethods {
 		this.suTimePipeline = new StanfordCoreNLP(suTimeProps);
 		
 		Properties corefProps = new Properties();
-	    corefProps.put("annotators", "tokenize, ssplit, pos, lemma, cleanxml, ner, parse, dcoref");
+	    corefProps.put("annotators", "tokenize, cleanxml, ssplit, pos, lemma, ner, parse, dcoref");
 	    //clean all xml tags
-	    corefProps.put("clean.xmltags", ".*");
-	    corefProps.put("clean.allowflawedxml", "true");
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 
 	}
@@ -141,10 +144,25 @@ public class StanfordAnnotatorHelperMethods {
 		
 		
 		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+		for(Integer i : graph.keySet()){
+			System.out.println("GROUP " + i);
+			CorefChain x = graph.get(i);
+			for( CorefMention m : x.getMentionsInTextualOrder()){
+				System.out.println(m.mentionSpan);
+			}
+		}
 
 		Integer corefClusterID = null;
 		
 		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		for(CoreMap sentence : sentences){
+			for(CoreLabel token : sentence.get(TokensAnnotation.class)){
+				
+			}
+		}
+		List<Pair<IntTuple,IntTuple>> x  = document.get(CorefGraphAnnotation.class);
+
+		
 	    for(CoreMap sentence: sentences){
 	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
 	    		if(token.beginPosition() == interval.start()){
@@ -161,5 +179,52 @@ public class StanfordAnnotatorHelperMethods {
 	    	return new ArrayList<CorefMention>();
 	    }
 		
+	}
+	
+	public Interval getAlternateSlotMentions(String xmlString, Interval interval, Candidate candidate){
+		Annotation document = new Annotation(xmlString);
+		corefPipeline.annotate(document);
+		
+		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+		Integer corefClusterID = null;
+		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+	    for(CoreMap sentence: sentences){
+	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
+	    		if(token.beginPosition() == interval.start()){
+	    			corefClusterID = token.get(CorefClusterIdAnnotation.class);
+	    		}
+	    	}
+	    }
+	    
+	    if(corefClusterID != null){
+	    	List<CorefMention> filteredCorefMentions = new ArrayList<CorefMention>();
+	    	List<CorefMention> corefMentions = graph.get(corefClusterID).getMentionsInTextualOrder();
+	    	
+	    	for(CorefMention x : corefMentions){
+	    		
+	    	}
+	    }
+	    else{
+	    }
+	    return Interval.open(0, 1);
+		
+	}
+	
+	/**
+	 * Provides a lookup method for taking corefMentions and finding their NER tagged
+	 * substrings.
+	 * @param annotatedDocument
+	 * @param position
+	 * @return
+	 */
+	private Interval getNamedEntityAtPosition(Annotation annotatedDocument, IntTuple position, KBPQueryEntityType entityType){
+		
+		return Interval.open(0, 1);
+	}
+	
+	
+	private CoreLabel getTokenAtInterval(Annotation annotatedDocument, Interval interval){
+		
+		return null;
 	}
 }
