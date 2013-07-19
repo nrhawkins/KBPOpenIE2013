@@ -495,16 +495,7 @@ object FilterSolrResults {
         } 
 
       return false
-    }  else if (Slot.fromName(candidate.pattern.slotName).isCauseOfDeath){
-       
-       if(candidate.fillField.tokens.headOption.isDefined){
-         if(candidate.fillField.tokens.head.isPronoun)
-           return false
-       }
-       
-       return true
     }
-
     else {
     
     
@@ -525,6 +516,26 @@ object FilterSolrResults {
     
     true
   }
+  
+  def satisfiesSlotFilter(candidate: Candidate): Boolean = {
+    
+    if(Slot.fromName(candidate.pattern.slotName).isCauseOfDeath){     
+       if(candidate.fillField.tokens.headOption.isDefined){
+         if(candidate.fillField.tokens.head.isPronoun)
+           return false
+       }       
+    }
+    else if(Slot.fromName(candidate.pattern.slotName).isTitle){
+      
+    	if(candidate.fillField.tokenInterval.size == 1){
+    	  if(candidate.fillField.originalText == "leader" || candidate.fillField.originalText == "head"){
+    	    return false
+    	  }
+    	}    	
+    }
+    return true
+    
+  }
 
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
@@ -538,7 +549,8 @@ object FilterSolrResults {
             satisfiesTermFilters(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
             satisfiesSemanticFilter(candidate) &&
-            satisfiesLengthFilter(candidate))
+            satisfiesLengthFilter(candidate) &&
+            satisfiesSlotFilter(candidate))
     
     unfiltered filter combinedFilter
   }
