@@ -144,7 +144,7 @@ public class StanfordAnnotatorHelperMethods {
 		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 	    for(CoreMap sentence: sentences){
 	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
-	    		if(token.beginPosition() == interval.start() && token.endPosition() == interval.end()){
+	    		if(token.beginPosition() == interval.start()){
 	    			corefClusterID = token.get(CorefClusterIdAnnotation.class);
 	    		}
 	    	}
