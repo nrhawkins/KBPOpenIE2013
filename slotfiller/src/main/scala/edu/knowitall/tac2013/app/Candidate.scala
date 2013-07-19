@@ -148,19 +148,6 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
       getLongestRightmostInterval(intersectingTypes)
     }
     else{
-      // return first type in list
-      var printAll = false
-      for(t <- intersectingTypes){
-        if(t.text().contains("executive"))
-          printAll = true
-      }
-      
-      if(printAll){
-        println("Printing all intersecting types")
-        for(t <- intersectingTypes){
-          println(t.text() + " " + t.interval())
-        }
-      }
       Some(intersectingTypes.head)
     }
   }
