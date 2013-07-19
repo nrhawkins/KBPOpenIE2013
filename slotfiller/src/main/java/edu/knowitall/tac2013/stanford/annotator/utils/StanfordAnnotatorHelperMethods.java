@@ -4,13 +4,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 
 import edu.knowitall.collection.immutable.Interval;
+import edu.stanford.nlp.dcoref.CorefChain;
+import edu.stanford.nlp.dcoref.CorefChain.CorefMention;
+import edu.stanford.nlp.dcoref.CorefCoreAnnotations.CorefChainAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.*;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -26,6 +31,7 @@ import edu.knowitall.tac2013.solr.query.SolrHelper;
 public class StanfordAnnotatorHelperMethods {
 	
 	private final StanfordCoreNLP suTimePipeline;
+	private final StanfordCoreNLP corefPipeline;
 	private String filePath = "/homes/gws/jgilme1/docs/";
 	
 	public StanfordAnnotatorHelperMethods(){
@@ -34,6 +40,10 @@ public class StanfordAnnotatorHelperMethods {
 		suTimeProps.put("sutime.binders", "0");
 		suTimeProps.put("clean.datetags","datetime|date|dateline");
 		this.suTimePipeline = new StanfordCoreNLP(suTimeProps);
+		
+		Properties corefProps = new Properties();
+	    corefProps.put("annotators", "tokenize, ssplit, pos, lemma, cleanxml, ner, dcoref");
+		this.corefPipeline = new StanfordCoreNLP(corefProps);
 
 	}
 	
@@ -118,5 +128,18 @@ public class StanfordAnnotatorHelperMethods {
 		}
 	    
 	    return originalString;
+	}
+	
+	public List<String> getCorefMentions(String xmlString) {
+		Annotation document = new Annotation(xmlString);
+		corefPipeline.annotate(document);
+		
+		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+		for( CorefMention x : graph.get(0).getMentionsInTextualOrder()){
+			System.out.println(x.toString());
+		}
+		List<String> x = new ArrayList<String>();
+		return x;
+		
 	}
 }

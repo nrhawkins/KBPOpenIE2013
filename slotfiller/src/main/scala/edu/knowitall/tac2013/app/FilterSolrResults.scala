@@ -450,7 +450,7 @@ object FilterSolrResults {
 
       for (t <- types) {
         if (t.interval().intersects(slotLocation)) {
-          if(t.interval().start - slotLocation.start < 5){
+          if(t.interval().start - slotLocation.start < 13){
 	          slotType match {
 	            case "Organization" => {
 	              if (t.descriptor() == "StanfordORGANIZATION") {
@@ -489,7 +489,7 @@ object FilterSolrResults {
       
       for (t <- types) {
         if (t.interval().intersects(slotLocation)){
-          if(t.interval().start - slotLocation.start < 5){
+          if(t.interval().start - slotLocation.start < 13){
             return true
           }
         } 
