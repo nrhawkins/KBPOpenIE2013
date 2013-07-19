@@ -120,7 +120,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     //an exact string match with the KBP query String and trim to that spot
     if(lookForEntity){
       if(str.endsWith(this.kbpQuery.name)){
-        val newInterval = Interval.open(interval.start + (interval.length - str.split(" ").length),interval.end)
+        val newInterval = Interval.open(interval.start + (interval.length - this.kbpQuery.name.split(" ").length),interval.end)
         return new TrimmedType(this.kbpQuery.name,newInterval)
       }
     }

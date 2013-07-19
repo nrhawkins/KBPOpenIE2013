@@ -57,7 +57,7 @@ object Slot {
   }
   
   private def fromNameAndPatterns(slotString: String, patternFields: Seq[Array[String]]): Slot = {
-    
+    System.out.println(slotString)
     val headPattern = patternFields.head
     
     val maxValues = headPattern(1).toInt
