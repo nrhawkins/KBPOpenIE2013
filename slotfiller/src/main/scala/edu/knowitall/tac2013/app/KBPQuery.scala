@@ -19,7 +19,17 @@ case class KBPQuery (val id: String, val name: String, val doc: String,
   
   lazy val docIdToSentNumDocIdPairMap = SolrHelper.getDocIDMapToSentNumsForEntityNameAndNodeID(name, nodeId)
   lazy val docIds = docIdToSentNumDocIdPairMap.keySet.toList
-    
+  lazy val numEntityFbids = nodeId match {
+    case Some(str) => 1
+    case None => {
+      val qstring1 = "+arg1Text:\"%s\"".format(name)
+      val fbidsArg1 = SolrHelper.solrQueryExecutor.get.issueSolrQuery(qstring1).flatMap(_.arg1.wikiLink.map(_.fbid)).toSet
+      val qstring2 = "+arg2Text:\"%s\"".format(name)
+      val fbidsArg2 = SolrHelper.solrQueryExecutor.get.issueSolrQuery(qstring2).flatMap(_.arg2.wikiLink.map(_.fbid)).toSet
+      val allFbids = (fbidsArg1 ++ fbidsArg2)
+      allFbids.size
+    }
+  }
 }
 
 object KBPQuery {
