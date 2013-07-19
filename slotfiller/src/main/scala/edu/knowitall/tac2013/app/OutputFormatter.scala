@@ -18,7 +18,7 @@ case class OutputFormatter(
     val printAnswers: Boolean = true,
     val detailedAnswers: Boolean = true) {
   
-  val runID = "UWashington_1"
+  val runID = "UWashington_2"
  
   val indentSize = 4
   
