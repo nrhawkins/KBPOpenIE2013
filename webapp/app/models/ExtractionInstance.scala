@@ -68,8 +68,8 @@ object ExtractionInstance {
   def fromKbpExtraction(e: KbpExtraction): ExtractionInstance = {
     
     def postags(field: KbpExtractionField) = field.tokens.map(_.postag).mkString(" ")
-    def linkTypes(extr: KbpExtraction, field: KbpExtractionField) = Seq(offsetString(extr, field)) ++  field.wikiLink.map { link =>
-      s", WikiLink(${link.name}, fbid=${link.fbid}, conf=${link.score}, nodeId=${link.nodeId.getOrElse("Nil")})" 
+    def linkTypes(extr: KbpExtraction, field: KbpExtractionField) = Seq(offsetString(extr, field)) ++ field.wikiLink.map { link =>
+      s"WikiLink(${link.name}, fbid=${link.fbid}, conf=${link.score}, nodeId=${link.nodeId.getOrElse("Nil")})" 
     } toSeq
     
     ExtractionInstance(e.sentence.docId, e.arg1.originalText, e.rel.originalText, e.arg2.originalText,
