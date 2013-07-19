@@ -450,17 +450,19 @@ object FilterSolrResults {
 
       for (t <- types) {
         if (t.interval().intersects(slotLocation)) {
-          if(t.interval().start - slotLocation.start < 5){
 	          slotType match {
 	            case "Organization" => {
 	              if (t.descriptor() == "StanfordORGANIZATION") {
-	
-	                return true
+	            	  if(t.interval().start - slotLocation.start < 5){
+	            		  	return true
+	            	  }
 	              }
 	            }
 	            case "Person" => {
 	              if (t.descriptor() == "StanfordPERSON") {
-	                return true
+	            	  if(t.interval().start - slotLocation.start < 5){
+	                      return true
+	            	  }
 	              }
 	            }
 	            // default case will be location
@@ -477,7 +479,6 @@ object FilterSolrResults {
 	
 	            }
 	          }
-          }
         }
       }
 
@@ -489,12 +490,9 @@ object FilterSolrResults {
       
       for (t <- types) {
         if (t.interval().intersects(slotLocation)){
-          if(t.interval().start - slotLocation.start < 5){
             return true
           }
         } 
-
-      }
 
       return false
     }
