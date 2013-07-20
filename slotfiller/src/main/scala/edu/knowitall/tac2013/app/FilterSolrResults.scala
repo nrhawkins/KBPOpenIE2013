@@ -411,7 +411,7 @@ object FilterSolrResults {
       }
       else{
         //update entity string and interval to match that of the coreferenced kbp query entity
-        candidate.trimmedEntity.setString(kbpQuery.name)
+        //candidate.trimmedEntity.setString(kbpQuery.name)
         candidate.trimmedEntity.setByteOffsets(kbpQueryEntityInterval.get)
         true
       }
