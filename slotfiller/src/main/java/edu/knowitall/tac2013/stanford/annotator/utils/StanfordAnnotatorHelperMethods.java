@@ -5,9 +5,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Stack;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -39,6 +41,9 @@ public class StanfordAnnotatorHelperMethods {
 	private final StanfordCoreNLP suTimePipeline;
 	private final StanfordCoreNLP corefPipeline;
 	private String filePath = "/homes/gws/jgilme1/docs/";
+	private Map<String,Annotation> corefAnnotationMap;
+	private Map<String,Annotation> suTimeAnnotationMap;
+	
 	
 	public StanfordAnnotatorHelperMethods(){
 		Properties suTimeProps = new Properties();
@@ -51,6 +56,10 @@ public class StanfordAnnotatorHelperMethods {
 	    corefProps.put("annotators", "tokenize, cleanxml, ssplit, pos, lemma, ner, parse, dcoref");
 	    //clean all xml tags
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
+		
+		corefAnnotationMap = new HashMap<String,Annotation>();
+		suTimeAnnotationMap = new HashMap<String,Annotation>();
+
 
 	}
 	
@@ -61,13 +70,20 @@ public class StanfordAnnotatorHelperMethods {
 	}
 	
 	public void runSuTime(String docID) throws FileNotFoundException, IOException{
-		String filePathPlusDocId = this.filePath+docID;
-		FileInputStream in = new FileInputStream(new File(filePathPlusDocId));
-		String fileString = IOUtils.toString(in,"UTF-8");
-		in.close();
+		Annotation document;
+		if(suTimeAnnotationMap.containsKey(docID)){
+			document = suTimeAnnotationMap.get(docID);
+		}
+		else{
+		  String filePathPlusDocId = this.filePath+docID;
+		  FileInputStream in = new FileInputStream(new File(filePathPlusDocId));
+		  String fileString = IOUtils.toString(in,"UTF-8");
+		  in.close();
 		
-		Annotation document = new Annotation(fileString);
-		suTimePipeline.annotate(document);
+		  document = new Annotation(fileString);
+		  suTimePipeline.annotate(document);
+		  suTimeAnnotationMap.put(docID, document);
+		}
 		
 		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 	    for(CoreMap sentence: sentences){
@@ -113,13 +129,18 @@ public class StanfordAnnotatorHelperMethods {
 
 	
 	public String getNormalizedDate(Interval charInterval, String docId, String originalString) throws IOException{
-		String xmlDoc = SolrHelper.getRawDoc(docId);
-		if(xmlDoc.trim().isEmpty()){
-			return originalString;
+		Annotation document;
+		if(suTimeAnnotationMap.containsKey(docId)){
+			document = suTimeAnnotationMap.get(docId);
 		}
 		else{
-			Annotation document = new Annotation(xmlDoc);
+			String xmlDoc = SolrHelper.getRawDoc(docId);
+			if(xmlDoc.trim().isEmpty()){
+				return originalString;
+			}
+			document = new Annotation(xmlDoc);
 			suTimePipeline.annotate(document);
+			suTimeAnnotationMap.put(docId, document);
 	
 			List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 		    for(CoreMap sentence: sentences){
@@ -181,34 +202,6 @@ public class StanfordAnnotatorHelperMethods {
 		
 	}
 	
-	public Interval getAlternateSlotMentions(String xmlString, Interval interval, Candidate candidate){
-		Annotation document = new Annotation(xmlString);
-		corefPipeline.annotate(document);
-		
-		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
-		Integer corefClusterID = null;
-		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
-	    for(CoreMap sentence: sentences){
-	    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
-	    		if(token.beginPosition() == interval.start()){
-	    			corefClusterID = token.get(CorefClusterIdAnnotation.class);
-	    		}
-	    	}
-	    }
-	    
-	    if(corefClusterID != null){
-	    	List<CorefMention> filteredCorefMentions = new ArrayList<CorefMention>();
-	    	List<CorefMention> corefMentions = graph.get(corefClusterID).getMentionsInTextualOrder();
-	    	
-	    	for(CorefMention x : corefMentions){
-	    		
-	    	}
-	    }
-	    else{
-	    }
-	    return Interval.open(0, 1);
-		
-	}
 	
 	/**
 	 * Provides a lookup method for taking corefMentions and finding their NER tagged
@@ -223,8 +216,83 @@ public class StanfordAnnotatorHelperMethods {
 	}
 	
 	
-	private CoreLabel getTokenAtInterval(Annotation annotatedDocument, Interval interval){
+	private CoreLabel getTokenBeginningAtByteOffset(Annotation annotatedDocument, Integer beg){
 		
+		List<CoreMap> sentences = annotatedDocument.get(SentencesAnnotation.class);
+		for(CoreMap sentence : sentences){
+			for(CoreLabel token : sentence.get(TokensAnnotation.class)){
+				if(token.beginPosition() == beg ){
+					return token;
+				}
+			}
+		}
+		return null;
+	}
+	
+	/**
+	 * Given the information from a CorefMention determine the byte offsets
+	 * of the whole mention and return as a knowitall Interval.
+	 * @param document
+	 * @param sentNum
+	 * @param startIndex
+	 * @param endIndex
+	 * @return
+	 */
+	private Interval getCharIntervalFromCorefMention(Annotation document, Integer sentNum, Integer startIndex, Integer endIndex){
+		
+		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		CoreMap sentence = sentences.get(sentNum-1);
+		List<CoreLabel> tokens = sentence.get(TokensAnnotation.class);
+		List<CoreLabel> spanningTokens = new ArrayList<CoreLabel>();
+		for(int i = startIndex; i < endIndex; i++){
+			spanningTokens.add(tokens.get(i-1));
+		}
+		
+		return Interval.closed(spanningTokens.get(0).beginPosition(),spanningTokens.get(spanningTokens.size()-1).endPosition());
+		
+	}
+	
+	public Interval getIntervalOfKBPEntityMention(String kbpEntityString, Interval originalInterval, String docID){
+		Annotation document;
+		if(corefAnnotationMap.containsKey(docID)){
+			document = corefAnnotationMap.get(docID);
+		}
+		else{
+			String xmlDoc = SolrHelper.getRawDoc(docID);
+			if(xmlDoc.trim().isEmpty()){
+				return null;
+			}
+			document = new Annotation(xmlDoc);
+			corefPipeline.annotate(document);
+			corefAnnotationMap.put(docID, document);
+			
+		}
+
+		
+		//get token of possible coref mention
+		CoreLabel token = getTokenBeginningAtByteOffset(document, originalInterval.start());
+		if(token == null){
+			System.out.println("Returning null because no token at offset");
+			return null;
+		}
+		Integer corefID = token.get(CorefClusterIdAnnotation.class);
+		if(corefID == null){
+			System.out.println("Returning null because no coref id at token");
+			return null;
+		}
+		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+		List<CorefMention> mentionsInOrder = graph.get(corefID).getMentionsInTextualOrder();
+
+		
+		for(CorefMention corefMention : mentionsInOrder){
+			System.out.println(corefMention.mentionSpan.trim().toLowerCase());
+			if (corefMention.mentionSpan.trim().toLowerCase().equals(kbpEntityString.trim().toLowerCase())){
+				// this is a match and the originalInterval corefers to the kbpEntityString
+				// return the proper interval of this mention of the kbpEntityString
+				return getCharIntervalFromCorefMention(document,corefMention.sentNum,corefMention.startIndex,corefMention.endIndex);
+			}
+		}
+		System.out.println("Returning null because entity is not in coref sequence");
 		return null;
 	}
 }
