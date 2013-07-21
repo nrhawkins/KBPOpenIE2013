@@ -55,6 +55,7 @@ public class StanfordAnnotatorHelperMethods {
 		Properties corefProps = new Properties();
 	    corefProps.put("annotators", "tokenize, cleanxml, ssplit, pos, lemma, ner, parse, dcoref");
 	    corefProps.put("clean.allowflawedxml", "true");
+	    corefProps.put("ner.useSUTime", "false");
 	    //clean all xml tags
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 		
