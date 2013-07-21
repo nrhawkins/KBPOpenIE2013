@@ -404,7 +404,7 @@ object FilterSolrResults {
       }
     }
     else if (candidate.queryType == SolrQueryType.COREF){
-      println("FILTERING for COREF")
+      
       val kbpQueryEntityInterval = Option(DocUtils.stanfordHelper.getIntervalOfKBPEntityMention(kbpQuery.name, candidate.entityOffsetInterval, candidate.extr.sentence.docId))
       if(kbpQueryEntityInterval.isEmpty){
         false 

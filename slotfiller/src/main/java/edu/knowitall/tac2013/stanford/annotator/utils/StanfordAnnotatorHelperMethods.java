@@ -54,6 +54,7 @@ public class StanfordAnnotatorHelperMethods {
 		
 		Properties corefProps = new Properties();
 	    corefProps.put("annotators", "tokenize, cleanxml, ssplit, pos, lemma, ner, parse, dcoref");
+	    corefProps.put("clean.allowflawedxml", "true");
 	    //clean all xml tags
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 		
@@ -263,21 +264,26 @@ public class StanfordAnnotatorHelperMethods {
 				return null;
 			}
 			document = new Annotation(xmlDoc);
-			corefPipeline.annotate(document);
-			corefAnnotationMap.put(docID, document);
-			
+			try{
+			 corefPipeline.annotate(document);
+			 corefAnnotationMap.put(docID, document);
+			}
+			catch (Exception e){
+				if(corefAnnotationMap.containsKey(docID)){
+					corefAnnotationMap.remove(docID);
+				}
+				return null;
+			}
 		}
 
 		
 		//get token of possible coref mention
 		CoreLabel token = getTokenBeginningAtByteOffset(document, originalInterval.start());
 		if(token == null){
-			System.out.println("Returning null because no token at offset");
 			return null;
 		}
 		Integer corefID = token.get(CorefClusterIdAnnotation.class);
 		if(corefID == null){
-			System.out.println("Returning null because no coref id at token");
 			return null;
 		}
 		Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
@@ -285,14 +291,12 @@ public class StanfordAnnotatorHelperMethods {
 
 		
 		for(CorefMention corefMention : mentionsInOrder){
-			System.out.println(corefMention.mentionSpan.trim().toLowerCase());
 			if (corefMention.mentionSpan.trim().toLowerCase().equals(kbpEntityString.trim().toLowerCase())){
 				// this is a match and the originalInterval corefers to the kbpEntityString
 				// return the proper interval of this mention of the kbpEntityString
 				return getCharIntervalFromCorefMention(document,corefMention.sentNum,corefMention.startIndex,corefMention.endIndex);
 			}
 		}
-		System.out.println("Returning null because entity is not in coref sequence");
 		return null;
 	}
 }
