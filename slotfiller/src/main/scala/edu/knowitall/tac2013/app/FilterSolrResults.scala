@@ -359,11 +359,12 @@ object FilterSolrResults {
           case "arg2" => candidate.extr.arg2.originalText
           case _ => throw new Exception("Poorly formatted entityIn field, should be arg1 or arg2")
         }
+
+        val thisNodeIDOption = candidate.entityField.wikiLink
         //if the query does have a nodeID make sure that the entity does not have a different nodeID
         val noLinkConflict = {
 	        if(kbpQuery.nodeId.isDefined){
 	          val entityNodeID = kbpQuery.nodeId.get
-	          val thisNodeIDOption = candidate.entityField.wikiLink
 	          if(thisNodeIDOption.isDefined){
 	            val thisNodeID = thisNodeIDOption.get
 	            if(entityNodeID == thisNodeID){
@@ -378,7 +379,16 @@ object FilterSolrResults {
 	          }
 	          
 	        }
-	        true
+	        //if the kbpQuery has no nodeID then make sure that the extraction entity
+	        //does not have a nodeID.
+	        else{
+	          if(thisNodeIDOption.isDefined && kbpQuery.numEntityFbids > 1) {
+	            println("KBPQuery wiki ID is not defined but extraction entity ID is defined for " + candidate.debugString )
+	            false
+	          } else {
+	            true
+	          }
+	        }
         }
 
         val entityFromExtractionSplit = entityFromExtraction.toString().split(" ")
@@ -529,6 +539,11 @@ object FilterSolrResults {
     return true
     
   }
+  
+  val htmlEntityPattern = ".*\\s+&\\w+.*".r.pattern
+  def satisfiesHtmlFilter(candidate: Candidate): Boolean = {
+    !htmlEntityPattern.matcher(candidate.trimmedFill.string).matches
+  }
 
   //filters results from solr by calling helper methods that look at the KbpSlotToOpenIEData specifications and compare
   //that data with the results from solr to see if the relation is still a candidate
@@ -537,12 +552,13 @@ object FilterSolrResults {
     
     
     def combinedFilter(candidate: Candidate) = (
+            satisfiesLengthFilter(candidate) &&
             satisfiesArg2BeginsFilter(candidate) &&
             satisfiesRelFilter(candidate) &&
+            satisfiesHtmlFilter(candidate) &&
             satisfiesTermFilters(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
             satisfiesSemanticFilter(candidate) &&
-            satisfiesLengthFilter(candidate) &&
             satisfiesSlotFilter(candidate))
     
     unfiltered filter combinedFilter
