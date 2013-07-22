@@ -14,8 +14,11 @@ import scala.math.Ordering
 
 class TrimmedType(var string: String, var interval: Interval){
   
+  var supportingByteOffsets : Option[Interval] = None
+  
   def setString(newString: String){string = newString}
   def setInterval(newInterval: Interval){interval = newInterval}
+  def setSupportingByteOffsets(byteOffsets: Interval){this.supportingByteOffsets = Some(byteOffsets)}
 }
 
 class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, val types: List[Type]) {
@@ -81,15 +84,21 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   
   def offsetString(interval: Interval): String = "%d-%d".format(interval.start, interval.last)
   
-  def offsetString(trimmedItem: TrimmedType): String = offsetString(getOffset(trimmedItem))
+  def offsetString(trimmedItem: TrimmedType): String = {
+      var str= offsetString(getOffset(trimmedItem))
+      if(trimmedItem.supportingByteOffsets.isDefined){
+        str = str + "," + offsetString(trimmedItem.supportingByteOffsets.get)
+      }
+      str
+  }
   
   def offsetString(field: KbpExtractionField): String = offsetString(getOffset(field))
   
   def getOffset(fill: TrimmedType): Interval = {
-    val startOffset = extr.sentence.startOffset
-    val firstToken = extr.sentence.chunkedTokens(fill.interval).minBy(_.offset)
-    val lastToken = extr.sentence.chunkedTokens(fill.interval).maxBy(t => t.offset + t.string.length)
-    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
+	    val startOffset = extr.sentence.startOffset
+	    val firstToken = extr.sentence.chunkedTokens(fill.interval).minBy(_.offset)
+	    val lastToken = extr.sentence.chunkedTokens(fill.interval).maxBy(t => t.offset + t.string.length)
+	    Interval.closed(firstToken.offset + startOffset, lastToken.offset + lastToken.string.length + startOffset - 1)
   }
   
   def getOffset(field: KbpExtractionField): Interval = {
@@ -135,9 +144,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
       return new TrimmedType(noPrepSlotFillString,newInterval)
     }
     
-    return noChangeTrimmedFill
-    
-     
+    return noChangeTrimmedFill 
   }
   
   private def getLongestRightmostInterval(intersectingTypes : List[Type]) : Option[Type]= {
@@ -147,19 +154,22 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
   }
   
   // intersectingTypes can't be empty when called
-  private def chooseBestInterval (intersectingTypes: List[Type]): Option[Type] ={
+  private def chooseBestInterval (slotFillIn: Option[String], intersectingTypes: List[Type]): Option[Type] ={
     val slotType = pattern.slotType.getOrElse("")
     if(slotType == "Country" || slotType == "Stateorprovince" ||
       slotType == "City"){
       findLocationTaggedType(intersectingTypes,slotType)
     }
     
-    else if(slotType =="JobTitle" || slotType =="School" || slotType =="Nationality" ||
-        slotType =="Country" || slotType == "Crime" ){
+    else if(slotType =="JobTitle" || slotType =="School" || slotType =="Nationality" || slotType == "Crime" ){
       getLongestRightmostInterval(intersectingTypes)
     }
     else{
-      Some(intersectingTypes.head)
+      slotFillIn match {
+        case Some("arg1") => Some(intersectingTypes.maxBy(_.interval.start))
+        case Some("arg2") | Some("relation") => Some(intersectingTypes.minBy(_.interval.start))
+        case _ => throw new RuntimeException(s"Invalid SlotFillIn: $slotFillIn")
+      }
     }
   }
   
@@ -171,7 +181,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
     } //there are types from the tagger that was ran on
     //the appropriate slot fill type
     else {
-      chooseBestInterval(intersectingTypes) match {
+      chooseBestInterval(pattern.slotFillIn, intersectingTypes) match {
         case Some(bestType) => {
           // Type doesn't seem to correctly return text()
           val bestTokens = extr.sentence.chunkedTokens(bestType.interval)

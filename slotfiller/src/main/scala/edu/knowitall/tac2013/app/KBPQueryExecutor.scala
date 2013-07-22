@@ -9,7 +9,7 @@ import scopt.OptionParser
 
 object KBPQueryExecutor {
 
-  def executeKbpQuery(queryExecutor: SolrQueryExecutor, kbpQuery: KBPQuery, outFmt: OutputFormatter): Unit = {
+  def executeKbpQuery(queryExecutor: SolrQueryExecutor, kbpQuery: KBPQuery, outFmt: OutputFormatter, oldOrNew: String): Unit = {
 
     val slots = kbpQuery.slotsToFill
 
@@ -17,7 +17,7 @@ object KBPQueryExecutor {
     
     val filteredCandidates = slots map { slot => (slot, filterResults(unfiltered(slot), kbpQuery)) } toMap
     
-    DocUtils.putInTimexFormat(filteredCandidates)
+    DocUtils.putInTimexFormat(filteredCandidates,oldOrNew)
 
     val bestAnswers = slots map { slot => 
       (slot, new SlotFillReranker(outFmt).findSlotAnswers(slot, kbpQuery, filteredCandidates(slot))) 
@@ -35,6 +35,7 @@ object KBPQueryExecutor {
     var corpus = "old"
     var detailed = false
     var corefOn = false
+    var runID = "UWashington_1"
     
     val parser = new OptionParser() {
       arg("queryFile", "Path to query file.", { s => queryFile = s })
@@ -42,6 +43,7 @@ object KBPQueryExecutor {
       arg("corpus", "Either \"old\" or \"new\".", { s => corpus = s })
       opt("detailed", "Produce more verbose output", { detailed = true })
       opt("coref", "Turn on coref module", { corefOn = true })
+      opt("runID", "Set runID name", {s => runID = s})
     }
     
     if (!parser.parse(args)) return
@@ -52,13 +54,13 @@ object KBPQueryExecutor {
     
     val outputStream = new PrintStream(outputFile)
     val outputFormatter = detailed match {
-      case true => OutputFormatter.detailedAnswersOnly(outputStream)
-      case false => OutputFormatter.formattedAnswersOnly(outputStream)
+      case true => OutputFormatter.detailedAnswersOnly(outputStream,runID)
+      case false => OutputFormatter.formattedAnswersOnly(outputStream,runID)
     }
 
     val kbpQueryList = KBPQuery.parseKBPQueries(queryFile)
         for (kbpQuery <- kbpQueryList) {
-      executeKbpQuery(queryExecutor, kbpQuery, outputFormatter)
+      executeKbpQuery(queryExecutor, kbpQuery, outputFormatter,corpus)
     }
     
     outputStream.close()

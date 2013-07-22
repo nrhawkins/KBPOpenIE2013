@@ -6,6 +6,8 @@ import edu.knowitall.tac2013.solr.query.SolrQueryType._
 import edu.knowitall.tac2013.solr.query.SolrQueryType
 import edu.knowitall.collection.immutable.Interval
 import scala.util.matching.Regex
+import edu.knowitall.tac2013.app.util.DocUtils
+import edu.knowitall.common.Resource.using
 
 object FilterSolrResults {
   
@@ -119,40 +121,37 @@ object FilterSolrResults {
     val semanticType = semanticTypeRaw.replace("<","").replace(">", "").trim()
     
     val chunkedSentence = candidate.extr.sentence.chunkedTokens
-   
-    
+
     if (semanticType == "Organization") {
       val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
       for (t <- types) {
-         if (t.descriptor() == "StanfordORGANIZATION") {
-             if(intervalMatches(t.interval,interval,backwards)){
-                return Some(t.interval())
-             }
-            }
-      }
-      return None
-    } else if(semanticType == "Person"){
-      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
-      for (t <- types) {
-        if(intervalMatches(t.interval,interval,backwards)) {
-            if (t.descriptor() == "StanfordPERSON") {
-                return Some(t.interval())
-            }
+        if (t.descriptor() == "StanfordORGANIZATION") {
+          if (intervalMatches(t.interval, interval, backwards)) {
+            return Some(t.interval())
+          }
         }
       }
       return None
-    }
-     else if(semanticType == "Location" || semanticType =="City" || semanticType =="Country" || semanticType =="Stateorprovince"){
+    } else if (semanticType == "Person") {
       val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
       for (t <- types) {
-        if(intervalMatches(t.interval,interval,backwards)) {
-            if (t.descriptor() == "StanfordLOCATION") {
-                return Some(t.interval())
-            }
+        if (intervalMatches(t.interval, interval, backwards)) {
+          if (t.descriptor() == "StanfordPERSON") {
+            return Some(t.interval())
+          }
         }
       }
       return None
-      
+    } else if (semanticType == "Location" || semanticType == "City" || semanticType == "Country" || semanticType == "Stateorprovince") {
+      val types = SemanticTaggers.useStandfordNERTagger(chunkedSentence)
+      for (t <- types) {
+        if (intervalMatches(t.interval, interval, backwards)) {
+          if (t.descriptor() == "StanfordLOCATION") {
+            return Some(t.interval())
+          }
+        }
+      }
+      return None
     }
 
     else if (semanticType == "School") {
@@ -222,30 +221,17 @@ object FilterSolrResults {
       val types = SemanticTaggers.useIntegerTagger(chunkedSentence)
       for (t <- types) {
         if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
-
       }
-
       return None
-      
     } else if (semanticType =="Crime"){
-
       val types = SemanticTaggers.useCrimeTagger(chunkedSentence)
       for (t <- types) {
         if(intervalMatches(t.interval,interval,backwards)) return Some(t.interval())
-
       }
-
-      return None
-      
+      return None   
     } else {
-    
-    
-
       return None
-
     }
-
-    
   }
 
   //filter for arg2 beginning with proper preposition
@@ -283,12 +269,8 @@ object FilterSolrResults {
 
   private def satisfiesRelFilter(candidate: Candidate): Boolean = {
 
-    
     //if there are no semantic strings in the relation condidtion then count backwards for
     //the start interval and call satisfiesRequirementAtInterval
-    
-    
-
     candidate.pattern.relString match {
       case Some(relString) => {
         
@@ -303,7 +285,6 @@ object FilterSolrResults {
   }
   
   private def satisfiesTermFilters(candidate: Candidate) : Boolean = {
-    
     
     //arg1 Terms
     val arg1TermsSatisfied =
@@ -413,33 +394,60 @@ object FilterSolrResults {
       }
     }
     else if (candidate.queryType == SolrQueryType.COREF){
-      //filter out if the entity slot contains a wikiLinkNodeID
-      candidate.pattern.entityIn.getOrElse({""}) match {
-        case "arg1" => { if(candidate.extr.arg1.wikiLink.isDefined) return false}
-        case "arg2" => { if(candidate.extr.arg2.wikiLink.isDefined) return false}
-      }
       
-      //filter out if there is no mention of the target entity in the current sentence or the preceeding two sentences
-      val sentencesWhereEntityIsMentioned = kbpQuery.docIdToSentNumDocIdPairMap(candidate.extr.sentence.docId).map(x => x._2)
-      val thisSentenceNum = candidate.extr.sentence.sentNum
-      val sentenceRange = thisSentenceNum-2 to thisSentenceNum
-      for(sentenceNum <- sentencesWhereEntityIsMentioned){
-        if(sentenceRange.contains(sentenceNum)){
-          return true
+      val kbpQueryEntityInterval = Option(DocUtils.stanfordHelper.getIntervalOfKBPEntityMention(kbpQuery.name, candidate.entityOffsetInterval, candidate.extr.sentence.docId))
+      if(kbpQueryEntityInterval.isEmpty){
+        false 
+      }
+      else{
+        //update entity string and interval to match that of the coreferenced kbp query entity
+        candidate.trimmedEntity.setString(kbpQuery.name)
+        val supportingByteOffsets  = DocUtils.getByteOffSetsOfFirstOccurenceOfString(candidate.extr.sentence.docId,kbpQuery.name)
+        //if the offsets can be found..
+        if(supportingByteOffsets.isDefined){
+          candidate.trimmedEntity.setSupportingByteOffsets(supportingByteOffsets.get)
         }
+        true
       }
-      
-      //if there is no sentence with a mention of the entity in the specified range
-      //around the coref extraction then the candidate extraction should be filtered out.
-      false
+    }
+    else{
+     true
     }
     
-    else {
-      true
+  }
+  
+  private def loadStoplist(rsrc: String) = {
+    val resource = getClass.getResource(rsrc)
+    require(resource != null, s"Couldn't find $rsrc")
+    using(io.Source.fromURL(resource)) { source =>
+      source.getLines.map(_.toLowerCase.trim).toSet 
     }
   }
   
+  private val cityStoplistFile     = "/edu/knowitall/tac2013/findSlotFillersApp/CityStoplist.txt"
+  private val provinceStoplistFile = "/edu/knowitall/tac2013/findSlotFillersApp/ProvinceStoplist.txt"
+  private val countryStoplistFile  = "/edu/knowitall/tac2013/findSlotFillersApp/CountryStoplist.txt"
+    
+  private val cityStoplist     = loadStoplist(cityStoplistFile) 
+  private val provinceStoplist = loadStoplist(provinceStoplistFile)
+  private val countryStoplist  = loadStoplist(countryStoplistFile)
+  
+  private def satisfiesLocationStoplist(candidate: Candidate): Boolean = {
 
+    val fillText = candidate.trimmedFill.string.toLowerCase
+    val slotType = candidate.pattern.slotType.getOrElse({ "" })
+
+    if (slotType == "City") {
+      !cityStoplist.contains(fillText)
+    } else if (slotType == "Stateorprovince") {
+      !provinceStoplist.contains(fillText)
+    } else if (slotType == "Country") {
+      !countryStoplist.contains(fillText)
+    } else {
+      true
+    }    
+  }
+  
   private def satisfiesSemanticFilter(candidate: Candidate): Boolean = {
 
     val pattern = candidate.pattern
@@ -460,35 +468,29 @@ object FilterSolrResults {
 
       for (t <- types) {
         if (t.interval().intersects(slotLocation)) {
-	          slotType match {
-	            case "Organization" => {
-	              if (t.descriptor() == "StanfordORGANIZATION") {
-	            	  if(t.interval().start - slotLocation.start < 5){
-	            		  	return true
-	            	  }
-	              }
-	            }
-	            case "Person" => {
-	              if (t.descriptor() == "StanfordPERSON") {
-	            	  if(t.interval().start - slotLocation.start < 5){
-	                      return true
-	            	  }
-	              }
-	            }
-	            // default case will be location
-	            case _ => {
-	              //if trimmed Fill does not exist then the Candidate
-	              //constructor has filtered out this extraction
-	              val typesInSlotFill = types.filter(t => (t.interval().intersects(slotLocation)))
-	              if(findLocationTaggedType(typesInSlotFill,slotType).isDefined){
-	                return true
-	              }
-	              else{
-	                return false
-	              }
-	
-	            }
-	          }
+          slotType match {
+            case "Organization" => {
+              if (t.descriptor() == "StanfordORGANIZATION") {
+                return true
+              }
+            }
+            case "Person" => {
+              if (t.descriptor() == "StanfordPERSON") {
+                return true
+              }
+            }
+            // default case will be location
+            case _ => {
+              //if trimmed Fill does not exist then the Candidate
+              //constructor has filtered out this extraction
+              val typesInSlotFill = types.filter(t => (t.interval().intersects(slotLocation)))
+              if (findLocationTaggedType(typesInSlotFill, slotType).isDefined) {
+                return true
+              } else {
+                return false
+              }
+            }
+          }
         }
       }
 
@@ -507,13 +509,9 @@ object FilterSolrResults {
       return false
     }
     else {
-    
-    
 
       return true
-
     }
-
   }
   
   def satisfiesLengthFilter(candidate: Candidate): Boolean = {
@@ -523,30 +521,36 @@ object FilterSolrResults {
       if(candidate.trimmedFill.interval.length >5) return false
     }
     
-    
     true
   }
   
+  val titleStopListPath = "/edu/knowitall/tac2013/findSlotFillersApp/TitleStoplist.txt"
+
+  val titleStopList = loadStoplist(titleStopListPath)
+
   def satisfiesSlotFilter(candidate: Candidate): Boolean = {
+
+    val fillText = candidate.trimmedFill.string.toLowerCase
+    val slotFillIn = candidate.pattern.slotFillIn.getOrElse("")
     
-    if(Slot.fromName(candidate.pattern.slotName).isCauseOfDeath){     
-       if(candidate.fillField.tokens.headOption.isDefined){
-         if(candidate.fillField.tokens.head.isPronoun)
-           return false
-       }       
-    }
-    else if(Slot.fromName(candidate.pattern.slotName).isTitle){
+    // require that a slot filler in arg2 start within the first 4 tokens.
+    if (slotFillIn == "arg2" && candidate.trimmedFill.interval.start - candidate.extr.arg2.tokenInterval.start > 4) false
+    
+    else if (Slot.fromName(candidate.pattern.slotName).isCauseOfDeath) {
+      val fillTokens = candidate.extr.sentence.chunkedTokens(candidate.trimmedFill.interval)
+      !fillTokens.headOption.exists(_.isPronoun)
       
-    	if(candidate.fillField.tokenInterval.size == 1){
-    	  if(candidate.fillField.originalText == "leader" || candidate.fillField.originalText == "head"){
-    	    return false
-    	  }
-    	}    	
+    } else if (Slot.fromName(candidate.pattern.slotName).isTitle) {
+      !titleStopList.contains(fillText) 
     }
-    return true
-    
+    else true
   }
   
+  /**
+   * matches if any word starts with &
+   * e.g. &amp or &gt.
+   * A single & does not match.
+   */
   val htmlEntityPattern = ".*\\s+&\\w+.*".r.pattern
   def satisfiesHtmlFilter(candidate: Candidate): Boolean = {
     !htmlEntityPattern.matcher(candidate.trimmedFill.string).matches
@@ -565,6 +569,7 @@ object FilterSolrResults {
             satisfiesHtmlFilter(candidate) &&
             satisfiesTermFilters(candidate) &&
             satisfiesEntityFilter(kbpQuery)(candidate) &&
+            satisfiesLocationStoplist(candidate) &&
             satisfiesSemanticFilter(candidate) &&
             satisfiesSlotFilter(candidate))
     

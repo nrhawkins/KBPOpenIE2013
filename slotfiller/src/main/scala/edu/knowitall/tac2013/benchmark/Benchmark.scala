@@ -30,7 +30,7 @@ case class BenchmarkItem(val entityName: String, val entityType: String, val nod
 
 case class BenchmarkItemSet(val entityName: String, val entityType: String, val nodeId: String, val items: Set[BenchmarkItem])
 
-class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItemSets: Iterable[BenchmarkItemSet]) {
+class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItemSets: Iterable[BenchmarkItemSet], val oldOrNew: String) {
 
   import edu.knowitall.tac2013.app.Candidate
   import edu.knowitall.tac2013.app.FilterSolrResults
@@ -54,7 +54,7 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItemSets: Iterab
 
     val filteredCandidates = items.map( item => (item.slot, FilterSolrResults.filterResults(unfiltered(item.slot), item.kbpQuery))).toMap
 
-    DocUtils.putInTimexFormat(filteredCandidates)
+    DocUtils.putInTimexFormat(filteredCandidates,oldOrNew)
     
     val bestAnswers = items.par.map( item => (item.slot, new SlotFillReranker(nullOutput).findSlotAnswers(item.slot, item.kbpQuery, filteredCandidates(item.slot)))).toMap
 
@@ -149,16 +149,17 @@ class Benchmarker(val solrExec: SolrQueryExecutor, val benchmarkItemSets: Iterab
   def go: Iterable[String] = {
     val responses = benchmarkItemSets.par.map(itemSet => (itemSet, getResponse(itemSet)))
     
-    val results = responses.flatMap { case (itemSet, resultsMap) =>
+    val allResponseItems = responses.flatMap { case (itemSet, resultsMap) =>
       val slotsToItems = itemSet.items.groupBy(_.slot).map { case (slot, items) => 
         require(items.size == 1)
         (slot, items.head)
       }
-      val itemsToResults = resultsMap.flatMap { case (slot, results) => slotsToItems.get(slot).map(i => judgeResponses(results, i)) }
-      itemsToResults
+      val responseItems = resultsMap.iterator.flatMap { case (slot, results) => slotsToItems.get(slot).map(i => (results, i)) }
+      responseItems
     }
+    val results = allResponseItems.toList.sortBy(_._2.entityName).flatMap { case (results, i) => judgeResponses(results, i) }
     
-    results.toList.flatten ++ finalStats
+    results.toList ++ finalStats
   }
 }
 
@@ -221,10 +222,14 @@ object Benchmarker {
     
     var corpus = "2013"
     var output = System.out
+    var corefOn = false
       
     val parser = new OptionParser() {
       arg("corpus", "2012 or 2013", { corpus = _ })
       opt("outFile", "File for output, default stdout", { s => output = new PrintStream(s)})
+      opt("coref", "Coref on true or false", { s => corefOn = s match{
+        case "true" => true
+        case _ =>  false }})
     }
     
     if (!parser.parse(args)) return
@@ -234,12 +239,12 @@ object Benchmarker {
     
     val outputStrings = corpus match {
       case "2013" => {
-        SolrHelper.setConfigurations("new", false)
-        new Benchmarker(SolrQueryExecutor.getInstance("new"), load2013Benchmark).go
+        SolrHelper.setConfigurations("new", corefOn)
+        new Benchmarker(SolrQueryExecutor.getInstance("new",corefOn), load2013Benchmark, "new").go
       }
       case "2012" => {
-        SolrHelper.setConfigurations("old", false)
-        new Benchmarker(SolrQueryExecutor.getInstance("old"), load2012Benchmark).go
+        SolrHelper.setConfigurations("old", corefOn)
+        new Benchmarker(SolrQueryExecutor.getInstance("old",corefOn), load2012Benchmark, "old").go
       }
       case _ => throw new RuntimeException("Corpus must be 2012 or 2013")
     }
