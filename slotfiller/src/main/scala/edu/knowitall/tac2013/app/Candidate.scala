@@ -138,9 +138,7 @@ class Candidate(val id: Int, val solrQuery: SolrQuery, val extr: KbpExtraction, 
       return new TrimmedType(noPrepSlotFillString,newInterval)
     }
     
-    return noChangeTrimmedFill
-    
-     
+    return noChangeTrimmedFill 
   }
   
   private def getLongestRightmostInterval(intersectingTypes : List[Type]) : Option[Type]= {

@@ -511,13 +511,9 @@ object FilterSolrResults {
       return false
     }
     else {
-    
-    
 
       return true
-
     }
-
   }
   
   def satisfiesLengthFilter(candidate: Candidate): Boolean = {
@@ -530,11 +526,8 @@ object FilterSolrResults {
     true
   }
   
-  
   val titleStopListPath = "/edu/knowitall/tac2013/findSlotFillersApp/TitleStoplist.txt"
-  
 
-    
   val titleStopList = loadStoplist(titleStopListPath)
 
   def satisfiesSlotFilter(candidate: Candidate): Boolean = {
@@ -551,6 +544,11 @@ object FilterSolrResults {
     else true
   }
   
+  /**
+   * matches if any word starts with &
+   * e.g. &amp or &gt.
+   * A single & does not match.
+   */
   val htmlEntityPattern = ".*\\s+&\\w+.*".r.pattern
   def satisfiesHtmlFilter(candidate: Candidate): Boolean = {
     !htmlEntityPattern.matcher(candidate.trimmedFill.string).matches
