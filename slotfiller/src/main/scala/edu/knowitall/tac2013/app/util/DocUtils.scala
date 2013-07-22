@@ -116,7 +116,6 @@ object DocUtils {
     
     
     val sent0Results = kbpExtrs.filter(p => (p.sentence.sentNum < 2))
-    println("Size of sent0Results = " + sent0Results.length)
     for( r <- sent0Results){
       if(yearPattern.findFirstIn(r.arg2.originalText).isDefined){
         return Some(KbpExtractionUtils.getOffset(r.arg2,r.sentence))
