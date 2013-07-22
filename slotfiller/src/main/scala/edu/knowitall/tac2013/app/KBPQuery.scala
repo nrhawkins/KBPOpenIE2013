@@ -37,7 +37,7 @@ case class KBPQuery (val id: String, val name: String, val doc: String,
       val allFbids = (fbidsArg1 ++ fbidsArg2)
       //val allNodeIds = nodeIdsArg1 ++ nodeIdsArg2
       if (nodeId.isEmpty) System.err.println(s"Unlinked entity $name links to ${allFbids.size} fbids.")
-      //if (allFbids.size == 1 && nodeId.isEmpty) foundFbid = Some(allFbids.head)
+      if (allFbids.size == 1 && nodeId.isEmpty) foundFbid = Some(allFbids.head)
       allFbids.size
     }
   }
