@@ -111,21 +111,32 @@ public class StanfordAnnotatorHelperMethods {
 		if(t.timexType() == "DATE"){
 	      String timexString = t.value();
 	      if (timexString == null) return "";
-	      String formattedString = timexString;
-	      if(Pattern.matches("\\w{4}", timexString)){
-	    	  formattedString = timexString +"-XX-XX";
-	      }
-	      else if(Pattern.matches("\\w{2}-\\w{2}",timexString)){
-	    	  formattedString = "XXXX-" + timexString; 
-	      }
-	      else if(Pattern.matches("\\w{4}-\\w{2}", timexString)){
-	    	  formattedString = timexString + "-XX";
-	      }
+	      String formattedString = normalizeDate(timexString);
 		  return formattedString;
 		}
 		else{
 			return "";
 		}
+	}
+	
+	private String normalizeDate(String dateString){
+		  String formattedString = null;
+	      if(Pattern.matches("\\w{4}", dateString)){
+	    	  formattedString = dateString +"-XX-XX";
+	      }
+	      else if(Pattern.matches("\\w{2}-\\w{2}",dateString)){
+	    	  formattedString = "XXXX-" + dateString; 
+	      }
+	      else if(Pattern.matches("\\w{4}-\\w{2}", dateString)){
+	    	  formattedString = dateString + "-XX";
+	      }
+		  
+	      if(formattedString == null){
+	    	  return dateString;
+	      }
+	      else{
+	    	  return formattedString;
+	      }
 	}
 	
 
@@ -143,8 +154,9 @@ public class StanfordAnnotatorHelperMethods {
 			document = new Annotation(xmlDoc);
 			suTimePipeline.annotate(document);
 			suTimeAnnotationMap.put(docId, document);
+		}
 	
-			List<CoreMap> sentences = document.get(SentencesAnnotation.class);
+		List<CoreMap> sentences = document.get(SentencesAnnotation.class);
 		    for(CoreMap sentence: sentences){
 		    	for(CoreLabel token: sentence.get(TokensAnnotation.class)){
 		    		Timex tt = token.get(TimexAnnotation.class);
@@ -155,9 +167,7 @@ public class StanfordAnnotatorHelperMethods {
 		    		}
 		    	}
 		    }
-		}
-	    
-	    return originalString;
+	       return normalizeDate(originalString);
 	}
 	
 	public List<CorefMention> getCorefMentions(String xmlString, Interval interval) {
