@@ -67,5 +67,16 @@ object DocUtils {
     
     
   }
+  
+  def getByteOffSetsOfFirstOccurenceOfString(docId:String, str: String): Option[Interval] = {
+    var xmlDoc = SolrHelper.getRawDoc(docId)
+    val indexOfSlice = xmlDoc.indexOfSlice(str)
+    if(indexOfSlice == -1){
+      None
+    }
+    else{
+      return Some(Interval.closed(indexOfSlice,indexOfSlice + (str.length()-1)))
+    }
+  }
 
 }
