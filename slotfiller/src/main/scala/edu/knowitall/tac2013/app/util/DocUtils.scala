@@ -14,7 +14,7 @@ import edu.knowitall.tac2013.openie.KbpExtractionUtils
 
 object DocUtils {
   
-  val stanfordHelper = new StanfordAnnotatorHelperMethods()
+  lazy val stanfordHelper = new StanfordAnnotatorHelperMethods()
   
   val yearPattern = new Regex("\\d\\d\\d\\d")
   
