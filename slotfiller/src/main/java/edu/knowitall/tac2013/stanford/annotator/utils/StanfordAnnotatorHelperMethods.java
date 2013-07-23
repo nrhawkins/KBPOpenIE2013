@@ -60,8 +60,8 @@ public class StanfordAnnotatorHelperMethods {
 	    //clean all xml tags
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 		
-		corefAnnotationMap = new WeakHashMap<String,Annotation>();
-		suTimeAnnotationMap = new WeakHashMap<String,Annotation>();
+		corefAnnotationMap = new HashMap<String,Annotation>();
+		suTimeAnnotationMap = new HashMap<String,Annotation>();
 
 
 	}
