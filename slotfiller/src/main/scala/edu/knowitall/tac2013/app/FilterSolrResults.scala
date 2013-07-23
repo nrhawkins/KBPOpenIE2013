@@ -559,6 +559,8 @@ object FilterSolrResults {
   //
   def filterResults(unfiltered: Seq[Candidate], kbpQuery: KBPQuery): Seq[Candidate] = {
     
+    //clear hashmaps from previous queries
+    DocUtils.stanfordHelper.clearHashMaps()
     
     def combinedFilter(candidate: Candidate) = (
             satisfiesLengthFilter(candidate) &&

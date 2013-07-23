@@ -72,6 +72,11 @@ public class StanfordAnnotatorHelperMethods {
 		
 	}
 	
+	public void clearHashMaps(){
+		corefAnnotationMap.clear();
+		suTimeAnnotationMap.clear();
+	}
+	
 	public void runSuTime(String docID) throws FileNotFoundException, IOException{
 		Annotation document;
 		if(suTimeAnnotationMap.containsKey(docID)){

@@ -18,7 +18,7 @@ object DocUtils {
   
   val yearPattern = new Regex("\\d\\d\\d\\d")
   
-  def putInTimexFormat(slotCandidates: Map[Slot,Seq[Candidate]], oldOrNew: String): Unit = stanfordHelper.synchronized {
+  def putInTimexFormat(slotCandidates: Map[Slot,Seq[Candidate]], oldOrNew: String): Unit = {
     
     for(slot <- slotCandidates.keys){
       if(slot.isDate){
@@ -55,7 +55,7 @@ object DocUtils {
     }
   }
   
-  def getCorefMentions(docId: String, interval: Interval): Option[List[CorefMention]] = stanfordHelper.synchronized {
+  def getCorefMentions(docId: String, interval: Interval): Option[List[CorefMention]] = {
     val rawDoc = SolrHelper.getRawDoc(docId)
     val mentions = stanfordHelper.getCorefMentions(rawDoc, interval)
     if(mentions.isEmpty()){
