@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Stack;
+import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
@@ -59,8 +60,8 @@ public class StanfordAnnotatorHelperMethods {
 	    //clean all xml tags
 		this.corefPipeline = new StanfordCoreNLP(corefProps);
 		
-		corefAnnotationMap = new HashMap<String,Annotation>();
-		suTimeAnnotationMap = new HashMap<String,Annotation>();
+		corefAnnotationMap = new WeakHashMap<String,Annotation>();
+		suTimeAnnotationMap = new WeakHashMap<String,Annotation>();
 
 
 	}
