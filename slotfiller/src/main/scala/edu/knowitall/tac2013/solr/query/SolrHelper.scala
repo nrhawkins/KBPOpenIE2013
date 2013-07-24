@@ -39,7 +39,7 @@ object SolrHelper {
     val docIdMapListOfSentNums = docSentNumPairs.groupBy(x => x._1)
     val constrainedMap = docIdMapListOfSentNums.filter(p => (p._2.length > 2))
     val sortedMap = constrainedMap.toList.sortBy(_._2.length)(Ordering[Int].reverse).take(2000).toMap
-    val filteredSortedMap = sortedMap.filter(p => (DocUtils.docLength(p._1) < 100000))
+    val filteredSortedMap = sortedMap.filter(p => (DocUtils.docLength(p._1) < 20000)).take(20)
     filteredSortedMap
   }
   
