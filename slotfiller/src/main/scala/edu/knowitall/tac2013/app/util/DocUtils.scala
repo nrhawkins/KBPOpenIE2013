@@ -124,5 +124,10 @@ object DocUtils {
     return None
     
   }
+  
+  def docLength(docId: String): Int = {
+    val rawDoc = SolrHelper.getRawDoc(docId)
+    rawDoc.size
+  }
 
 }
