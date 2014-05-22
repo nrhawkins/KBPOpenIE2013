@@ -1,7 +1,8 @@
 import sbt._
 import Keys._
-import PlayProject._
-
+import play.Project._
+import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseKeys
+import com.typesafe.sbteclipse.plugin.EclipsePlugin.EclipseCreateSrc
 import sbtassembly.Plugin._
 import AssemblyKeys._
 
@@ -29,6 +30,7 @@ object SlotFillerBuild extends Build {
     Keys.fork in Test := true,
     javaOptions in Test += "-Xmx8G",
     javaOptions in run += "-Xmx12G",
+    EclipseKeys.createSrc := EclipseCreateSrc.Default + EclipseCreateSrc.Resource,
     resolvers ++= Seq(
       "knowitall" at "http://knowitall.cs.washington.edu/maven2",
       "knowitall-snapshot" at "http://knowitall.cs.washington.edu/maven2-snapshot",
